@@ -1,0 +1,126 @@
+#!/usr/bin/env python
+from optparse import OptionParser
+import os
+import sys
+import tract_querier
+
+global parser
+parser = OptionParser(version=0.1)
+
+def main():
+    parser.add_option("-t", "--tractography", dest="tractography_file_name",
+                    help="name of the tractography file")
+    parser.add_option("-a", "--atlas", dest="atlas_file_name",
+                    help="name of the atlas file")
+    parser.add_option("-q", "--queries", dest="queries_string",
+                    help="query to run")
+    parser.add_option('-o', "--output", dest="output_file_name",
+                    help="clustering output file prefix")
+
+    (options, args) = parser.parse_args()
+
+    if not options.tractography_file_name or\
+       not options.atlas_file_name or\
+       not options.queries_string or\
+       not options.output_file_name:
+        parser.error("incorrect number of arguments")
+
+    from itertools import izip
+
+    import numpy as np
+    import nibabel
+
+    from tractographyGP import tractography
+
+    print "Loading files"
+
+    if os.path.exists(options.queries_string):
+        query_file_body = tract_querier.queries_preprocess(file(options.queries_string).read())
+    else:
+        query_file_body = tract_querier.queries_preprocess(options.queries_string)
+
+    labels_nii = nibabel.load(options.atlas_file_name)
+    img = labels_nii.get_data()
+   
+    queries = tract_querier.queries_syntax_check(query_file_body, np.unique(img))
+
+    tr = tractography.tractography_from_vtk_files(
+        options.tractography_file_name
+    )
+
+
+    print "Calculating labels and crossings"
+    affine = np.linalg.inv(labels_nii.get_affine())
+    fibers = tr.getFibersToProcess()
+    all_points = np.vstack(fibers)
+    all_points_ijk = (np.dot(affine[:-1, :-1], all_points.T).T +\
+                      affine[:-1, -1])
+    all_points_ijk_rounded = np.round(all_points_ijk).astype(int)
+
+    if any( ((all_points_ijk_rounded[:, i] >= img.shape[i]).any() for i in xrange(3)))  or (all_points_ijk_rounded < 0).any():
+        print >>sys.stderr, "Warning tract points fall outside the image"
+
+    for i in xrange(3):
+        all_points_ijk_rounded[:, i] = all_points_ijk_rounded[:, i].clip(0, img.shape[i] - 1)
+
+    point_labels = img[tuple(all_points_ijk_rounded.T)]
+    fiber_cumulative_lengths = np.cumsum([0] + [len(f) for f in fibers])
+
+    fiber_labels = [
+        np.unique(point_labels[start:end])
+        for start, end in izip(
+            fiber_cumulative_lengths[:-1],
+            fiber_cumulative_lengths[1:]
+        )
+    ]
+
+    labels_fibers = {}
+    for i, f in enumerate(fiber_labels):
+        for l in f:
+            if l in labels_fibers:
+                labels_fibers[l].add(i)
+            else:
+                labels_fibers[l] = set((i,))
+
+    print "Computing queries"
+    evaluated_queries = tract_querier.eval_queries(labels_fibers, queries)
+
+    for query_name, query in evaluated_queries.items():
+        fiber_numbers, compute_query = query
+        if not compute_query:
+            continue
+
+        print "\tQuery %s: %.6d" % (query_name, len(fiber_numbers))
+        if fiber_numbers:
+            save_tractography_file(
+                options.output_file_name + "_" + query_name + '.vtk',
+                tr,
+                fiber_numbers
+            )
+
+def save_tractography_file(filename, tractography, fiber_numbers):
+    from tractographyGP import vtkInterface
+
+    original_fibers = tractography.getOriginalFibers()
+
+    fibers_to_save = [original_fibers[i] for i in fiber_numbers]
+
+    fibers_data_to_save = {}
+    for key, data in tractography.getOriginalFibersData().items():
+        fibers_data_to_save[key] = [data[f] for f in fiber_numbers]
+
+    if 'tensors' in fibers_data_to_save:
+        fibers_data_to_save['ActiveTensors'] = 'tensors'
+    if 'vectors' in fibers_data_to_save:
+        fibers_data_to_save['ActiveVectors'] = 'vectors'
+
+    vtkInterface.writeLinesToVtkPolyData(
+        filename,
+        fibers_to_save,
+        fibers_data_to_save
+    )
+
+
+
+if __name__ == "__main__":
+    main()

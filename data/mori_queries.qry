@@ -1,0 +1,73 @@
+import JHU_MNI_SS_WMPM_Type_II.qry
+
+HEMISPHERE_left |= '.*_left'
+HEMISPHERE_right |= '.*_right'
+
+frontal.side |= SUPERIOR_FRONTAL_GYRUS.side + MIDDLE_FRONTAL_GYRUS.side + INFERIOR_FRONTAL_GYRUS.side +\
+                   MIDDLE_FRONTO_ORBITAL_GYRUS.side + LATERAL_FRONTO_ORBITAL_GYRUS.side
+occipital.side |= SUPERIOR_OCCIPITAL_GYRUS.side + INFERIOR_OCCIPITAL_GYRUS.side + MIDDLE_OCCIPITAL_GYRUS.side
+temporal.side |= SUPERIOR_TEMPORAL_GYRUS.side + INFERIOR_TEMPORAL_GYRUS.side + MIDDLE_TEMPORAL_GYRUS.side
+
+corpus_callosum.side |= Genu_of_corpus_callosum.side + Body_of_corpus_callosum.side + Splenium_of_corpus_callosum.side
+
+corpus_callosum |= corpus_callosum_left + corpus_callosum_right - THALAMUS_right\
+   - THALAMUS_left - PUTAMEN_right - PUTAMEN_left - GLOBUS_PALLIDUS_right - GLOBUS_PALLIDUS_left\
+   - PONS_right - PONS_left - CEREBELLUM_right - CEREBELLUM_left \
+   - Fornix_cres_Stria_terminalis_left - Fornix_column_and_body_left - Fornix_cres_Stria_terminalis_right - Fornix_column_and_body_right
+
+
+CST.side = Cerebral_peduncle.side * PRECENTRAL_GYRUS.side\
+          - HEMISPHERE.opposite - THALAMUS.side\
+          - CEREBELLUM.side - MIDDLE_OCCIPITAL_GYRUS.side\
+          #- Anterior_limb_of_internal_capsule.side - Posterior_limb_of_internal_capsule.side\
+          #- Superior_cerebellar_peduncle.side\
+          #- Pontine_crossing_tract.side - Inferior_cerebellar_peduncle.side - Medial_lemniscus.side\
+          #- Superior_corona_radiata.side - Posterior_limb_of_internal_capsule.side\
+          #- HEMISPHERE.opposite - THALAMUS.side - CEREBELLUM.side - Cerebral_peduncle.side
+
+IFO.side = frontal.side * occipital.side * Sagittal_stratum.side * Inferior_fronto_occipital_fasciculus.side\
+          - corpus_callosum - THALAMUS.side - SUPERIOR_PARIETAL_LOBULE.side - PRE_CUNEUS.side\
+          - Superior_corona_radiata.side - Uncinate_fasciculus.side
+
+ILF.side = temporal.side *occipital.side * Sagittal_stratum.side\
+          - HEMISPHERE.opposite - CEREBELLUM.side - THALAMUS.side - corpus_callosum - frontal.side \
+          - LINGUAL_GYRUS.side \
+          - Inferior_fronto_occipital_fasciculus.side - Superior_longitudinal_fasciculus.side - CINGULATE_GYRUS.side\
+          - Anterior_limb_of_internal_capsule.side - Anterior_corona_radiata.side - Superior_corona_radiata.side\
+          - Fornix_column_and_body.side - ANGULAR_GYRUS.side - PRE_CUNEUS.side - CUNEUS.side -SUPRAMARGINAL_GYRUS.side
+
+UNC.side = frontal.side * temporal.side\
+          - corpus_callosum - CEREBELLUM.side - THALAMUS.side - Posterior_corona_radiata.side\
+          - PARAHIPPOCAMPAL_GYRUS.side - occipital.side\
+          - Posterior_limb_of_internal_capsule.side - Retrolenticular_part_of_internal_capsule.side\
+          - Superior_longitudinal_fasciculus.side - HEMISPHERE.opposite
+
+CG.side = CINGULATE_GYRUS.side + Cingulum_cingulate_gyrus.side + Cingulum_hippocampus.side - corpus_callosum - HEMISPHERE.opposite
+
+SLF_t.side = frontal.side * temporal.side\
+              - occipital.side - corpus_callosum - CEREBELLUM.side - Inferior_fronto_occipital_fasciculus.side\
+              - Anterior_limb_of_internal_capsule.side - Posterior_limb_of_internal_capsule.side - INSULAR.side\
+              - Fornix_column_and_body.side - External_capsule.side
+
+SLF_fp.side = frontal.side * ANGULAR_GYRUS.side * SUPRAMARGINAL_GYRUS.side \
+              - occipital.side - temporal.side\
+              - corpus_callosum - CEREBELLUM.side - Inferior_fronto_occipital_fasciculus.side\
+              - Anterior_limb_of_internal_capsule.side - Posterior_limb_of_internal_capsule.side - INSULAR.side
+
+SLF_pt.side = temporal.side * ANGULAR_GYRUS.side \
+              - occipital.side - frontal.side\
+              - corpus_callosum - CEREBELLUM.side - Inferior_fronto_occipital_fasciculus.side\
+              - Anterior_limb_of_internal_capsule.side - Posterior_limb_of_internal_capsule.side - INSULAR.side
+
+thalamic_radiations.side = THALAMUS.side * (
+              SUPERIOR_PARIETAL_LOBULE.side +\
+              SUPERIOR_FRONTAL_GYRUS.side + MIDDLE_FRONTAL_GYRUS.side + INFERIOR_FRONTAL_GYRUS.side +\
+              PRECENTRAL_GYRUS.side + POSTCENTRAL_GYRUS.side + \
+              PRE_CUNEUS.side +\
+              SUPERIOR_OCCIPITAL_GYRUS.side + MIDDLE_OCCIPITAL_GYRUS.side ) -\
+              Pontine_crossing_tract.side - Inferior_cerebellar_peduncle.side - Medial_lemniscus.side -\
+              corpus_callosum - temporal.side - CEREBELLUM.side - HEMISPHERE.opposite - Cerebral_peduncle.side
+              
+              
+
+
