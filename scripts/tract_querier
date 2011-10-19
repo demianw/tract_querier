@@ -4,10 +4,10 @@ import os
 import sys
 import tract_querier
 
-global parser
-parser = OptionParser(version=0.1)
+
 
 def main():
+    parser = OptionParser(version=0.1, usage = "usage: %prog -t tractography_file -a atlas_file -q queries -o result_prefix")
     parser.add_option("-t", "--tractography", dest="tractography_file_name",
                     help="name of the tractography file")
     parser.add_option("-a", "--atlas", dest="atlas_file_name",
@@ -16,6 +16,8 @@ def main():
                     help="query to run")
     parser.add_option('-o', "--output", dest="output_file_name",
                     help="clustering output file prefix")
+    parser.add_option('--threshold', dest='threshold', default=2,
+                    help="Minimum percentage of the fiber to be considered inside of the label default %default %")
 
     (options, args) = parser.parse_args()
 
@@ -25,8 +27,6 @@ def main():
        not options.output_file_name:
         parser.error("incorrect number of arguments")
 
-    from itertools import izip
-
     import numpy as np
     import nibabel
 
@@ -35,14 +35,14 @@ def main():
     print "Loading files"
 
     if os.path.exists(options.queries_string):
-        query_file_body = tract_querier.queries_preprocess(file(options.queries_string).read())
+        query_file_body = tract_querier.queries_preprocess(file(options.queries_string).read(), filename=options.queries_string)
     else:
-        query_file_body = tract_querier.queries_preprocess(options.queries_string)
+        query_file_body = tract_querier.queries_preprocess(options.queries_string, filename=options.queries_string)
 
     labels_nii = nibabel.load(options.atlas_file_name)
     img = labels_nii.get_data()
    
-    queries = tract_querier.queries_syntax_check(query_file_body, np.unique(img))
+#    queries = tract_querier.queries_syntax_check(query_file_body, np.unique(img))
 
     tr = tractography.tractography_from_vtk_files(
         options.tractography_file_name
@@ -66,16 +66,18 @@ def main():
     point_labels = img[tuple(all_points_ijk_rounded.T)]
     fiber_cumulative_lengths = np.cumsum([0] + [len(f) for f in fibers])
 
-    fiber_labels = [
-        np.unique(point_labels[start:end])
-        for start, end in izip(
-            fiber_cumulative_lengths[:-1],
-            fiber_cumulative_lengths[1:]
-        )
-    ]
+    fibers_labels = {}
+    fibers_percentages = {}
+    for i in xrange(len(fiber_cumulative_lengths) - 1):
+        start = fiber_cumulative_lengths[i]
+        end = fiber_cumulative_lengths[i + 1]
+        label_crossings = point_labels[start:end]
+        bincount = np.bincount(label_crossings)
+        percentages = bincount * 1. / bincount.sum()
+        fibers_labels[i] = set(np.where(percentages >= (options.threshold / 100.))[0])
 
     labels_fibers = {}
-    for i, f in enumerate(fiber_labels):
+    for i, f in fibers_labels.items():
         for l in f:
             if l in labels_fibers:
                 labels_fibers[l].add(i)
@@ -83,13 +85,9 @@ def main():
                 labels_fibers[l] = set((i,))
 
     print "Computing queries"
-    evaluated_queries = tract_querier.eval_queries(labels_fibers, queries)
+    evaluated_queries = tract_querier.eval_queries(labels_fibers, fibers_labels, query_file_body)
 
-    for query_name, query in evaluated_queries.items():
-        fiber_numbers, compute_query = query
-        if not compute_query:
-            continue
-
+    for query_name, fiber_numbers in evaluated_queries.items():
         print "\tQuery %s: %.6d" % (query_name, len(fiber_numbers))
         if fiber_numbers:
             save_tractography_file(

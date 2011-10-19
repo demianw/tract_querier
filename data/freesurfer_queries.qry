@@ -6,54 +6,50 @@ HEMISPHERE_right |= '.*_right'
 corpus_callosum |= '.*orpus_callosum.*'
 cerebellum |= 'Cerebellum_.*'
 
-frontal.side |= ( wm_superiorfrontal.side + wm_caudalmiddlefrontal.side + 
-                  wm_rostralmiddlefrontal.side + wm_parsopercularis.side +
-                  wm_parstriangularis.side + wm_parsorbitalis.side + 
-                  wm_frontalpole.side + wm_medialorbitofrontal.side + 
-                  wm_precentral.side + wm_paracentral.side )
+frontal.side |= ( wm_superiorfrontal.side or wm_caudalmiddlefrontal.side or
+         wm_rostralmiddlefrontal.side or wm_parsopercularis.side or
+         wm_parstriangularis.side or wm_parsorbitalis.side or
+         wm_frontalpole.side or wm_medialorbitofrontal.side or
+         wm_precentral.side or wm_paracentral.side )
 
-cingular.side |= (wm_caudalanteriorcingulate.side + wm_isthmuscingulate.side + 
-                  wm_posteriorcingulate.side + wm_rostralanteriorcingulate.side + wm_corpuscallosum.side)
+cingular.side |= (wm_caudalanteriorcingulate.side or wm_isthmuscingulate.side or
+         wm_posteriorcingulate.side or wm_rostralanteriorcingulate.side or wm_corpuscallosum.side)
 
-temporal.side |= (wm_entorhinal.side + wm_parahippocampal.side + wm_temporalpole.side + 
-                  wm_fusiform.side + wm_superiortemporal.side + wm_middletemporal.side + 
-                  wm_inferiortemporal.side + wm_transversetemporal.side + wm_bankssts.side)
+temporal.side |= (wm_entorhinal.side or wm_parahippocampal.side or wm_temporalpole.side or
+         wm_fusiform.side or wm_superiortemporal.side or wm_middletemporal.side or
+         wm_inferiortemporal.side or wm_transversetemporal.side or wm_bankssts.side)
 
-parietal.side |= wm_postcentral.side + wm_precuneus.side + wm_supramarginal.side + wm_superiorparietal.side + wm_inferiorparietal.side
+parietal.side |= wm_postcentral.side or wm_precuneus.side or wm_supramarginal.side or wm_superiorparietal.side or wm_inferiorparietal.side
 
-occipital.side |= wm_lingual.side + wm_pericalcarine.side + wm_cuneus.side + wm_lateraloccipital.side
+occipital.side |= wm_lingual.side or wm_pericalcarine.side or wm_cuneus.side or wm_lateraloccipital.side
 
-subcortical.side |= VentralDC.side + Thalamus_Proper.side + Pallidum.side + Putamen.side + Amygdala.side + Brain_Stem + choroid_plexus.side
+subcortical.side |= VentralDC.side or Thalamus_Proper.side or Pallidum.side or Putamen.side or Amygdala.side or Brain_Stem or choroid_plexus.side
 
-frontal_frontal_section.side |= wm_medialorbitofrontal.side + wm_parsorbitalis.side 
+frontal_frontal_section.side |= wm_medialorbitofrontal.side or wm_parsorbitalis.side
 
-precentral_postcentral.side |= ((wm_precentral.side * wm_postcentral.side) 
-              - ( wm_superiorfrontal.side + wm_caudalmiddlefrontal.side
-                  + wm_rostralmiddlefrontal.side + wm_parsopercularis.side
-                  + wm_parstriangularis.side + wm_parsorbitalis.side
-                  + wm_frontalpole.side + wm_medialorbitofrontal.side
-                  + wm_paracentral.side ) 
-                - ( wm_precuneus.side + wm_supramarginal.side
-                    + wm_superiorparietal.side + wm_inferiorparietal.side
-                  )
-                )
+precentral_postcentral.side = ~(wm_precentral.side and wm_postcentral.side and UnsegmentedWhiteMatter.side)
 
 
-SLF_tf.side = ( (frontal.side * temporal.side) 
-              * (wm_precentral.side + UnsegmentedWhiteMatter.side)
-              - occipital.side - corpus_callosum - cerebellum - HEMISPHERE.opposite
-              - subcortical.side - wm_insula.side - wm_unknown.side)
+ILF.side = ( (temporal.side and occipital.side)
+       not in Hippocampus.side not in Amygdala.side
+       not in frontal.side not in parietal.side not in wm_insula.side not in cingular.side
+       not in HEMISPHERE.opposite not in corpus_callosum not in cerebellum not in subcortical.side
+     )
 
-SLF_fp.side = ((frontal.side * 
-              (wm_supramarginal.side + wm_inferiorparietal.side) * 
-              (wm_precentral.side + wm_postcentral.side + UnsegmentedWhiteMatter.side)) 
-              - precentral_postcentral.side
-              - occipital.side - temporal.side
-              - corpus_callosum - cerebellum - HEMISPHERE.opposite
-              - subcortical.side - wm_insula.side - wm_unknown.side)
+SLF_tf.side = ( ((frontal.side and temporal.side)
+        and (wm_precentral.side or UnsegmentedWhiteMatter.side))
+        not in occipital.side not in corpus_callosum not in cerebellum not in HEMISPHERE.opposite
+        not in subcortical.side not in wm_insula.side not in wm_unknown.side not in cingular.side)
 
-SLF_pt.side = (wm_bankssts.side * wm_inferiorparietal.side * wm_supramarginal.side
-              - wm_middletemporal.side - occipital.side - frontal.side
-              - corpus_callosum - cerebellum  - HEMISPHERE.opposite
-              - subcortical.side - wm_insula.side - wm_unknown.side)
+SLF_fp.side = ((frontal.side and
+       (wm_supramarginal.side or wm_inferiorparietal.side) and
+       (wm_precentral.side or wm_postcentral.side or UnsegmentedWhiteMatter.side))
+        not in precentral_postcentral.side
+        not in occipital.side not in temporal.side
+        not in corpus_callosum not in cerebellum not in HEMISPHERE.opposite
+        not in subcortical.side not in wm_insula.side not in wm_unknown.side not in cingular.side)
 
+SLF_pt.side = ((wm_bankssts.side and wm_inferiorparietal.side and wm_supramarginal.side)
+        not in occipital.side not in frontal.side
+        not in corpus_callosum not in cerebellum not in HEMISPHERE.opposite
+        not in subcortical.side not in wm_insula.side not in wm_unknown.side not in cingular.side)
