@@ -1,7 +1,62 @@
 import ast
-from itertools import izip
+from itertools import izip, takewhile
 from copy import deepcopy
 import re
+
+class RewriteChangeNotInPrescedence(ast.NodeTransformer):
+    def visit_BoolOp(self, node):
+        predicate = lambda value: not (
+                isinstance(value, ast.Compare) and 
+                isinstance(value.ops[0], ast.NotIn)
+        )
+
+        values_which_are_not_in_op = [value for value in takewhile(
+            predicate,
+            node.values[1:]
+        )]
+
+        if (len(values_which_are_not_in_op) == len(node.values) - 1):
+            return node
+
+        old_CompareNode = node.values[len(values_which_are_not_in_op) + 1]
+        new_CompareNodeLeft = ast.copy_location(
+            ast.BoolOp(
+                op=node.op,
+                values=(
+                    [node.values[0]] + 
+                    values_which_are_not_in_op + 
+                    [old_CompareNode.left]
+                )
+            ),
+            node
+        )
+
+
+        new_CompareNode = ast.copy_location(
+            ast.Compare(
+                left=new_CompareNodeLeft,
+                ops=old_CompareNode.ops,
+                comparators=old_CompareNode.comparators
+            ),
+            node
+        )
+
+        rest_of_the_values = node.values[len(values_which_are_not_in_op) + 2:]
+
+        if len(rest_of_the_values) == 0:
+            return self.visit(new_CompareNode)
+        else:
+            return self.visit(ast.copy_location(
+                ast.BoolOp(
+                    op=node.op,
+                    values=(
+                        [new_CompareNode] +
+                        rest_of_the_values
+                                        )
+                ),
+                node
+            ))
+
 
 class RewriteSide(ast.NodeTransformer):
     def __init__(self, left=True):
@@ -309,8 +364,11 @@ def queries_preprocess(query_file, filename='<unknown>'):
     query_file_module = ast.parse(query_file, filename='<unknown>')
 
     rewrite_preprocess = RewritePreprocess()
+    rewrite_precedence_not_in = RewriteChangeNotInPrescedence()
 
-    preprocessed_module = rewrite_preprocess.visit(query_file_module)
+    preprocessed_module = rewrite_precedence_not_in.visit(
+        rewrite_preprocess.visit(query_file_module)
+    )
 
     return preprocessed_module.body
 
