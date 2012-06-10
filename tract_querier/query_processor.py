@@ -24,7 +24,7 @@ class RewriteSide(ast.NodeTransformer):
                 node
             )
         else:
-            
+
             raise SyntaxError("Invalid subscript: " + ast.dump(node))
 
 class RewritePreprocess(ast.NodeTransformer):
@@ -35,7 +35,7 @@ class RewritePreprocess(ast.NodeTransformer):
         if isinstance(node.targets[0], ast.Attribute):
             if node.targets[0].attr != 'side':
                 raise SyntaxError("Wrong attribute")
-            
+
             node_left_right = ast.Module([
                 self.rewrite_left.visit(deepcopy(node)),
                 self.rewrite_right.visit(deepcopy(node))
@@ -53,7 +53,7 @@ class RewritePreprocess(ast.NodeTransformer):
         if isinstance(node.target, ast.Attribute):
             if node.target.attr != 'side':
                 raise SyntaxError("Wrong attribute")
-            
+
             node_left_right = ast.Module([
                 self.rewrite_left.visit(deepcopy(node)),
                 self.rewrite_right.visit(deepcopy(node))
@@ -74,7 +74,7 @@ class RewritePreprocess(ast.NodeTransformer):
 
     def visit_Import(self, node):
         imported_modules = [
-            ast.parse(file(module_name.name).read(), filename=module_name.name) 
+            ast.parse(file(module_name.name).read(), filename=module_name.name)
             for module_name in node.names
         ]
 
@@ -165,9 +165,9 @@ class EvaluateQueries(ast.NodeVisitor):
 
         elif isinstance(node.op, ast.And):
             for value in node.values[1:]:
-                    fibers_, labels_ = self.visit(value)
-                    fibers.intersection_update(fibers_)
-                    labels.update(labels_)
+                fibers_, labels_ = self.visit(value)
+                fibers.intersection_update(fibers_)
+                labels.update(labels_)
 
         else:
             return self.generic_visit(node)
@@ -211,19 +211,18 @@ class EvaluateQueries(ast.NodeVisitor):
         return matching_fibers, matching_labels
 
     def visit_Call(self, node):
-        if not (
-            isinstance(node.func, ast.Name) and 
+        if (
+            isinstance(node.func, ast.Name) and
             node.func.id.lower() == 'only' and
             len(node.args) == 1 and
             node.starargs is None and
             node.keywords == [] and
-            node.kwargs is None 
+            node.kwargs is None
         ):
+            fibers, labels = self.visit(node.args[0])
+            return set(fiber for fiber in fibers if self.fibers_labels[fiber].issubset(labels)), labels
+        else:
             raise SyntaxError("Invalid query in line %d" %node.lineno)
-
-        fibers, labels = self.visit(node.args[0])
-        return set(fiber for fiber in fibers if self.fibers_labels[fiber].issubset(labels)), labels
-
 
     def visit_Assign(self, node):
         if len(node.targets) > 1 or not isinstance(node.targets[0], ast.Name):
@@ -236,7 +235,7 @@ class EvaluateQueries(ast.NodeVisitor):
     def visit_AugAssign(self, node):
         if not isinstance(node.op, ast.BitOr) or not isinstance(node.target, ast.Name):
             raise SyntaxError("Invalid assignment in line %d" % node.lineno)
-        fibers, labels = self.visit(node.value) 
+        fibers, labels = self.visit(node.value)
         self.evaluated_queries_fibers[node.target.id] = fibers
         self.evaluated_queries_labels[node.target.id] = labels
 
@@ -286,7 +285,7 @@ class ObtainQueries(ast.NodeVisitor):
     def append_query(self, target, value, compute):
         if not isinstance(target, ast.Name):
             raise SyntaxError("Wrong left side of assignment")
-    
+
         try:
             self.validate_query.visit(value)
         except SyntaxError, e:
@@ -305,7 +304,7 @@ class ObtainQueries(ast.NodeVisitor):
 
 
 def queries_preprocess(query_file, filename='<unknown>'):
-   
+
     query_file_module = ast.parse(query_file, filename='<unknown>')
 
     rewrite_preprocess = RewritePreprocess()
@@ -334,11 +333,11 @@ def eval_queries_old(labels_fibers, fibers_labels, queries, evaluated_queries = 
         evaluated_query, evaluated_query_labels = eval_query(labels_fibers, fibers_labels, query, evaluated_queries, evaluated_queries_labels)
         evaluated_queries[query_name] = (evaluated_query, compute_query)
         evaluated_queries_labels[query_name] = evaluated_query_labels
-    
+
     return evaluated_queries
 
 
-    
+
 def eval_query(labels_fibers, fibers_labels, query, evaluated_queries={}, evaluated_queries_labels={}):
     import re
 
@@ -382,11 +381,11 @@ def eval_query(labels_fibers, fibers_labels, query, evaluated_queries={}, evalua
             return evaluated_queries[query.id][0], evaluated_queries_labels[query.id]
         elif isinstance(query, ast.Str):
             matching_queries = tuple((
-                fibers[0] for name, fibers in evaluated_queries.items() 
+                fibers[0] for name, fibers in evaluated_queries.items()
                 if re.match(query.s, name)
             ))
             matching_labels = tuple((
-                labels for name, labels in evaluated_queries_labels.items() 
+                labels for name, labels in evaluated_queries_labels.items()
                 if re.match(query.s, name)
             ))
 
