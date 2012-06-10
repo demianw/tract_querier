@@ -18,6 +18,9 @@ def main():
                     help="clustering output file prefix")
     parser.add_option('--threshold', dest='threshold', default=2,
                     help="Minimum percentage of the fiber to be considered inside of the label default %default %")
+    parser.add_option('--length_threshold', dest='length_threshold', default=0,
+                    help="Minimum length of the fiber to be considered (in mm) default %default %")
+
 
     (options, args) = parser.parse_args()
 
@@ -26,6 +29,9 @@ def main():
        not options.queries_string or\
        not options.output_file_name:
         parser.error("incorrect number of arguments")
+
+    options.threshold = float(options.threshold)
+    options.length_threshold = float(options.length_threshold)
 
     import numpy as np
     import nibabel
@@ -42,16 +48,25 @@ def main():
     labels_nii = nibabel.load(options.atlas_file_name)
     img = labels_nii.get_data()
    
-#    queries = tract_querier.queries_syntax_check(query_file_body, np.unique(img))
-
     tr = tractography.tractography_from_vtk_files(
         options.tractography_file_name
     )
 
-
     print "Calculating labels and crossings"
     affine = np.linalg.inv(labels_nii.get_affine())
     fibers = tr.getFibersToProcess()
+
+    fiber_indices = None
+    if options.length_threshold > 0:
+	    fiber_length = lambda fiber: ((((fiber[1:] - fiber[:-1]) ** 2).sum(1)) ** .5).sum()
+	    fiber_indices = []
+	    filtered_fibers = []
+	    for i, f in enumerate(fibers):
+		if fiber_length(f) >= options.length_threshold:
+			fiber_indices.append(i)
+			filtered_fibers.append(f)
+	    fibers = filtered_fibers
+
     all_points = np.vstack(fibers)
     all_points_ijk = (np.dot(affine[:-1, :-1], all_points.T).T +\
                       affine[:-1, -1])
@@ -74,7 +89,7 @@ def main():
         label_crossings = point_labels[start:end]
         bincount = np.bincount(label_crossings)
         percentages = bincount * 1. / bincount.sum()
-        fibers_labels[i] = set(np.where(percentages >= (options.threshold / 100.))[0])
+        fibers_labels[i] = set(np.where(percentages >= (float(options.threshold) / 100.))[0])
 
     labels_fibers = {}
     for i, f in fibers_labels.items():
@@ -90,6 +105,8 @@ def main():
     for query_name, fiber_numbers in evaluated_queries.items():
         print "\tQuery %s: %.6d" % (query_name, len(fiber_numbers))
         if fiber_numbers:
+	    if fiber_indices is not None:
+		fiber_numbers = [fiber_indices[i] for i in fiber_numbers] 
             save_tractography_file(
                 options.output_file_name + "_" + query_name + '.vtk',
                 tr,
