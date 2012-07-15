@@ -115,10 +115,10 @@ def save_tractography_file(filename, tractography, fiber_numbers):
     for key, data in tractography.getOriginalFibersData().items():
         fibers_data_to_save[key] = [data[f] for f in fiber_numbers]
 
-    if 'tensors' in fibers_data_to_save:
-        fibers_data_to_save['ActiveTensors'] = 'tensors'
-    if 'vectors' in fibers_data_to_save:
-        fibers_data_to_save['ActiveVectors'] = 'vectors'
+    if 'ActiveTensors' not in fibers_data_to_save and 'Tensors_' in fibers_data_to_save:
+        fibers_data_to_save['ActiveTensors'] = 'Tensors_'
+    if 'ActiveVectors' not in fibers_data_to_save and 'Vectors_' in fibers_data_to_save:
+        fibers_data_to_save['ActiveVectors'] = 'Vectors_'
 
     vtkInterface.writeLinesToVtkPolyData(
         filename,
