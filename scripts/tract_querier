@@ -40,14 +40,20 @@ def main():
 
     print "Loading files"
 
-    if os.path.exists(options.queries_string):
-        query_file_body = tract_querier.queries_preprocess(file(options.queries_string).read(), filename=options.queries_string)
-    else:
-        query_file_body = tract_querier.queries_preprocess(options.queries_string, filename=options.queries_string)
+    try:
+        if os.path.exists(options.queries_string):
+            query_file_body = tract_querier.queries_preprocess(file(options.queries_string).read(), filename=options.queries_string)
+        else:
+            query_file_body = tract_querier.queries_preprocess(options.queries_string, filename=options.queries_string)
+
+        tract_querier.queries_syntax_check(query_file_body)
+    except tract_querier.TractQuerierSyntaxError, e:
+        parser.error(e.value)
+
 
     labels_nii = nibabel.load(options.atlas_file_name)
     img = labels_nii.get_data()
-   
+
     tr = tractography.tractography_from_vtk_files(
         options.tractography_file_name
     )
@@ -57,8 +63,8 @@ def main():
     fibers = tr.getFibersToProcess()
 
     if options.length_threshold > 0:
-	    fiber_length = lambda fiber: ((((fiber[1:] - fiber[:-1]) ** 2).sum(1)) ** .5).sum()
-	    fibers = [f for f in fibers if fiber_length(f) >= options.length_threshold]
+        fiber_length = lambda fiber: ((((fiber[1:] - fiber[:-1]) ** 2).sum(1)) ** .5).sum()
+        fibers = [f for f in fibers if fiber_length(f) >= options.length_threshold]
 
     all_points = np.vstack(fibers)
     all_points_ijk = (np.dot(affine[:-1, :-1], all_points.T).T +\
