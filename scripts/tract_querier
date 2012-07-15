@@ -56,16 +56,9 @@ def main():
     affine = np.linalg.inv(labels_nii.get_affine())
     fibers = tr.getFibersToProcess()
 
-    fiber_indices = None
     if options.length_threshold > 0:
 	    fiber_length = lambda fiber: ((((fiber[1:] - fiber[:-1]) ** 2).sum(1)) ** .5).sum()
-	    fiber_indices = []
-	    filtered_fibers = []
-	    for i, f in enumerate(fibers):
-		if fiber_length(f) >= options.length_threshold:
-			fiber_indices.append(i)
-			filtered_fibers.append(f)
-	    fibers = filtered_fibers
+	    fibers = [f for f in fibers if fiber_length(f) >= options.length_threshold]
 
     all_points = np.vstack(fibers)
     all_points_ijk = (np.dot(affine[:-1, :-1], all_points.T).T +\
@@ -105,8 +98,6 @@ def main():
     for query_name, fiber_numbers in evaluated_queries.items():
         print "\tQuery %s: %.6d" % (query_name, len(fiber_numbers))
         if fiber_numbers:
-	    if fiber_indices is not None:
-		fiber_numbers = [fiber_indices[i] for i in fiber_numbers] 
             save_tractography_file(
                 options.output_file_name + "_" + query_name + '.vtk',
                 tr,
