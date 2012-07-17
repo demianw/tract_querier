@@ -107,7 +107,12 @@ class RewritePreprocess(ast.NodeTransformer):
                 node
             )
         else:
-            return node
+            return ast.copy_location(
+                ast.Assign(
+                    targets=[self.visit(t) for t in node.targets],
+                    value=self.visit(node.value)
+                )
+            , node)
 
 
     def visit_AugAssign(self, node):
@@ -125,13 +130,26 @@ class RewritePreprocess(ast.NodeTransformer):
                 node
             )
         else:
-            return node
+            return ast.copy_location(
+                ast.AugAssign(
+                    target=self.visit(node.target),
+                    value=self.visit(node.value),
+                    op=node.op
+                )
+            , node)
 
     def visit_Name(self, node):
         return ast.copy_location(
             ast.Name(id=node.id.lower()),
             node
         )
+
+    def visit_Str(self, node):
+        return ast.copy_location(
+            ast.Str(s=node.s.lower()),
+            node
+        )
+
 
     def visit_Import(self, node):
         try:
