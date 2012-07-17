@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python -O
 from optparse import OptionParser
 import os
 import sys
@@ -85,7 +85,7 @@ def main():
     for i in xrange(len(fiber_cumulative_lengths) - 1):
         start = fiber_cumulative_lengths[i]
         end = fiber_cumulative_lengths[i + 1]
-        label_crossings = point_labels[start:end]
+        label_crossings = np.asanyarray(point_labels[start:end], dtype=int)
         bincount = np.bincount(label_crossings)
         percentages = bincount * 1. / bincount.sum()
         fibers_labels[i] = set(np.where(percentages >= (float(options.threshold) / 100.))[0])
@@ -117,10 +117,23 @@ def main():
 
 def save_tractography_file(filename, tractography, fiber_numbers):
     from tractographyGP import vtkInterface
+    from itertools import izip
+    import numpy as np
+
+    fiber_numbers = list(fiber_numbers)
 
     original_fibers = tractography.getOriginalFibers()
 
-    fibers_to_save = [original_fibers[i] for i in fiber_numbers]
+    fibers_to_analyze_for_outlier_rejection = [original_fibers[i] for i in fiber_numbers]
+
+    fiber_numbers_to_save, zscore_per_fiber = tract_querier.z_score_outlier_rejection(fibers_to_analyze_for_outlier_rejection)
+    zscore_per_fiber.sort()
+    print '\t', len(fiber_numbers_to_save)
+    fiber_numbers = [ fiber_numbers[i] for i in fiber_numbers_to_save]
+    fibers_to_save = [ original_fibers[i] for i in fiber_numbers]
+
+    if len(fibers_to_save) == 0:
+        return
 
     fibers_data_to_save = {}
     for key, data in tractography.getOriginalFibersData().items():
@@ -131,6 +144,9 @@ def save_tractography_file(filename, tractography, fiber_numbers):
     if 'ActiveVectors' not in fibers_data_to_save and 'Vectors_' in fibers_data_to_save:
         fibers_data_to_save['ActiveVectors'] = 'Vectors_'
 
+    z_scores_fiber_data = [np.repeat(z_score, len(fiber))[:, None] for z_score, fiber in izip(zscore_per_fiber, fibers_to_save)]
+    fibers_data_to_save['z_score'] = z_scores_fiber_data
+
     vtkInterface.writeLinesToVtkPolyData(
         filename,
         fibers_to_save,
@@ -140,4 +156,5 @@ def save_tractography_file(filename, tractography, fiber_numbers):
 
 
 if __name__ == "__main__":
+    main()
     main()
