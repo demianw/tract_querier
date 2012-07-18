@@ -52,6 +52,7 @@ if __name__ == "__main__":
              ],
             scripts=[
                 'scripts/tract_querier',
+                'scripts/tract_outlier_rejection',
               ],
             **(configuration().todict())
     )

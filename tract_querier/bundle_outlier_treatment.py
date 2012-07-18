@@ -1,6 +1,5 @@
 import numpy as np
 from scipy import ndimage
-import ipdb
 
 def hausdorff_distance(fiber1, fiber2, **kwargs):
     return np.sqrt(((fiber1[None,...] - fiber2[:, None, ...]) ** 2).sum(-1).max())

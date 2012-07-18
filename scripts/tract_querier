@@ -20,6 +20,11 @@ def main():
                     help="Minimum percentage of the fiber to be considered inside of the label default %default %")
     parser.add_option('--length_threshold', dest='length_threshold', default=0,
                     help="Minimum length of the fiber to be considered (in mm) default %default %")
+    parser.add_option('--zscore_threshold', dest='zscore_threshold', default=0,
+                    help="Outlier rejection threshold default %default %")
+
+    parser.add_option('--query_selection', dest='query_selection', default='',
+                    help="Query selection %default %")
 
 
     (options, args) = parser.parse_args()
@@ -103,7 +108,12 @@ def main():
 
 
     query_names = evaluated_queries.keys()
+    if options.query_selection != '':
+        selected_queries = set(options.query_selection.lower().split(','))
+        query_names = list(set(query_names) & set(selected_queries))
+
     query_names.sort()
+
 
     for query_name in query_names:
         fiber_numbers = evaluated_queries[query_name]
@@ -112,10 +122,11 @@ def main():
             save_tractography_file(
                 options.output_file_name + "_" + query_name + '.vtk',
                 tr,
-                fiber_numbers
+                fiber_numbers,
+                zscore_threshold=float(options.zscore_threshold)
             )
 
-def save_tractography_file(filename, tractography, fiber_numbers):
+def save_tractography_file(filename, tractography, fiber_numbers, zscore_threshold=3):
     from tractographyGP import vtkInterface
     from itertools import izip
     import numpy as np
@@ -126,10 +137,13 @@ def save_tractography_file(filename, tractography, fiber_numbers):
 
     fibers_to_analyze_for_outlier_rejection = [original_fibers[i] for i in fiber_numbers]
 
-    fiber_numbers_to_save, zscore_per_fiber = tract_querier.z_score_outlier_rejection(fibers_to_analyze_for_outlier_rejection)
-    zscore_per_fiber.sort()
-    print '\t', len(fiber_numbers_to_save)
-    fiber_numbers = [ fiber_numbers[i] for i in fiber_numbers_to_save]
+    if zscore_threshold > 0:
+        fiber_numbers_to_save, zscore_per_fiber = tract_querier.z_score_outlier_rejection(fibers_to_analyze_for_outlier_rejection, z_score_reject=zscore_threshold)
+        zscore_per_fiber.sort()
+        print '\t', len(fiber_numbers_to_save)
+        fiber_numbers = [ fiber_numbers[i] for i in fiber_numbers_to_save]
+    else:
+        fiber_numbers = fibers_to_analyze_for_outlier_rejection
     fibers_to_save = [ original_fibers[i] for i in fiber_numbers]
 
     if len(fibers_to_save) == 0:
@@ -144,8 +158,9 @@ def save_tractography_file(filename, tractography, fiber_numbers):
     if 'ActiveVectors' not in fibers_data_to_save and 'Vectors_' in fibers_data_to_save:
         fibers_data_to_save['ActiveVectors'] = 'Vectors_'
 
-    z_scores_fiber_data = [np.repeat(z_score, len(fiber))[:, None] for z_score, fiber in izip(zscore_per_fiber, fibers_to_save)]
-    fibers_data_to_save['z_score'] = z_scores_fiber_data
+    if zscore_threshold > 0:
+        z_scores_fiber_data = [np.repeat(z_score, len(fiber))[:, None] for z_score, fiber in izip(zscore_per_fiber, fibers_to_save)]
+        fibers_data_to_save['z_score'] = z_scores_fiber_data
 
     vtkInterface.writeLinesToVtkPolyData(
         filename,
@@ -156,5 +171,4 @@ def save_tractography_file(filename, tractography, fiber_numbers):
 
 
 if __name__ == "__main__":
-    main()
     main()
