@@ -77,20 +77,6 @@ def test_not_in():
         query_evaluator.evaluated_queries_labels['A'] == set((0,))
     ))
 
-def test_not_in_prescedence():
-    query_evaluator1 = query_processor.EvaluateQueries(fibers_labels, labels_fibers)
-    query_evaluator1.visit(ast.parse("A=((0 or 1) not in 1) or 0"))
-    query_evaluator2 = query_processor.EvaluateQueries(fibers_labels, labels_fibers)
-    query_evaluator2.visit(ast.parse("A=0 or 1 not in 1 or 0"))
-
-    assert((
-        'A' in query_evaluator1.queries_to_save and
-        query_evaluator1.queries_to_save == query_evaluator2.queries_to_save and
-        query_evaluator1.evaluated_queries_fibers['A'] == query_evaluator2.evaluated_queries_fibers['A'] and
-        query_evaluator1.evaluated_queries_labels['A'] == query_evaluator2.evaluated_queries_labels['A'] 
-    ))
-
-
 def test_only_sign():
     query_evaluator = query_processor.EvaluateQueries(fibers_labels, labels_fibers)
     query_evaluator.visit(ast.parse("A=~0"))
