@@ -92,6 +92,17 @@ class RewritePreprocess(ast.NodeTransformer):
     rewrite_left = RewriteSide(left=True)
     rewrite_right = RewriteSide(left=False)
 
+    def visit_Attribute(self, node):
+        node_left_right = ast.Module([
+            self.rewrite_left.visit(deepcopy(node)),
+            self.rewrite_right.visit(deepcopy(node))
+        ])
+
+        return ast.copy_location(
+            self.visit(node_left_right),
+            node
+        )
+
     def visit_Assign(self, node):
         if isinstance(node.targets[0], ast.Attribute):
             if node.targets[0].attr != 'side':
@@ -234,7 +245,7 @@ class EvaluateQueries(ast.NodeVisitor):
         if isinstance(node.op, ast.Add):
             return fibers_left | fibers_right, label_left | label_right
         if isinstance(node.op, ast.Mult):
-            return fibers_left & fibers_right, label_left.union & label_right
+            return fibers_left & fibers_right, label_left | label_right
         if isinstance(node.op, ast.Sub):
             return fibers_left.difference(fibers_right), label_left.difference(label_right)
         else:
@@ -265,7 +276,7 @@ class EvaluateQueries(ast.NodeVisitor):
         return matching_fibers, matching_labels
 
     def visit_Call(self, node):
-        if not (
+        if (
             isinstance(node.func, ast.Name) and
             node.func.id.lower() == 'only' and
             len(node.args) == 1 and
@@ -273,10 +284,20 @@ class EvaluateQueries(ast.NodeVisitor):
             node.keywords == [] and
             node.kwargs is None
         ):
+            fibers, labels = self.visit(node.args[0])
+            return set(fiber for fiber in fibers if self.fibers_labels[fiber].issubset(labels)), labels
+        elif (
+            isinstance(node.func, ast.Name) and
+            node.func.id.lower() == 'save' and
+            len(node.args) == 1 and isinstance(node.args, ast.Str) and
+            node.starargs is None and
+            node.keywords == [] and
+            node.kwargs is None
+        ):
+            self.queries_to_save.add(node.args[0].s)
+            pass
+        else:
             raise TractQuerierSyntaxError("Invalid query in line %d" %node.lineno)
-
-        fibers, labels = self.visit(node.args[0])
-        return set(fiber for fiber in fibers if self.fibers_labels[fiber].issubset(labels)), labels
 
 
     def visit_Assign(self, node):
@@ -306,6 +327,17 @@ class EvaluateQueries(ast.NodeVisitor):
         else:
             fibers = set()
         return fibers, set((node.n,))
+
+    def visit_Expr(self, node):
+        if isinstance(node.value, ast.Name):
+            if node.value.id in self.evaluated_queries_fibers.keys():
+                self.queries_to_save.add(node.value.id)
+            else:
+                raise TractQuerierSyntaxError("Query %s not known line: %d" % (node.value.id, node.lineno))
+        elif isinstance(node.value, ast.Module):
+            self.visit(node.value)
+        else:
+            raise TractQuerierSyntaxError("Invalid expression at line: %d" % (node.lineno))
 
     def generic_visit(self, node):
         raise TractQuerierSyntaxError("Invalid Operation %s line: %d" % (type(node), node.lineno) )
@@ -363,5 +395,108 @@ def labels_for_fibers(fibers_labels):
             else:
                 labels_fibers[l] = set((i,))
     return labels_fibers
-    return labels_fibers
-    return labels_fibers
+
+import code
+import ast
+import readline
+import fnmatch
+import os
+import atexit
+
+class HistoryConsole(code.InteractiveConsole):
+    def __init__(self, locals=None, filename="<console>",
+        histfile=os.path.expanduser("~/.wmql-history")):
+        code.InteractiveConsole.__init__(self, locals, filename)
+        self.init_history(histfile)
+
+    def init_history(self, histfile):
+        readline.parse_and_bind("tab: complete")
+        if hasattr(readline, "read_history_file"):
+            try:
+                readline.read_history_file(histfile)
+            except IOError:
+                pass
+            atexit.register(self.save_history, histfile)
+
+    def save_history(self, histfile):
+        readline.write_history_file(histfile)
+
+
+class SaveQueries(ast.NodeVisitor):
+    def __init__(self, save_query_callback, querier):
+        self.save_query_callback = save_query_callback
+        self.querier = querier
+
+    def visit_Assign(self, node):
+        for target in node.targets:
+            ast.dump(target)
+            if isinstance(target, ast.Name):
+                query_name = target.id.lower()
+                self.save_query_callback(
+                    query_name,
+                    self.querier.evaluated_queries_fibers[query_name]
+                )
+
+    def visit_Name(self, node):
+            query_name = node.id.lower()
+            self.save_query_callback(
+                query_name,
+                self.querier.evaluated_queries_fibers[query_name]
+            )
+
+    def visit_Expr(self, node):
+        self.visit(node.value)
+
+    def visit_Module(self, node):
+        for line in node.body:
+            self.visit(line)
+
+
+class TractQuerierShell(HistoryConsole):
+    def __init__(self, fibers_labels, labels_fibers, initial_body=None, tractography=None, save_query_callback=None):
+        self.tractography = tractography
+        self.querier = EvaluateQueries(fibers_labels, labels_fibers)
+        self.save_query_callback = save_query_callback
+        self.save_query_visitor = SaveQueries(self.save_query_callback, self.querier)
+
+
+        if initial_body is not None:
+            if isinstance(initial_body, str):
+                initial_body = queries_preprocess(initial_body, filename='Shell')
+
+            if isinstance(initial_body, list):
+                self.querier.visit(ast.Module(initial_body))
+            else:
+                self.querier.visit(initial_body)
+
+
+    def push(self, line):
+        try:
+            if line.strip().startswith('%'):
+                pattern = line.split(' ')
+                if pattern[0] == '%dir':
+                    k = self.querier.evaluated_queries_fibers.keys()
+                    if len(pattern) == 1:
+                        keys = k
+                        keys.sort()
+                    elif len(pattern) > 1:
+                        keys = []
+                        for p in pattern[1:]:
+                            keys_found = fnmatch.filter(k, p)
+                            keys_found.sort()
+                            keys += keys_found
+                    for k in keys:
+                        print k
+                else:
+                    raise TractQuerierSyntaxError('Invalid dir pattern')
+            else:
+                body = queries_preprocess(line, filename='shell')
+                body = ast.Module(body=body)
+                self.querier.visit(body)
+                self.save_query_visitor.visit(body)
+
+        except SyntaxError, e:
+            print e.value
+        except TractQuerierSyntaxError, e:
+            print e.value
+

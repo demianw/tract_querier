@@ -1,5 +1,6 @@
 import numpy as np
-from scipy import ndimage
+
+from tract_querier.tensor_covariance import fiberSegments
 
 def hausdorff_distance(fiber1, fiber2, **kwargs):
     return np.sqrt(((fiber1[None,...] - fiber2[:, None, ...]) ** 2).sum(-1).max())
@@ -52,78 +53,44 @@ def bundle_normed_distances(fibers, inner_product=wassermann_inner_product, **kw
     return distance_matrix.round(6) ** .5
 
 def z_score_outlier_rejection(fibers, z_score_reject=4, **kwargs):
-    inner_products = inner_product_matrix(fibers, **kwargs)
+    #inner_products_whole_bundle = inner_product_matrix(fibers, **kwargs)
 
-    inner_products_to_whole_bundle = inner_products.mean(1)
+    #inner_products_to_whole_bundle = inner_products_whole_bundle.mean(1)
 
-    whole_bundle_squared_norm = inner_products_to_whole_bundle.sum()
+    #whole_bundle_squared_norm = inner_products_to_whole_bundle.sum()
 
-    distances_to_whole_bundle = whole_bundle_squared_norm + inner_products.diagonal() - 2 * inner_products_to_whole_bundle
+    #distances_to_whole_bundle = whole_bundle_squared_norm + inner_products_whole_bundle.diagonal() - 2 * inner_products_to_whole_bundle
 
+    import ipdb; ipdb.set_trace()
+
+    fiber_gps = [ fiberSegments.FiberSegmentGaussianProcess(f, thickness=4) for f in fibers ]
+    whole_bundle_gp = fiberSegments.FiberBundleSegmentGaussianProcess(fiber_gps)
+
+    inner_products_whole_bundle = np.array([whole_bundle_gp * f for f in fiber_gps])
+    squared_norms = np.array([f * f for f in fiber_gps])
+
+    #prototype_tract_index = inner_products_whole_bundle.argmax()
+    #prototype_tract_squared_norm = squared_norms[prototype_tract_index]
+    whole_bundle_squared_norm = whole_bundle_gp * whole_bundle_gp
+
+    distances_to_whole_bundle = whole_bundle_squared_norm + squared_norms - 2 * inner_products_whole_bundle
+    #angles = inner_products_whole_bundle / ((whole_bundle_squared_norm * squared_norms) ** .5)
+    #inner_products_prototype_tract = np.array([fiber_gps[prototype_tract_index] * f for f in fiber_gps])
+
+    #distances_prototype_tract = np.sqrt(squared_norms + prototype_tract_squared_norm - 2 * inner_products_prototype_tract)
+
+    measure = distances_to_whole_bundle + 1e-10
     #Estimation of the gamma function parameters
-    s = np.log(distances_to_whole_bundle.mean()) - np.log(distances_to_whole_bundle).mean()
+    s = np.log(measure.mean()) - np.log(measure).mean()
     k = (3 - s + np.sqrt((s-3) ** 2 + 24 * s) ) / (12 * s)
-    theta = distances_to_whole_bundle.mean() / k
+    theta = measure.mean() / k
 
     mean = k * theta
     std = np.sqrt(k) * theta
 
-    z_score = (distances_to_whole_bundle - mean) / std
+    centered_measure = measure - mean
+    z_score = centered_measure / std
 
-    return np.where(np.abs(z_score) < z_score_reject)[0], np.abs(z_score)
-
-
-def mean_density_map(fibers, sigma=4, resolution=4):
-    points = np.vstack(fibers)
-    sigma_ = sigma / resolution
-    points_max = np.ceil(points.max(0) + sigma)
-    points_min = np.floor(points.min(0) - sigma)
-    box_dimensions = np.ceil((np.ceil(points_max) - np.floor(points_min)) / resolution).astype(int)
-    im = np.empty(box_dimensions)
-    mean_im = np.empty(box_dimensions)
-
-    for i,f in enumerate(fibers):
-        im[:] = 0
-        fiber_ijk = ((f - points_min)/resolution).round().astype(int)
-        im[ tuple(fiber_ijk.T)] = 1
-        ndimage.gaussian_filter(im, sigma_, output=im)
-        mean_im += im
-
-    return mean_im
-
-def bundle_z_scores(fibers, sigma=4, resolution=4):
-    points = np.vstack(fibers)
-    sigma_ = sigma / resolution
-    points_max = np.ceil(points.max(0) + sigma)
-    points_min = np.floor(points.min(0) - sigma)
-    box_dimensions = np.ceil((np.ceil(points_max) - np.floor(points_min)) / resolution).astype(int)
-    im = np.empty(box_dimensions)
-    mean_im = np.empty(box_dimensions)
-
-    fibers_ijk = []
-    for i,f in enumerate(fibers):
-        im[:] = 0
-        fibers_ijk.append(((f - points_min)/resolution).round().astype(int))
-        im[ tuple(fibers_ijk[-1].T)] = 1
-        ndimage.gaussian_filter(im, sigma_, output=im)
-        mean_im += im
-
-    z_scores = np.empty(len(fibers))
-    mean_im_norm = mean_im.sum()
-    for i,f in enumerate(fibers_ijk):
-        im[:] = 0
-        im[ tuple(f.T)] = 1
-        ndimage.gaussian_filter(im, sigma_, output=im)
-        z_scores[i] = (mean_im * im).sum() / np.sqrt(mean_im_norm * im.sum())
-
-    z_scores = (z_scores - z_scores.mean()) / z_scores.std()
-
-    return z_scores
-
-def bundle_without_outliers(fibers, sigma=4, resolution=4, z_score=3):
-    z_scores = bundle_z_scores(fibers, sigma=sigma, resolution=resolution)
-    indices_to_keep = (z_scores > -z_score).nonzero()[0]
-
-    return indices_to_keep, [fibers[i] for i in indices_to_keep]
+    return np.where(z_score < z_score_reject)[0], z_score
 
 
