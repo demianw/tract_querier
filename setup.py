@@ -22,7 +22,6 @@ if __name__ == "__main__":
     setup(
           name=DISTNAME,
           maintainer=MAINTAINER,
-          include_package_data=False,
           maintainer_email=MAINTAINER_EMAIL,
           description=DESCRIPTION,
           license=LICENSE,
@@ -30,12 +29,9 @@ if __name__ == "__main__":
           version=VERSION,
           download_url=DOWNLOAD_URL,
           long_description=LONG_DESCRIPTION,
-          zip_safe=False,  # the package can run out of an .egg file
           classifiers=[
               'Intended Audience :: Science/Research',
-              'Intended Audience :: Developers',
               'Programming Language :: Python',
-              'Topic :: Software Development',
               'Topic :: Scientific/Engineering',
               'Operating System :: Microsoft :: Windows',
               'Operating System :: POSIX',
