@@ -2,7 +2,6 @@
 from optparse import OptionParser
 import os
 import sys
-import tract_querier
 
 
 
@@ -40,9 +39,11 @@ def main():
     options.length_threshold = float(options.length_threshold)
 
     global np
+    global tract_querier
     import numpy as np
     import nibabel
 
+    import tract_querier
     from tractographyGP import tractography
 
     print "Loading files"
@@ -108,11 +109,18 @@ def main():
             lambda query_name, query_result:
                 save_query(query_name, tr, options, {query_name: query_result})
         )
-        interactive_shell = tract_querier.TractQuerierShell(
+        #interactive_shell = tract_querier.TractQuerierShell(
+        #    fibers_labels, labels_fibers,
+        #    initial_body=file(options.queries_string).read(),  save_query_callback=query_save
+        #)
+        #interactive_shell.interact("Entering WMQL shell")
+        interactive_shell = tract_querier.TractQuerierCmd(
             fibers_labels, labels_fibers,
             initial_body=file(options.queries_string).read(),  save_query_callback=query_save
+
         )
-        interactive_shell.interact("Entering WMQL shell")
+
+        interactive_shell.cmdloop()
 
 def save_query(query_name, tractography, options, evaluated_queries):
     fiber_numbers = evaluated_queries[query_name]
