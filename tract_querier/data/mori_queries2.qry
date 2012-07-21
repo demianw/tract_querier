@@ -1,0 +1,32 @@
+import JHU_MNI_SS_WMPM_Type_II.qry
+
+
+HEMISPHERE_left = not '.*_left'
+HEMISPHERE_right = not '.*_right'
+
+frontal_%side = not SUPERIOR_FRONTAL_GYRUS_%side + MIDDLE_FRONTAL_GYRUS_%side + INFERIOR_FRONTAL_GYRUS_%side +\
+                   MIDDLE_FRONTO_ORBITAL_GYRUS_%side + LATERAL_FRONTO_ORBITAL_GYRUS_%side
+occipital_%side = not SUPERIOR_OCCIPITAL_GYRUS_%side + INFERIOR_OCCIPITAL_GYRUS_%side + MIDDLE_OCCIPITAL_GYRUS_%side
+temporal_%side = not SUPERIOR_TEMPORAL_GYRUS_%side + INFERIOR_TEMPORAL_GYRUS_%side + MIDDLE_TEMPORAL_GYRUS_%side
+
+
+corpus_callosum_%side = not Genu_of_corpus_callosum_%side + Body_of_corpus_callosum_%side + Splenium_of_corpus_callosum_%side
+
+corpus_callosum = not corpus_callosum_left + corpus_callosum_right - THALAMUS_right\
+   - THALAMUS_left - PUTAMEN_right - PUTAMEN_left - GLOBUS_PALLIDUS_right - GLOBUS_PALLIDUS_left\
+   - PONS_right - PONS_left - CEREBELLUM_right - CEREBELLUM_left \
+   - Fornix_cres_Stria_terminalis_left - Fornix_column_and_body_left - Fornix_cres_Stria_terminalis_right - Fornix_column_and_body_right
+
+
+CST_%side = Cerebral_peduncle_%side * PRECENTRAL_GYRUS_%side - HEMISPHERE_%opposite
+          #* Superior_corona_radiata_%side * Posterior_limb_of_internal_capsule_%side\
+          #- HEMISPHERE_%opposite - THALAMUS_%side - CEREBELLUM_%side - Cerebral_peduncle_%side
+
+IFO_%side = frontal_%side*occipital_%side*Sagittal_stratum_%side - corpus_callosum
+CG_%side = CINGULATE_GYRUS_%side + Cingulum_cingulate_gyrus_%side + Cingulum_hippocampus_%side - corpus_callosum - HEMISPHERE_%opposite
+
+ILF_left =(18+19+20)*(12+15+16)*46 - (frontal_left + CEREBELLUM_left + THALAMUS_left) - corpus_callosum
+ILF_right =(83+84+85)*(79+80+81)*111 - (frontal_right + CEREBELLUM_right + THALAMUS_right) - corpus_callosum
+UNC_left = frontal_left*temporal_left - (IFO_left+61+28) - corpus_callosum - HEMISPHERE_right
+UNC_right = frontal_right*temporal_right - (IFO_right+126+93) - corpus_callosum - HEMISPHERE_left
+
