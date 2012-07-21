@@ -16,14 +16,6 @@ def configuration(parent_package='', top_path=None):
     config = Configuration(None, parent_package, top_path)
     config.set_options(quiet=True)
     config.add_subpackage('tract_querier')
-    config.add_data_files(
-        ('queries',[
-        'data/FreeSurfer.qry',
-        'data/JHU_MNI_SS_WMPM_Type-II.qry',
-        'data/freesurfer_queries.qry',
-        'data/mori_queries.qry',
-        ])
-    )
     return config
 
 if __name__ == "__main__":
