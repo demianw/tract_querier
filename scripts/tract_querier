@@ -84,16 +84,19 @@ def main():
     affine_ras_2_ijk = np.linalg.inv(labels_nii.get_affine())
     fibers = tr.getFibersToProcess()
 
-    fibers_labels, labels_fibers = tract_querier.compute_fiber_label_indices(
-        affine_ras_2_ijk, img, fibers,
-        options.length_threshold, options.threshold
-    )
+    crossing_fibers_labels, crossing_labels_fibers, ending_fibers_labels, ending_labels_fibers =\
+            tract_querier.compute_fiber_label_indices(
+                affine_ras_2_ijk, img, fibers,
+                options.length_threshold, options.threshold
+            )
 
     if not options.interactive:
         print "Computing queries"
         evaluated_queries = tract_querier.eval_queries(
-            labels_fibers,
-            fibers_labels,
+            crossing_labels_fibers,
+            crossing_fibers_labels,
+            ending_labels_fibers,
+            ending_fibers_labels,
             query_file_body
         )
 
@@ -113,7 +116,8 @@ def main():
         )
 
         interactive_shell = tract_querier.TractQuerierCmd(
-            fibers_labels, labels_fibers,
+            crossing_fibers_labels, crossing_labels_fibers,
+            ending_fibers_labels, ending_labels_fibers,
             initial_body=file(options.queries_string).read(),
             save_query_callback=query_save
         )

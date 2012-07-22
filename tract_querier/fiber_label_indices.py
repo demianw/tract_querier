@@ -40,7 +40,7 @@ def compute_label_extremes(image, affine_ras_2_ijk):
     return label_extremes
 
 
-def compute_label_crossings(i, fiber_cumulative_lengths, point_labels, threshold):
+def compute_label_crossings(fiber_cumulative_lengths, point_labels, threshold):
     fibers_labels = {}
     for i in xrange(len(fiber_cumulative_lengths) - 1):
         start = fiber_cumulative_lengths[i]
@@ -49,6 +49,23 @@ def compute_label_crossings(i, fiber_cumulative_lengths, point_labels, threshold
         bincount = np.bincount(label_crossings)
         percentages = bincount * 1. / bincount.sum()
         fibers_labels[i] = set(np.where(percentages >= (threshold / 100.))[0])
+
+    labels_fibers = {}
+    for i, f in fibers_labels.items():
+        for l in f:
+            if l in labels_fibers:
+                labels_fibers[l].add(i)
+            else:
+                labels_fibers[l] = set((i,))
+    return fibers_labels, labels_fibers
+
+
+def compute_label_endings(fiber_cumulative_lengths, point_labels):
+    fibers_labels = {}
+    for i in xrange(len(fiber_cumulative_lengths) - 1):
+        start = fiber_cumulative_lengths[i]
+        end = fiber_cumulative_lengths[i + 1]
+        fibers_labels[i] = set((int(point_labels[start]), int(point_labels[end - 1])))
 
     labels_fibers = {}
     for i, f in fibers_labels.items():
@@ -79,5 +96,11 @@ def compute_fiber_label_indices(affine_ras_2_ijk, img, fibers, length_threshold,
     point_labels = img[tuple(all_points_ijk_rounded.T)]
     fiber_cumulative_lengths = np.cumsum([0] + [len(f) for f in fibers])
 
-    fibers_labels, labels_fibers = compute_label_crossings(i, fiber_cumulative_lengths, point_labels, crossing_threshold)
-    return fibers_labels, labels_fibers
+    crossing_fibers_labels, crossing_labels_fibers = compute_label_crossings(
+        fiber_cumulative_lengths, point_labels, crossing_threshold
+    )
+
+    ending_fibers_labels, ending_labels_fibers = compute_label_endings(
+        fiber_cumulative_lengths, point_labels
+    )
+    return crossing_fibers_labels, crossing_labels_fibers, ending_fibers_labels, ending_labels_fibers

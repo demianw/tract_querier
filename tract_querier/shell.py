@@ -1,7 +1,7 @@
 import ast
 import cmd
 import fnmatch
-from query_processor import EvaluateQueries, queries_preprocess, TractQuerierSyntaxError
+from query_processor import EvaluateQueries, queries_preprocess, TractQuerierSyntaxError, keywords
 
 
 class SaveQueries(ast.NodeVisitor):
@@ -35,12 +35,19 @@ class SaveQueries(ast.NodeVisitor):
 
 
 class TractQuerierCmd(cmd.Cmd):
-    def __init__(self, fibers_labels, labels_fibers, initial_body=None, tractography=None, save_query_callback=None):
+    def __init__(self,
+                 crossing_fibers_labels, crossing_labels_fibers,
+                 ending_fibers_labels, ending_labels_fibers,
+                 initial_body=None, tractography=None, save_query_callback=None
+                ):
         cmd.Cmd.__init__(self, 'Tab')
         self.prompt = '[wmql] '
 
         self.tractography = tractography
-        self.querier = EvaluateQueries(fibers_labels, labels_fibers)
+        self.querier = EvaluateQueries(
+            crossing_fibers_labels, crossing_labels_fibers,
+            ending_fibers_labels, ending_labels_fibers
+        )
         self.save_query_callback = save_query_callback
         self.save_query_visitor = SaveQueries(self.save_query_callback, self.querier)
 
@@ -95,7 +102,7 @@ class TractQuerierCmd(cmd.Cmd):
                 if query.endswith('_left')
             ],
             self.querier.evaluated_queries_fibers.keys()
-        )
+        ) + keywords
         options = [candidate for candidate in candidates if candidate.startswith(text)]
         return options
 

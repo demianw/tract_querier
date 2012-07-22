@@ -4,6 +4,16 @@ from itertools import takewhile
 import re
 from collections import Counter
 
+
+keywords = [
+    'and',
+    'or',
+    'not in',
+    'not',
+    'only',
+    'end_points_in'
+]
+
 class TractQuerierSyntaxError(ValueError):
     def __init__(self, value):
         self.value = value
@@ -192,9 +202,16 @@ class RewritePreprocess(ast.NodeTransformer):
 
 
 class EvaluateQueries(ast.NodeVisitor):
-    def __init__(self, fibers_labels, labels_fibers):
-        self.fibers_labels = fibers_labels
-        self.labels_fibers = labels_fibers
+    def __init__(self,
+                 crossing_fibers_labels, crossing_labels_fibers,
+                 ending_fibers_labels, ending_labels_fibers
+                ):
+        self.crossing_fibers_labels = crossing_fibers_labels
+        self.crossing_labels_fibers = crossing_labels_fibers
+
+        self.ending_fibers_labels = ending_fibers_labels
+        self.ending_labels_fibers = ending_labels_fibers
+
         self.evaluated_queries_fibers = {}
         self.evaluated_queries_labels = {}
         self.queries_to_save = set()
@@ -254,13 +271,13 @@ class EvaluateQueries(ast.NodeVisitor):
     def visit_UnaryOp(self, node):
         fibers, labels = self.visit(node.operand)
         if isinstance(node.op, ast.Invert):
-            return set(fiber for fiber in fibers if self.fibers_labels[fiber].issubset(labels)), labels
+            return set(fiber for fiber in fibers if self.crossing_fibers_labels[fiber].issubset(labels)), labels
         elif isinstance(node.op, ast.UAdd):
             return fibers, labels
         elif isinstance(node.op, ast.USub) or isinstance(node.op, ast.Not):
-            all_labels = set(self.labels_fibers.keys())
+            all_labels = set(self.crossing_labels_fibers.keys())
             all_labels.difference_update(labels)
-            fibers = set().union(*tuple((self.labels_fibers[label] for label in all_labels)))
+            fibers = set().union(*tuple((self.crossing_labels_fibers[label] for label in all_labels)))
             return fibers, all_labels
         else:
             raise TractQuerierSyntaxError("Syntax error in query line %d" % node.lineno)
@@ -276,28 +293,38 @@ class EvaluateQueries(ast.NodeVisitor):
         return matching_fibers, matching_labels
 
     def visit_Call(self, node):
-        if (
+
+        if (#Single string argument function
             isinstance(node.func, ast.Name) and
-            node.func.id.lower() == 'only' and
+            len(node.args) == 1 and
             len(node.args) == 1 and
             node.starargs is None and
             node.keywords == [] and
             node.kwargs is None
         ):
-            fibers, labels = self.visit(node.args[0])
-            return set(fiber for fiber in fibers if self.fibers_labels[fiber].issubset(labels)), labels
-        elif (
-            isinstance(node.func, ast.Name) and
-            node.func.id.lower() == 'save' and
-            len(node.args) == 1 and isinstance(node.args, ast.Str) and
-            node.starargs is None and
-            node.keywords == [] and
-            node.kwargs is None
-        ):
-            self.queries_to_save.add(node.args[0].s)
-            pass
-        else:
-            raise TractQuerierSyntaxError("Invalid query in line %d" %node.lineno)
+            if (node.func.id.lower() == 'only' ):
+                fibers, labels = self.visit(node.args[0])
+                return (
+                    set(
+                        fiber for fiber in fibers
+                        if self.crossing_fibers_labels[fiber].issubset(labels)
+                    ), labels
+                )
+            elif (node.func.id.lower() == 'end_points_in'):
+                fibers, labels = self.visit(node.args[0])
+                fibers = set(
+                        fiber for fiber in fibers
+                        if (self.ending_fibers_labels[fiber].intersection(labels))
+                    )
+                labels = set().union(
+                    *tuple((self.crossing_fibers_labels[fiber] for fiber in fibers))
+                )
+                return fibers, labels
+            elif (node.func.id.lower() == 'save' and isinstance(node.args, ast.Str)):
+                self.queries_to_save.add(node.args[0].s)
+                return
+
+        raise TractQuerierSyntaxError("Invalid query in line %d" %node.lineno)
 
 
     def visit_Assign(self, node):
@@ -322,8 +349,8 @@ class EvaluateQueries(ast.NodeVisitor):
             raise TractQuerierSyntaxError("Invalid query name in line %d: %s" % (node.lineno, node.id))
 
     def visit_Num(self, node):
-        if node.n in self.labels_fibers:
-            fibers = self.labels_fibers[node.n]
+        if node.n in self.crossing_labels_fibers:
+            fibers = self.crossing_labels_fibers[node.n]
         else:
             fibers = set()
         return fibers, set((node.n,))
@@ -372,8 +399,15 @@ def queries_preprocess(query_file, filename='<unknown>'):
     return preprocessed_module.body
 
 
-def eval_queries(labels_fibers, fibers_labels, query_file_body):
-    eq = EvaluateQueries(fibers_labels, labels_fibers)
+def eval_queries(
+    crossing_labels_fibers, crossing_fibers_labels,
+    ending_labels_fibers, ending_fibers_labels,
+    query_file_body
+):
+    eq = EvaluateQueries(
+        crossing_fibers_labels, crossing_labels_fibers,
+        ending_fibers_labels, ending_labels_fibers
+    )
     if isinstance(query_file_body, list):
         eq.visit(ast.Module(query_file_body))
     else:
@@ -383,17 +417,17 @@ def eval_queries(labels_fibers, fibers_labels, query_file_body):
 
 
 def queries_syntax_check(query_file_body):
-    eval_queries({}, {}, query_file_body)
+    eval_queries({}, {}, {}, {}, query_file_body)
 
 
-def labels_for_fibers(fibers_labels):
-    labels_fibers = {}
-    for i, f in fibers_labels.items():
+def labels_for_fibers(crossing_fibers_labels):
+    crossing_labels_fibers = {}
+    for i, f in crossing_fibers_labels.items():
         for l in f:
-            if l in labels_fibers:
-                labels_fibers[l].add(i)
+            if l in crossing_labels_fibers:
+                crossing_labels_fibers[l].add(i)
             else:
-                labels_fibers[l] = set((i,))
-    return labels_fibers
+                crossing_labels_fibers[l] = set((i,))
+    return crossing_labels_fibers
 
 
