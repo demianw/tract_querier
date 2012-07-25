@@ -1,0 +1,3 @@
+[submodule "tract_querier/tensor_covariance"]
+	path = tract_querier/tensor_covariance
+	url = /Users/demian/sources/scratchpad/tensor_covariance
