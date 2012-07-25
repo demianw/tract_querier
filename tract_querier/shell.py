@@ -26,7 +26,7 @@ class SaveQueries(ast.NodeVisitor):
     def visit_Expr(self, node):
         value = node.value
         if isinstance(value, ast.Name):
-            query_name = node.id.lower()
+            query_name = node.value.id.lower()
             self.save_query_callback(
                 query_name,
                 self.querier.evaluated_queries_fibers[query_name]
