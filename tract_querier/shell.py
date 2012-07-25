@@ -9,6 +9,9 @@ class SaveQueries(ast.NodeVisitor):
         self.save_query_callback = save_query_callback
         self.querier = querier
 
+    def visit_AugAssign(self, node):
+        pass
+
     def visit_Assign(self, node):
         for target in node.targets:
             ast.dump(target)
@@ -19,15 +22,18 @@ class SaveQueries(ast.NodeVisitor):
                     self.querier.evaluated_queries_fibers[query_name]
                 )
 
-    def visit_Name(self, node):
+
+    def visit_Expr(self, node):
+        value = node.value
+        if isinstance(value, ast.Name):
             query_name = node.id.lower()
             self.save_query_callback(
                 query_name,
                 self.querier.evaluated_queries_fibers[query_name]
             )
+        else:
+            self.visit(value)
 
-    def visit_Expr(self, node):
-        self.visit(node.value)
 
     def visit_Module(self, node):
         for line in node.body:
@@ -38,11 +44,12 @@ class TractQuerierCmd(cmd.Cmd):
     def __init__(self,
                  crossing_fibers_labels, crossing_labels_fibers,
                  ending_fibers_labels, ending_labels_fibers,
-                 initial_body=None, tractography=None, save_query_callback=None
+                 initial_body=None, tractography=None, save_query_callback=None,
+                 include_folders=['.']
                 ):
         cmd.Cmd.__init__(self, 'Tab')
         self.prompt = '[wmql] '
-
+        self.include_folders = include_folders
         self.tractography = tractography
         self.querier = EvaluateQueries(
             crossing_fibers_labels, crossing_labels_fibers,
@@ -53,7 +60,10 @@ class TractQuerierCmd(cmd.Cmd):
 
         if initial_body is not None:
             if isinstance(initial_body, str):
-                initial_body = queries_preprocess(initial_body, filename='Shell')
+                initial_body = queries_preprocess(
+                    initial_body,
+                    filename='Shell', include_folders=self.include_folders
+                )
 
             if isinstance(initial_body, list):
                 self.querier.visit(ast.Module(initial_body))
@@ -65,7 +75,7 @@ class TractQuerierCmd(cmd.Cmd):
         if patterns == '':
             patterns = '*'
         patterns = patterns.split(' ')
-        k = self.querier.evaluated_queries_fibers.keys()
+        k = self.names()
         keys = []
         if len(patterns) > 0:
             for p in patterns:
@@ -80,7 +90,10 @@ class TractQuerierCmd(cmd.Cmd):
 
     def default(self, line):
         try:
-            body = queries_preprocess(line, filename='shell')
+            body = queries_preprocess(
+                line,
+                filename='shell', include_folders=self.include_folders
+            )
             body = ast.Module(body=body)
             self.querier.visit(body)
             self.save_query_visitor.visit(body)
@@ -91,20 +104,43 @@ class TractQuerierCmd(cmd.Cmd):
 
         return False
 
-    def completenames(self, text, *ignored):
-        candidates = sum([
-                [
-                    query.replace('_left', '.side'),
-                    query.replace('_left', '.opposite')
+    def names(self):
+        names = []
+        for query in self.querier.evaluated_queries_fibers.keys():
+            if query.endswith('_left'):
+                names += [
+                        query.replace('_left', '.left'),
+                        query.replace('_left', '.right'),
                 ]
-                for query in
-                self.querier.evaluated_queries_fibers.keys()
-                if query.endswith('_left')
-            ],
-            self.querier.evaluated_queries_fibers.keys()
-        ) + keywords
-        options = [candidate for candidate in candidates if candidate.startswith(text)]
-        return options
+            elif query.endswith('_right'):
+                pass
+            else:
+                names.append(query)
+        return names
+
+    def completenames(self, text, *ignored):
+        try:
+            candidates = sum(
+                ([
+                    query.replace('.left', '.side'),
+                    query.replace('.left', '.opposite'),
+                ] for query in self.names() if query.endswith('.left')),
+                self.names()
+            )
+
+            if '=' in text:
+                candidates += keywords
+
+            options = [
+                candidate
+                for candidate in candidates
+                if candidate.startswith(text)
+            ]
+
+            return options
+        except Exception, e:
+            print repr(e)
+
 
     def completedefault(self, text, *ignored):
         return self.completenames(text, *ignored)

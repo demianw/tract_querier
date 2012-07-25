@@ -17,6 +17,8 @@ def main():
                     help="query to run")
     parser.add_option('-o', "--output", dest="output_file_name",
                     help="clustering output file prefix")
+    parser.add_option('-I',  dest="include", default='.',
+                    help="folders to include query files")
     parser.add_option(
         '--threshold', dest='threshold', default=2,
         help="Minimum percentage of the fiber to be "
@@ -57,17 +59,37 @@ def main():
 
     print "Loading files"
 
+    folders = options.include.split(':')
+    folders = [os.getcwd()] + folders
+    for folder in folders:
+        if not (os.path.exists(folder) and os.path.isdir(folder)):
+            parser.error("Error in include folder %s", folder)
+
     try:
         if os.path.exists(options.queries_string):
-            query_file_body = tract_querier.queries_preprocess(
-                file(options.queries_string).read(),
-                filename=options.queries_string
-            )
+            query_script = file(options.queries_string).read()
+            query_filename = options.queries_string
         else:
-            query_file_body = tract_querier.queries_preprocess(
-                options.queries_string,
-                filename=options.queries_string
-            )
+            found = False
+            for folder in folders:
+                file_ = os.path.join(folder, options.queries_string)
+                if os.path.exists(file_):
+                    found = True
+                    break
+            if found:
+                query_script = file(file_).read()
+                query_filename = file_
+            else:
+                query_script = options.queries_string
+                query_filename = '<script>'
+
+        query_file_body = tract_querier.queries_preprocess(
+            query_script,
+            filename=query_filename,
+            include_folders=folders
+        )
+
+
 
         tract_querier.queries_syntax_check(query_file_body)
     except tract_querier.TractQuerierSyntaxError, e:
@@ -118,8 +140,9 @@ def main():
         interactive_shell = tract_querier.TractQuerierCmd(
             crossing_fibers_labels, crossing_labels_fibers,
             ending_fibers_labels, ending_labels_fibers,
-            initial_body=file(options.queries_string).read(),
-            save_query_callback=query_save
+            initial_body=query_script,
+            save_query_callback=query_save,
+            include_folders=folders
         )
 
         interactive_shell.cmdloop()

@@ -1,8 +1,9 @@
 import ast
+from os import path
 from copy import deepcopy
 from itertools import takewhile
-import re
 from collections import Counter
+import fnmatch
 
 
 keywords = [
@@ -11,14 +12,16 @@ keywords = [
     'not in',
     'not',
     'only',
-    'end_points_in'
+    'endpoints_in'
 ]
+
 
 class TractQuerierSyntaxError(ValueError):
     def __init__(self, value):
         self.value = value
     def __str__(self):
         return repr(self.value)
+
 
 class RewriteChangeNotInPrescedence(ast.NodeTransformer):
     def visit_BoolOp(self, node):
@@ -47,7 +50,6 @@ class RewriteChangeNotInPrescedence(ast.NodeTransformer):
             ),
             node
         )
-
 
         new_CompareNode = ast.copy_location(
             ast.Compare(
@@ -96,20 +98,37 @@ class RewriteSide(ast.NodeTransformer):
                 node
             )
         else:
-            raise TractQuerierSyntaxError("Invalid subscript: " + ast.dump(node))
+            raise TractQuerierSyntaxError(
+                "Invalid subscript: " + ast.dump(node)
+            )
 
 class RewritePreprocess(ast.NodeTransformer):
+    def __init__(self, *args, **kwargs):
+        if 'include_folders' in kwargs:
+            self.include_folders = kwargs['include_folders']
+            kwargs['include_folders'] = None
+            del kwargs['include_folders']
+        else:
+            self.include_folders = ['.']
+        super(RewritePreprocess, self).__init__(*args, **kwargs)
+
+
     rewrite_left = RewriteSide(left=True)
     rewrite_right = RewriteSide(left=False)
 
     def visit_Attribute(self, node):
-        node_left_right = ast.Module([
-            self.rewrite_left.visit(deepcopy(node)),
-            self.rewrite_right.visit(deepcopy(node))
-        ])
+        if node.attr == 'left':
+            new_node = ast.Name(id=node.value.id + '_left')
+        elif node.attr == 'right':
+            new_node = ast.Name(id=node.value.id + '_right')
+        elif node.attr == 'side' or node.attr == 'opposite':
+            new_node = ast.Module([
+                self.rewrite_left.visit(deepcopy(node)),
+                self.rewrite_right.visit(deepcopy(node))
+            ])
 
         return ast.copy_location(
-            self.visit(node_left_right),
+            self.visit(new_node),
             node
         )
 
@@ -174,9 +193,23 @@ class RewritePreprocess(ast.NodeTransformer):
 
     def visit_Import(self, node):
         try:
+            module_names = []
+            for module_name in node.names:
+                file_name = module_name.name
+                found = False
+                for folder in self.include_folders:
+                    file_ = path.join(folder, file_name)
+                    if path.exists(file_) and path.isfile(file_):
+                        module_names.append(file_)
+                        found =True
+                        break
+                if not found:
+                    raise TractQuerierSyntaxError(
+                        'Imported file not found: %s' % file_name
+                    )
             imported_modules = [
-                ast.parse(file(module_name.name).read(), filename=module_name.name)
-                for module_name in node.names
+                ast.parse(file(module_name).read(), filename=module_name)
+                for module_name in module_names
             ]
         except SyntaxError:
             import sys
@@ -286,7 +319,7 @@ class EvaluateQueries(ast.NodeVisitor):
         matching_fibers = set()
         matching_labels = set()
         for name in self.evaluated_queries_fibers.keys():
-            if re.match(node.s, name):
+            if fnmatch.fnmatch(node.s, name):
                 matching_fibers.update(self.evaluated_queries_fibers[name])
                 matching_labels.update(self.evaluated_queries_labels[name])
 
@@ -310,7 +343,7 @@ class EvaluateQueries(ast.NodeVisitor):
                         if self.crossing_fibers_labels[fiber].issubset(labels)
                     ), labels
                 )
-            elif (node.func.id.lower() == 'end_points_in'):
+            elif (node.func.id.lower() == 'endpoints_in'):
                 fibers, labels = self.visit(node.args[0])
                 fibers = set(
                         fiber for fiber in fibers
@@ -335,6 +368,7 @@ class EvaluateQueries(ast.NodeVisitor):
         self.evaluated_queries_fibers[node.targets[0].id] = fibers
         self.evaluated_queries_labels[node.targets[0].id] = labels
 
+
     def visit_AugAssign(self, node):
         if not isinstance(node.op, ast.BitOr) or not isinstance(node.target, ast.Name):
             raise TractQuerierSyntaxError("Invalid assignment in line %d" % node.lineno)
@@ -342,11 +376,13 @@ class EvaluateQueries(ast.NodeVisitor):
         self.evaluated_queries_fibers[node.target.id] = fibers
         self.evaluated_queries_labels[node.target.id] = labels
 
+
     def visit_Name(self, node):
         if node.id in self.evaluated_queries_fibers:
             return self.evaluated_queries_fibers[node.id], self.evaluated_queries_labels[node.id]
         else:
             raise TractQuerierSyntaxError("Invalid query name in line %d: %s" % (node.lineno, node.id))
+
 
     def visit_Num(self, node):
         if node.n in self.crossing_labels_fibers:
@@ -370,7 +406,7 @@ class EvaluateQueries(ast.NodeVisitor):
         raise TractQuerierSyntaxError("Invalid Operation %s line: %d" % (type(node), node.lineno) )
 
 
-def queries_preprocess(query_file, filename='<unknown>'):
+def queries_preprocess(query_file, filename='<unknown>', include_folders=[]):
 
     try:
         query_file_module = ast.parse(query_file, filename='<unknown>')
@@ -389,7 +425,7 @@ def queries_preprocess(query_file, filename='<unknown>'):
             )
         )
 
-    rewrite_preprocess = RewritePreprocess()
+    rewrite_preprocess = RewritePreprocess(include_folders=include_folders)
     rewrite_precedence_not_in = RewriteChangeNotInPrescedence()
 
     preprocessed_module = rewrite_precedence_not_in.visit(
