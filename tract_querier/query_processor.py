@@ -77,6 +77,64 @@ class RewriteChangeNotInPrescedence(ast.NodeTransformer):
             ))
 
 
+class RewriteFor(ast.NodeTransformer):
+    def __init__(self, left=True):
+        self.symbol_list = []
+
+    def visit_Assign(self, node):
+        for target in node.targets:
+            if isinstance(target, ast.Name):
+                symbol = target.id.lower()
+                self.symbol_list.append(symbol)
+                if symbol.endswith('_left'):
+                    self.symbol_list.append(symbol.replace('_left', ''))
+            elif isinstance(target, ast.Attribute):
+                self.symbol_list.append(target.value.id.lower())
+        return node
+
+    def visit_AugAssign(self, node):
+        target = node.target
+        if isinstance(target, ast.Name):
+            symbol = target.id.lower()
+            self.symbol_list.append(symbol)
+            if symbol.endswith('_left'):
+                self.symbol_list.append(symbol.replace('_left', ''))
+        elif isinstance(target, ast.Attribute):
+            self.symbol_list.append(target.value.id.lower())
+        return node
+
+    def visit_For(self, node):
+        id_to_replace = node.target.id.lower()
+
+        iter_ = node.iter
+        if isinstance(iter_, ast.Str):
+            list_items = fnmatch.filter(self.symbol_list, iter_.s.lower())
+        elif isinstance(iter_, ast.List):
+            list_items = []
+            for item in iter_.elts:
+                if isinstance(item, ast.Name):
+                    if item.id.lower() in self.symbol_list:
+                        list_items.append(item.id.lower())
+                    else:
+                        raise TractQuerierSyntaxError('Error in FOR statement in line %d, query %s not defined' % (node.lineno, item.id))
+                else:
+                    raise TractQuerierSyntaxError('Error in FOR statement in line %d, elements in the list must be query names' % node.lineno)
+
+        original_body = ast.Module(body=node.body)
+
+        new_body = []
+        for item in list_items:
+            aux_body = deepcopy(original_body)
+            for node_ in ast.walk(aux_body):
+                if isinstance(node_, ast.Name) and node_.id.lower() == id_to_replace:
+                    node_.id = item
+            new_body += aux_body.body
+
+        new_node = ast.copy_location(ast.Module(body=new_body), node)
+
+        return new_node
+
+
 class RewriteSide(ast.NodeTransformer):
     def __init__(self, left=True):
         if left:
@@ -116,67 +174,74 @@ class RewritePreprocess(ast.NodeTransformer):
     rewrite_left = RewriteSide(left=True)
     rewrite_right = RewriteSide(left=False)
 
-    def visit_Attribute(self, node):
-        if node.attr == 'left':
-            new_node = ast.Name(id=node.value.id + '_left')
-        elif node.attr == 'right':
-            new_node = ast.Name(id=node.value.id + '_right')
-        elif node.attr == 'side' or node.attr == 'opposite':
-            new_node = ast.Module([
-                self.rewrite_left.visit(deepcopy(node)),
-                self.rewrite_right.visit(deepcopy(node))
-            ])
+    #def visit_Attribute(self, node):
+    #    if node.attr == 'left':
+    #        new_node = ast.Name(id=node.value.id + '_left')
+    #    elif node.attr == 'right':
+    #        new_node = ast.Name(id=node.value.id + '_right')
+    #    elif node.attr == 'side' or node.attr == 'opposite':
+    #        new_node = ast.Module([
+    #            self.rewrite_left.visit(deepcopy(node)),
+    #            self.rewrite_right.visit(deepcopy(node))
+    #        ])
 
+    #    return ast.copy_location(
+    #        self.visit(new_node),
+    #        node
+    #    )
+
+    #def visit_Assign(self, node):
+    #    if isinstance(node.targets[0], ast.Attribute):
+    #        if node.targets[0].attr != 'side':
+    #            raise TractQuerierSyntaxError("Wrong attribute in line %d" % node.lineno)
+
+    #        node_left_right = ast.Module([
+    #            self.rewrite_left.visit(deepcopy(node)),
+    #            self.rewrite_right.visit(deepcopy(node))
+    #        ])
+
+    #        return ast.copy_location(
+    #            self.visit(node_left_right),
+    #            node
+    #        )
+    #    else:
+    #        return ast.copy_location(
+    #            ast.Assign(
+    #                targets=[self.visit(t) for t in node.targets],
+    #                value=self.visit(node.value)
+    #            )
+    #        , node)
+
+
+    #def visit_AugAssign(self, node):
+    #    if isinstance(node.target, ast.Attribute):
+    #        if node.target.attr != 'side':
+    #            raise TractQuerierSyntaxError("Wrong attribute in line %d" % node.lineno)
+
+    #        node_left_right = ast.Module([
+    #            self.rewrite_left.visit(deepcopy(node)),
+    #            self.rewrite_right.visit(deepcopy(node))
+    #        ])
+
+    #        return ast.copy_location(
+    #            self.visit(node_left_right),
+    #            node
+    #        )
+    #    else:
+    #        return ast.copy_location(
+    #            ast.AugAssign(
+    #                target=self.visit(node.target),
+    #                value=self.visit(node.value),
+    #                op=node.op
+    #            )
+    #        , node)
+
+    def visit_Attribute(self, node):
         return ast.copy_location(
-            self.visit(new_node),
+            ast.Attribute(value=self.visit(node.value), attr=node.attr.lower()),
             node
         )
 
-    def visit_Assign(self, node):
-        if isinstance(node.targets[0], ast.Attribute):
-            if node.targets[0].attr != 'side':
-                raise TractQuerierSyntaxError("Wrong attribute")
-
-            node_left_right = ast.Module([
-                self.rewrite_left.visit(deepcopy(node)),
-                self.rewrite_right.visit(deepcopy(node))
-            ])
-
-            return ast.copy_location(
-                self.visit(node_left_right),
-                node
-            )
-        else:
-            return ast.copy_location(
-                ast.Assign(
-                    targets=[self.visit(t) for t in node.targets],
-                    value=self.visit(node.value)
-                )
-            , node)
-
-
-    def visit_AugAssign(self, node):
-        if isinstance(node.target, ast.Attribute):
-            if node.target.attr != 'side':
-                raise TractQuerierSyntaxError("Wrong attribute")
-
-            node_left_right = ast.Module([
-                self.rewrite_left.visit(deepcopy(node)),
-                self.rewrite_right.visit(deepcopy(node))
-            ])
-
-            return ast.copy_location(
-                self.visit(node_left_right),
-                node
-            )
-        else:
-            return ast.copy_location(
-                ast.AugAssign(
-                    target=self.visit(node.target),
-                    value=self.visit(node.value),
-                    op=node.op
-                )
-            , node)
 
     def visit_Name(self, node):
         return ast.copy_location(
@@ -237,7 +302,7 @@ class RewritePreprocess(ast.NodeTransformer):
 class EvaluateQueries(ast.NodeVisitor):
     def __init__(self,
                  crossing_fibers_labels, crossing_labels_fibers,
-                 ending_fibers_labels, ending_labels_fibers
+                 ending_fibers_labels={}, ending_labels_fibers={}
                 ):
         self.crossing_fibers_labels = crossing_fibers_labels
         self.crossing_labels_fibers = crossing_labels_fibers
@@ -280,14 +345,15 @@ class EvaluateQueries(ast.NodeVisitor):
 
         elif isinstance(node.op, ast.And):
             for value in node.values[1:]:
-                    fibers_, labels_ = self.visit(value)
-                    fibers.intersection_update(fibers_)
-                    labels.update(labels_)
+                fibers_, labels_ = self.visit(value)
+                fibers.intersection_update(fibers_)
+                labels.update(labels_)
 
         else:
             return self.generic_visit(node)
 
         return fibers, labels
+
 
     def visit_BinOp(self, node):
         fibers_left, label_left = self.visit(node.left)
@@ -300,6 +366,7 @@ class EvaluateQueries(ast.NodeVisitor):
             return fibers_left.difference(fibers_right), label_left.difference(label_right)
         else:
             return self.generic_visit(node)
+
 
     def visit_UnaryOp(self, node):
         fibers, labels = self.visit(node.operand)
@@ -315,15 +382,16 @@ class EvaluateQueries(ast.NodeVisitor):
         else:
             raise TractQuerierSyntaxError("Syntax error in query line %d" % node.lineno)
 
+
     def visit_Str(self, node):
         matching_fibers = set()
         matching_labels = set()
-        for name in self.evaluated_queries_fibers.keys():
-            if fnmatch.fnmatch(node.s, name):
-                matching_fibers.update(self.evaluated_queries_fibers[name])
-                matching_labels.update(self.evaluated_queries_labels[name])
+        for name in fnmatch.filter(self.evaluated_queries_fibers.keys(), node.s):
+            matching_fibers.update(self.evaluated_queries_fibers[name])
+            matching_labels.update(self.evaluated_queries_labels[name])
 
         return matching_fibers, matching_labels
+
 
     def visit_Call(self, node):
 
@@ -361,20 +429,83 @@ class EvaluateQueries(ast.NodeVisitor):
 
 
     def visit_Assign(self, node):
-        if len(node.targets) > 1 or not isinstance(node.targets[0], ast.Name):
+        if len(node.targets) > 1:
             raise TractQuerierSyntaxError("Invalid assignment in line %d" % node.lineno)
-        fibers, labels = self.visit(node.value)
-        self.queries_to_save.add(node.targets[0].id)
-        self.evaluated_queries_fibers[node.targets[0].id] = fibers
-        self.evaluated_queries_labels[node.targets[0].id] = labels
+
+        queries_to_evaluate = {}
+        target = node.targets[0]
+        if isinstance(target, ast.Name):
+            queries_to_evaluate[target.id] = node.value
+        elif (
+            isinstance(target, ast.Attribute) and
+            target.attr == 'side'
+        ):
+            node_left, node_right = self.rewrite_side_query(node)
+            self.visit(node_left)
+            self.visit(node_right)
+        elif (
+            isinstance(target, ast.Attribute) and
+            isinstance(target.value, ast.Name)
+        ):
+            queries_to_evaluate[target.value.id.lower() + '.' + target.attr.lower()] = node.value
+        else:
+            raise TractQuerierSyntaxError("Invalid assignment in line %d" % node.lineno)
+
+        for query_name, value_node in queries_to_evaluate.items():
+            fibers, labels = self.visit(value_node)
+            self.queries_to_save.add(query_name)
+            self.evaluated_queries_fibers[query_name] = fibers
+            self.evaluated_queries_labels[query_name] = labels
 
 
     def visit_AugAssign(self, node):
-        if not isinstance(node.op, ast.BitOr) or not isinstance(node.target, ast.Name):
+        if not isinstance(node.op, ast.BitOr):
             raise TractQuerierSyntaxError("Invalid assignment in line %d" % node.lineno)
-        fibers, labels = self.visit(node.value)
-        self.evaluated_queries_fibers[node.target.id] = fibers
-        self.evaluated_queries_labels[node.target.id] = labels
+
+        queries_to_evaluate = {}
+        target = node.target
+        if isinstance(target, ast.Name):
+            queries_to_evaluate[target.id] = node.value
+        elif (
+            isinstance(target, ast.Attribute) and
+            target.attr == 'side'
+        ):
+            node_left, node_right = self.rewrite_side_query(node)
+            self.visit(node_left)
+            self.visit(node_right)
+        elif (
+            isinstance(target, ast.Attribute) and
+            isinstance(target.value, ast.Name)
+        ):
+            queries_to_evaluate[target.value.id.lower() + '.' + target.attr.lower()] = node.value
+        else:
+            raise TractQuerierSyntaxError("Invalid assignment in line %d" % node.lineno)
+
+        for query_name, value_node in queries_to_evaluate.items():
+            fibers, labels = self.visit(value_node)
+            self.evaluated_queries_fibers[query_name] = fibers
+            self.evaluated_queries_labels[query_name] = labels
+
+
+    def rewrite_side_query(self, node):
+        node_left = deepcopy(node)
+        node_right = deepcopy(node)
+
+        for node_ in ast.walk(node_left):
+            if isinstance(node_, ast.Attribute):
+                if node_.attr == 'side':
+                    node_.attr = 'left'
+                elif node_.attr == 'opposite':
+                    node_.attr = 'right'
+
+        for node_ in ast.walk(node_right):
+            if isinstance(node_, ast.Attribute):
+                if node_.attr == 'side':
+                    node_.attr = 'right'
+                elif node_.attr == 'opposite':
+                    node_.attr = 'left'
+
+        return node_left, node_right
 
 
     def visit_Name(self, node):
@@ -382,6 +513,17 @@ class EvaluateQueries(ast.NodeVisitor):
             return self.evaluated_queries_fibers[node.id], self.evaluated_queries_labels[node.id]
         else:
             raise TractQuerierSyntaxError("Invalid query name in line %d: %s" % (node.lineno, node.id))
+
+
+    def visit_Attribute(self, node):
+        if not isinstance(node.value, ast.Name):
+            raise TractQuerierSyntaxError("Invalid query in line %d: %s" % node.lineno)
+
+        query_name = node.value.id + '.' + node.attr
+        if query_name in self.evaluated_queries_fibers:
+            return self.evaluated_queries_fibers[query_name], self.evaluated_queries_labels[query_name]
+        else:
+            raise TractQuerierSyntaxError("Invalid query name in line %d: %s" % (node.lineno, query_name))
 
 
     def visit_Num(self, node):
@@ -404,6 +546,33 @@ class EvaluateQueries(ast.NodeVisitor):
 
     def generic_visit(self, node):
         raise TractQuerierSyntaxError("Invalid Operation %s line: %d" % (type(node), node.lineno) )
+
+
+    def visit_For(self, node):
+        id_to_replace = node.target.id.lower()
+
+        iter_ = node.iter
+        if isinstance(iter_, ast.Str):
+            list_items = fnmatch.filter(self.evaluated_queries_fibers.keys(), iter_.s.lower())
+        elif isinstance(iter_, ast.List):
+            list_items = []
+            for item in iter_.elts:
+                if isinstance(item, ast.Name):
+                    list_items.append(item.id.lower())
+                else:
+                    raise TractQuerierSyntaxError('Error in FOR statement in line %d, elements in the list must be query names' % node.lineno)
+
+        original_body = ast.Module(body=node.body)
+
+        for item in list_items:
+            aux_body = deepcopy(original_body)
+            for node_ in ast.walk(aux_body):
+                if isinstance(node_, ast.Name) and node_.id.lower() == id_to_replace:
+                    node_.id = item
+
+            self.visit(aux_body)
+
+
 
 
 def queries_preprocess(query_file, filename='<unknown>', include_folders=[]):
@@ -465,5 +634,3 @@ def labels_for_fibers(crossing_fibers_labels):
             else:
                 crossing_labels_fibers[l] = set((i,))
     return crossing_labels_fibers
-
-
