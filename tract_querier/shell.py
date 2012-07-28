@@ -12,21 +12,48 @@ class SaveQueries(ast.NodeVisitor):
     def visit_AugAssign(self, node):
         pass
 
+
     def visit_Assign(self, node):
         for target in node.targets:
-            ast.dump(target)
             if isinstance(target, ast.Name):
                 query_name = target.id.lower()
                 self.save_query_callback(
                     query_name,
                     self.querier.evaluated_queries_fibers[query_name]
                 )
+            elif (
+                isinstance(target, ast.Attribute) and
+                isinstance(target.value, ast.Name)
+            ):
+                query_name = (
+                    target.value.id.lower() +
+                    '.' +
+                    target.attr.lower()
+                )
+                self.save_query_callback(
+                    query_name,
+                    self.querier.evaluated_queries_fibers[query_name]
+                )
+
 
 
     def visit_Expr(self, node):
         value = node.value
         if isinstance(value, ast.Name):
             query_name = node.value.id.lower()
+            self.save_query_callback(
+                query_name,
+                self.querier.evaluated_queries_fibers[query_name]
+            )
+        elif (
+            isinstance(node, ast.Attribute) and
+            isinstance(node.value, ast.Name)
+        ):
+            query_name = (
+                node.value.id.lower() +
+                '.' +
+                node.attr.lower()
+            )
             self.save_query_callback(
                 query_name,
                 self.querier.evaluated_queries_fibers[query_name]
