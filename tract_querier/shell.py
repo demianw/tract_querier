@@ -1,7 +1,23 @@
 import ast
 import cmd
 import fnmatch
-from query_processor import EvaluateQueries, queries_preprocess, TractQuerierSyntaxError, keywords
+from query_processor import (
+    EvaluateQueries, queries_preprocess,
+    TractQuerierSyntaxError, keywords
+)
+
+
+def safe_method(f):
+    """exception handling decorator"""
+    def newfunc(*args, **kwargs):
+        try:
+            return f(*args, **kwargs)
+        except:
+            import traceback
+            import sys
+            sys.stderr.write("Uncaught exception, please contact the development team\n")
+            traceback.print_exc()
+    return newfunc
 
 
 class SaveQueries(ast.NodeVisitor):
@@ -11,7 +27,6 @@ class SaveQueries(ast.NodeVisitor):
 
     def visit_AugAssign(self, node):
         pass
-
 
     def visit_Assign(self, node):
         for target in node.targets:
@@ -25,17 +40,8 @@ class SaveQueries(ast.NodeVisitor):
                 isinstance(target, ast.Attribute) and
                 isinstance(target.value, ast.Name)
             ):
-                query_name = (
-                    target.value.id.lower() +
-                    '.' +
-                    target.attr.lower()
-                )
-                self.save_query_callback(
-                    query_name,
-                    self.querier.evaluated_queries_fibers[query_name]
-                )
 
-
+                self.save_attribute_name(target)
 
     def visit_Expr(self, node):
         value = node.value
@@ -49,29 +55,47 @@ class SaveQueries(ast.NodeVisitor):
             isinstance(node, ast.Attribute) and
             isinstance(node.value, ast.Name)
         ):
-            query_name = (
-                node.value.id.lower() +
-                '.' +
-                node.attr.lower()
-            )
-            self.save_query_callback(
-                query_name,
-                self.querier.evaluated_queries_fibers[query_name]
-            )
+            self.save_attribute_name(node)
         else:
             self.visit(value)
 
+    def save_attribute_name(self, node):
+        query_prefix = node.value.id().lower()
+        query_suffix = node.attr.lower()
+        if query_suffix == 'side':
+            for suffix in ('left', 'right'):
+                query_name = query_prefix + '.' + suffix
+                self.save_query_callback(
+                    query_name.replace('.', '_'),
+                    self.querier.evaluated_queries_fibers[
+                        query_name
+                    ]
+                )
+        else:
+            query_name = query_prefix + '.' + query_suffix
+            self.save_query_callback(
+                query_name.replace('.', '_'),
+                self.querier.evaluated_queries_fibers[
+                    query_name
+                ]
+            )
 
     def visit_Module(self, node):
         for line in node.body:
             self.visit(line)
 
+    def visit_For(self, node):
+        #If it is a for loop, only execute
+        pass
+
 
 class TractQuerierCmd(cmd.Cmd):
     def __init__(self,
-                 crossing_fibers_labels, crossing_labels_fibers,
+                 crossing_fibers_labels,
+                 crossing_labels_fibers,
                  ending_fibers_labels, ending_labels_fibers,
-                 initial_body=None, tractography=None, save_query_callback=None,
+                 initial_body=None, tractography=None,
+                 save_query_callback=None,
                  include_folders=['.']
                 ):
         cmd.Cmd.__init__(self, 'Tab')
@@ -83,7 +107,9 @@ class TractQuerierCmd(cmd.Cmd):
             ending_fibers_labels, ending_labels_fibers
         )
         self.save_query_callback = save_query_callback
-        self.save_query_visitor = SaveQueries(self.save_query_callback, self.querier)
+        self.save_query_visitor = SaveQueries(
+            self.save_query_callback, self.querier
+        )
 
         if initial_body is not None:
             if isinstance(initial_body, str):
@@ -97,7 +123,7 @@ class TractQuerierCmd(cmd.Cmd):
             else:
                 self.querier.visit(initial_body)
 
-
+    @safe_method
     def do_dir(self, patterns):
         if patterns == '':
             patterns = '*'
@@ -114,7 +140,7 @@ class TractQuerierCmd(cmd.Cmd):
         for k in keys:
             print k
 
-
+    @safe_method
     def default(self, line):
         try:
             body = queries_preprocess(
@@ -131,6 +157,7 @@ class TractQuerierCmd(cmd.Cmd):
 
         return False
 
+    @safe_method
     def names(self):
         names = []
         for query in self.querier.evaluated_queries_fibers.keys():
@@ -145,36 +172,33 @@ class TractQuerierCmd(cmd.Cmd):
                 names.append(query)
         return names
 
+    @safe_method
     def completenames(self, text, *ignored):
-        try:
-            candidates = sum(
-                ([
-                    query.replace('.left', '.side'),
-                    query.replace('.left', '.opposite'),
-                ] for query in self.names() if query.endswith('.left')),
-                self.names()
-            )
+        candidates = sum(
+            ([
+                query.replace('.left', '.side'),
+                query.replace('.left', '.opposite'),
+            ] for query in self.names() if query.endswith('.left')),
+            self.names()
+        )
 
-            if '=' in text:
-                candidates += keywords
+        if '=' in text:
+            candidates += keywords
 
-            options = [
-                candidate
-                for candidate in candidates
-                if candidate.startswith(text)
-            ]
+        options = [
+            candidate
+            for candidate in candidates
+            if candidate.startswith(text)
+        ]
 
-            return options
-        except Exception, e:
-            print repr(e)
-
+        return options
 
     def completedefault(self, text, *ignored):
         return self.completenames(text, *ignored)
 
     def do_EOF(self, line):
         s = raw_input("\nSure you want to leave (y/n)? ")
-        if s.lower() =='y':
+        if s.lower() == 'y':
             return True
         else:
             return False
