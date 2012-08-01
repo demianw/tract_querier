@@ -1,73 +1,71 @@
 import JHU_MNI_SS_WMPM_Type_II.qry
 
-HEMISPHERE_left |= '.*_left'
-HEMISPHERE_right |= '.*_right'
+HEMISPHERE.left |= '*.left'
+HEMISPHERE.right |= '*.right'
 
-frontal.side |= SUPERIOR_FRONTAL_GYRUS.side + MIDDLE_FRONTAL_GYRUS.side + INFERIOR_FRONTAL_GYRUS.side +\
-                   MIDDLE_FRONTO_ORBITAL_GYRUS.side + LATERAL_FRONTO_ORBITAL_GYRUS.side
-occipital.side |= SUPERIOR_OCCIPITAL_GYRUS.side + INFERIOR_OCCIPITAL_GYRUS.side + MIDDLE_OCCIPITAL_GYRUS.side
-temporal.side |= SUPERIOR_TEMPORAL_GYRUS.side + INFERIOR_TEMPORAL_GYRUS.side + MIDDLE_TEMPORAL_GYRUS.side
+frontal.side |= SUPERIOR_FRONTAL_GYRUS.side or MIDDLE_FRONTAL_GYRUS.side or INFERIOR_FRONTAL_GYRUS.side or \
+                   MIDDLE_FRONTO_ORBITAL_GYRUS.side or LATERAL_FRONTO_ORBITAL_GYRUS.side
+occipital.side |= SUPERIOR_OCCIPITAL_GYRUS.side or INFERIOR_OCCIPITAL_GYRUS.side or MIDDLE_OCCIPITAL_GYRUS.side
+temporal.side |= SUPERIOR_TEMPORAL_GYRUS.side or INFERIOR_TEMPORAL_GYRUS.side or MIDDLE_TEMPORAL_GYRUS.side
 
-corpus_callosum.side |= Genu_of_corpus_callosum.side + Body_of_corpus_callosum.side + Splenium_of_corpus_callosum.side
+corpus_callosum.side |= Genu_of_corpus_callosum.side or Body_of_corpus_callosum.side or Splenium_of_corpus_callosum.side
 
-corpus_callosum |= corpus_callosum_left + corpus_callosum_right - THALAMUS_right\
-   - THALAMUS_left - PUTAMEN_right - PUTAMEN_left - GLOBUS_PALLIDUS_right - GLOBUS_PALLIDUS_left\
-   - PONS_right - PONS_left - CEREBELLUM_right - CEREBELLUM_left \
-   - Fornix_cres_Stria_terminalis_left - Fornix_column_and_body_left - Fornix_cres_Stria_terminalis_right - Fornix_column_and_body_right
+corpus_callosum |= corpus_callosum.left or corpus_callosum.right not in THALAMUS.right\
+    not in THALAMUS.left not in PUTAMEN.right not in PUTAMEN.left not in GLOBUS_PALLIDUS.right not in GLOBUS_PALLIDUS.left\
+    not in PONS.right not in PONS.left not in CEREBELLUM.right not in CEREBELLUM.left \
+    not in Fornix_cres_Stria_terminalis.left not in Fornix_column_and_body.left not in Fornix_cres_Stria_terminalis.right not in Fornix_column_and_body.right
 
 
-CST.side = Cerebral_peduncle.side * PRECENTRAL_GYRUS.side\
-          - HEMISPHERE.opposite - THALAMUS.side\
-          - CEREBELLUM.side - MIDDLE_OCCIPITAL_GYRUS.side\
-          #- Anterior_limb_of_internal_capsule.side - Posterior_limb_of_internal_capsule.side\
-          #- Superior_cerebellar_peduncle.side\
-          #- Pontine_crossing_tract.side - Inferior_cerebellar_peduncle.side - Medial_lemniscus.side\
-          #- Superior_corona_radiata.side - Posterior_limb_of_internal_capsule.side\
-          #- HEMISPHERE.opposite - THALAMUS.side - CEREBELLUM.side - Cerebral_peduncle.side
+CST.side = Cerebral_peduncle.side and PRECENTRAL_GYRUS.side\
+           not in HEMISPHERE.opposite not in THALAMUS.side\
+           not in CEREBELLUM.side not in MIDDLE_OCCIPITAL_GYRUS.side\
+          # not in Anterior_limb_of_internal_capsule.side not in Posterior_limb_of_internal_capsule.side\
+          # not in Superior_cerebellar_peduncle.side\
+          # not in Pontine_crossing_tract.side not in Inferior_cerebellar_peduncle.side not in Medial_lemniscus.side\
+          # not in Superior_corona_radiata.side not in Posterior_limb_of_internal_capsule.side\
+          # not in HEMISPHERE.opposite not in THALAMUS.side not in CEREBELLUM.side not in Cerebral_peduncle.side
 
-IFO.side = frontal.side * occipital.side * Sagittal_stratum.side * Inferior_fronto_occipital_fasciculus.side\
-          - corpus_callosum - THALAMUS.side - SUPERIOR_PARIETAL_LOBULE.side - PRE_CUNEUS.side\
-          - Superior_corona_radiata.side - Uncinate_fasciculus.side
+IFO.side = frontal.side and occipital.side and Sagittal_stratum.side and Inferior_fronto_occipital_fasciculus.side\
+           not in corpus_callosum not in THALAMUS.side not in SUPERIOR_PARIETAL_LOBULE.side not in PRE_CUNEUS.side\
+           not in Superior_corona_radiata.side not in Uncinate_fasciculus.side
 
-ILF.side = temporal.side *occipital.side * Sagittal_stratum.side\
-          - HEMISPHERE.opposite - CEREBELLUM.side - THALAMUS.side - corpus_callosum - frontal.side \
-          - LINGUAL_GYRUS.side \
-          - Inferior_fronto_occipital_fasciculus.side - Superior_longitudinal_fasciculus.side - CINGULATE_GYRUS.side\
-          - Anterior_limb_of_internal_capsule.side - Anterior_corona_radiata.side - Superior_corona_radiata.side\
-          - Fornix_column_and_body.side - ANGULAR_GYRUS.side - PRE_CUNEUS.side - CUNEUS.side -SUPRAMARGINAL_GYRUS.side
+ILF.side = temporal.side and occipital.side and Sagittal_stratum.side\
+           not in HEMISPHERE.opposite not in CEREBELLUM.side not in THALAMUS.side not in corpus_callosum not in frontal.side \
+           not in LINGUAL_GYRUS.side \
+           not in Inferior_fronto_occipital_fasciculus.side not in Superior_longitudinal_fasciculus.side not in CINGULATE_GYRUS.side\
+           not in Anterior_limb_of_internal_capsule.side not in Anterior_corona_radiata.side not in Superior_corona_radiata.side\
+           not in Fornix_column_and_body.side not in ANGULAR_GYRUS.side not in PRE_CUNEUS.side not in CUNEUS.side not in SUPRAMARGINAL_GYRUS.side
 
-UNC.side = frontal.side * temporal.side\
-          - corpus_callosum - CEREBELLUM.side - THALAMUS.side - Posterior_corona_radiata.side\
-          - PARAHIPPOCAMPAL_GYRUS.side - occipital.side\
-          - Posterior_limb_of_internal_capsule.side - Retrolenticular_part_of_internal_capsule.side\
-          - Superior_longitudinal_fasciculus.side - HEMISPHERE.opposite
+UNC.side = frontal.side and temporal.side\
+           not in corpus_callosum not in CEREBELLUM.side not in THALAMUS.side not in Posterior_corona_radiata.side\
+           not in PARAHIPPOCAMPAL_GYRUS.side not in occipital.side\
+           not in Posterior_limb_of_internal_capsule.side not in Retrolenticular_part_of_internal_capsule.side\
+           not in Superior_longitudinal_fasciculus.side not in HEMISPHERE.opposite
 
-CG.side = CINGULATE_GYRUS.side + Cingulum_cingulate_gyrus.side + Cingulum_hippocampus.side - corpus_callosum - HEMISPHERE.opposite
+CG.side = CINGULATE_GYRUS.side or Cingulum_cingulate_gyrus.side or Cingulum_hippocampus.side not in corpus_callosum not in HEMISPHERE.opposite
 
-SLF_t.side = frontal.side * temporal.side\
-              - occipital.side - corpus_callosum - CEREBELLUM.side - Inferior_fronto_occipital_fasciculus.side\
-              - Anterior_limb_of_internal_capsule.side - Posterior_limb_of_internal_capsule.side - INSULAR.side\
-              - Fornix_column_and_body.side - External_capsule.side
+SLF_t.side = frontal.side and temporal.side\
+               not in occipital.side not in corpus_callosum not in CEREBELLUM.side not in Inferior_fronto_occipital_fasciculus.side\
+               not in Anterior_limb_of_internal_capsule.side not in Posterior_limb_of_internal_capsule.side not in INSULAR.side\
+               not in Fornix_column_and_body.side not in External_capsule.side
 
-SLF_fp.side = frontal.side * ANGULAR_GYRUS.side * SUPRAMARGINAL_GYRUS.side \
-              - occipital.side - temporal.side\
-              - corpus_callosum - CEREBELLUM.side - Inferior_fronto_occipital_fasciculus.side\
-              - Anterior_limb_of_internal_capsule.side - Posterior_limb_of_internal_capsule.side - INSULAR.side
+SLF_fp.side = frontal.side and ANGULAR_GYRUS.side and SUPRAMARGINAL_GYRUS.side \
+               not in occipital.side not in temporal.side\
+               not in corpus_callosum not in CEREBELLUM.side not in Inferior_fronto_occipital_fasciculus.side\
+               not in Anterior_limb_of_internal_capsule.side not in Posterior_limb_of_internal_capsule.side not in INSULAR.side
 
-SLF_pt.side = temporal.side * ANGULAR_GYRUS.side \
-              - occipital.side - frontal.side\
-              - corpus_callosum - CEREBELLUM.side - Inferior_fronto_occipital_fasciculus.side\
-              - Anterior_limb_of_internal_capsule.side - Posterior_limb_of_internal_capsule.side - INSULAR.side
+SLF_pt.side = temporal.side and ANGULAR_GYRUS.side \
+               not in occipital.side not in frontal.side\
+               not in corpus_callosum not in CEREBELLUM.side not in Inferior_fronto_occipital_fasciculus.side\
+               not in Anterior_limb_of_internal_capsule.side not in Posterior_limb_of_internal_capsule.side not in INSULAR.side
 
-thalamic_radiations.side = THALAMUS.side * (
-              SUPERIOR_PARIETAL_LOBULE.side +\
-              SUPERIOR_FRONTAL_GYRUS.side + MIDDLE_FRONTAL_GYRUS.side + INFERIOR_FRONTAL_GYRUS.side +\
-              PRECENTRAL_GYRUS.side + POSTCENTRAL_GYRUS.side + \
-              PRE_CUNEUS.side +\
-              SUPERIOR_OCCIPITAL_GYRUS.side + MIDDLE_OCCIPITAL_GYRUS.side ) -\
-              Pontine_crossing_tract.side - Inferior_cerebellar_peduncle.side - Medial_lemniscus.side -\
-              corpus_callosum - temporal.side - CEREBELLUM.side - HEMISPHERE.opposite - Cerebral_peduncle.side
+thalamic_radiations.side = THALAMUS.side and (
+              SUPERIOR_PARIETAL_LOBULE.side or \
+              SUPERIOR_FRONTAL_GYRUS.side or MIDDLE_FRONTAL_GYRUS.side or INFERIOR_FRONTAL_GYRUS.side or \
+              PRECENTRAL_GYRUS.side or POSTCENTRAL_GYRUS.side or \
+              PRE_CUNEUS.side or \
+              SUPERIOR_OCCIPITAL_GYRUS.side or MIDDLE_OCCIPITAL_GYRUS.side )  not in \
+              Pontine_crossing_tract.side not in Inferior_cerebellar_peduncle.side not in Medial_lemniscus.side not in \
+              corpus_callosum not in temporal.side not in CEREBELLUM.side not in HEMISPHERE.opposite not in Cerebral_peduncle.side
               
               
-
-
