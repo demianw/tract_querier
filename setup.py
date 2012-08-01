@@ -2,8 +2,11 @@
 from distutils.core import setup
 
 DISTNAME = 'tract_querier'
-DESCRIPTION = 'Complex queries for full brain tractographies with a registered template on top of them'
-LONG_DESCRIPTION = '' #open('README.rst').read()
+DESCRIPTION = \
+        'Complex queries for full '\
+        'brain tractographies with '\
+        'a registered template on top of them'
+LONG_DESCRIPTION = ''  # open('README.rst').read()
 MAINTAINER = 'Demian Wassermann'
 MAINTAINER_EMAIL = 'demian@bwh.harvard.edu'
 URL = ''
@@ -11,12 +14,14 @@ LICENSE = ''
 DOWNLOAD_URL = ''
 VERSION = '0.1'
 
+
 def configuration(parent_package='', top_path=None):
     from numpy.distutils.misc_util import Configuration
     config = Configuration(None, parent_package, top_path)
     config.set_options(quiet=True)
     config.add_subpackage('tract_querier')
     return config
+
 
 if __name__ == "__main__":
     setup(
