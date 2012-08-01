@@ -19,6 +19,7 @@ keywords = [
 class TractQuerierSyntaxError(ValueError):
     def __init__(self, value):
         self.value = value
+
     def __str__(self):
         return repr(self.value)
 
@@ -87,13 +88,14 @@ class RewritePreprocess(ast.NodeTransformer):
             self.include_folders = ['.']
         super(RewritePreprocess, self).__init__(*args, **kwargs)
 
-
     def visit_Attribute(self, node):
         return ast.copy_location(
-            ast.Attribute(value=self.visit(node.value), attr=node.attr.lower()),
+            ast.Attribute(
+                value=self.visit(node.value),
+                attr=node.attr.lower()
+            ),
             node
         )
-
 
     def visit_Name(self, node):
         return ast.copy_location(
@@ -107,7 +109,6 @@ class RewritePreprocess(ast.NodeTransformer):
             node
         )
 
-
     def visit_Import(self, node):
         try:
             module_names = []
@@ -118,7 +119,7 @@ class RewritePreprocess(ast.NodeTransformer):
                     file_ = path.join(folder, file_name)
                     if path.exists(file_) and path.isfile(file_):
                         module_names.append(file_)
-                        found =True
+                        found = True
                         break
                 if not found:
                     raise TractQuerierSyntaxError(
@@ -133,15 +134,15 @@ class RewritePreprocess(ast.NodeTransformer):
             import traceback
             exc_type, exc_value, exc_traceback = sys.exc_info()
             formatted_lines = traceback.format_exc().splitlines()
-            raise TractQuerierSyntaxError('syntax error in line %s line %d: \n%s\n%s' %
-                                          (
-                                              module_name,
-                                              exc_value[1][1],
-                                              formatted_lines[-3],
-                                              formatted_lines[-2]
-                                          )
-                                         )
-
+            raise TractQuerierSyntaxError(
+                'syntax error in line %s line %d: \n%s\n%s' %
+                (
+                    module_name,
+                    exc_value[1][1],
+                    formatted_lines[-3],
+                    formatted_lines[-2]
+                )
+            )
 
         new_node = ast.Module(imported_modules)
 
@@ -172,7 +173,9 @@ class EvaluateQueries(ast.NodeVisitor):
 
     def visit_Compare(self, node):
         if any(not isinstance(op, ast.NotIn) for op in node.ops):
-            raise TractQuerierSyntaxError("Invalid syntax in query line %d" % node.lineno)
+            raise TractQuerierSyntaxError(
+                "Invalid syntax in query line %d" % node.lineno
+            )
 
         fibers, labels = self.visit(node.left)
         fibers = fibers.copy()
@@ -206,19 +209,20 @@ class EvaluateQueries(ast.NodeVisitor):
 
         return fibers, labels
 
-
     def visit_BinOp(self, node):
         fibers_left, label_left = self.visit(node.left)
-        fibers_right,label_right = self.visit(node.right)
+        fibers_right, label_right = self.visit(node.right)
         if isinstance(node.op, ast.Add):
             return fibers_left | fibers_right, label_left | label_right
         if isinstance(node.op, ast.Mult):
             return fibers_left & fibers_right, label_left | label_right
         if isinstance(node.op, ast.Sub):
-            return fibers_left.difference(fibers_right), label_left.difference(label_right)
+            return (
+                fibers_left.difference(fibers_right),
+                label_left.difference(label_right)
+            )
         else:
             return self.generic_visit(node)
-
 
     def visit_UnaryOp(self, node):
         fibers, labels = self.visit(node.operand)
@@ -234,7 +238,6 @@ class EvaluateQueries(ast.NodeVisitor):
         else:
             raise TractQuerierSyntaxError("Syntax error in query line %d" % node.lineno)
 
-
     def visit_Str(self, node):
         matching_fibers = set()
         matching_labels = set()
@@ -244,10 +247,9 @@ class EvaluateQueries(ast.NodeVisitor):
 
         return matching_fibers, matching_labels
 
-
     def visit_Call(self, node):
 
-        if (#Single string argument function
+        if (  # Single string argument function
             isinstance(node.func, ast.Name) and
             len(node.args) == 1 and
             len(node.args) == 1 and
@@ -255,7 +257,7 @@ class EvaluateQueries(ast.NodeVisitor):
             node.keywords == [] and
             node.kwargs is None
         ):
-            if (node.func.id.lower() == 'only' ):
+            if (node.func.id.lower() == 'only'):
                 fibers, labels = self.visit(node.args[0])
                 return (
                     set(
@@ -277,8 +279,7 @@ class EvaluateQueries(ast.NodeVisitor):
                 self.queries_to_save.add(node.args[0].s)
                 return
 
-        raise TractQuerierSyntaxError("Invalid query in line %d" %node.lineno)
-
+        raise TractQuerierSyntaxError("Invalid query in line %d" % node.lineno)
 
     def visit_Assign(self, node):
         if len(node.targets) > 1:
@@ -292,7 +293,6 @@ class EvaluateQueries(ast.NodeVisitor):
             self.evaluated_queries_fibers[query_name] = fibers
             self.evaluated_queries_labels[query_name] = labels
 
-
     def visit_AugAssign(self, node):
         if not isinstance(node.op, ast.BitOr):
             raise TractQuerierSyntaxError("Invalid assignment in line %d" % node.lineno)
@@ -303,7 +303,6 @@ class EvaluateQueries(ast.NodeVisitor):
             fibers, labels = self.visit(value_node)
             self.evaluated_queries_fibers[query_name] = fibers
             self.evaluated_queries_labels[query_name] = labels
-
 
     def process_assignment(self, node):
         queries_to_evaluate = {}
@@ -330,7 +329,6 @@ class EvaluateQueries(ast.NodeVisitor):
             raise TractQuerierSyntaxError("Invalid assignment in line %d" % node.lineno)
         return queries_to_evaluate
 
-
     def rewrite_side_query(self, node):
         node_left = deepcopy(node)
         node_right = deepcopy(node)
@@ -351,13 +349,11 @@ class EvaluateQueries(ast.NodeVisitor):
 
         return node_left, node_right
 
-
     def visit_Name(self, node):
         if node.id in self.evaluated_queries_fibers:
             return self.evaluated_queries_fibers[node.id], self.evaluated_queries_labels[node.id]
         else:
             raise TractQuerierSyntaxError("Invalid query name in line %d: %s" % (node.lineno, node.id))
-
 
     def visit_Attribute(self, node):
         if not isinstance(node.value, ast.Name):
@@ -368,7 +364,6 @@ class EvaluateQueries(ast.NodeVisitor):
             return self.evaluated_queries_fibers[query_name], self.evaluated_queries_labels[query_name]
         else:
             raise TractQuerierSyntaxError("Invalid query name in line %d: %s" % (node.lineno, query_name))
-
 
     def visit_Num(self, node):
         if node.n in self.crossing_labels_fibers:
@@ -389,8 +384,7 @@ class EvaluateQueries(ast.NodeVisitor):
             raise TractQuerierSyntaxError("Invalid expression at line: %d" % (node.lineno))
 
     def generic_visit(self, node):
-        raise TractQuerierSyntaxError("Invalid Operation %s line: %d" % (type(node), node.lineno) )
-
+        raise TractQuerierSyntaxError("Invalid Operation %s line: %d" % (type(node), node.lineno))
 
     def visit_For(self, node):
         id_to_replace = node.target.id.lower()
@@ -415,8 +409,6 @@ class EvaluateQueries(ast.NodeVisitor):
                     node_.id = item
 
             self.visit(aux_body)
-
-
 
 
 def queries_preprocess(query_file, filename='<unknown>', include_folders=[]):
