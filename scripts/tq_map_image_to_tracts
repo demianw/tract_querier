@@ -1,0 +1,54 @@
+#!/usr/bin/env python
+
+from os import path
+
+from optparse import OptionParser
+def main():
+    usage = """
+    usage: %prog [options] -o bundle.vtk -i image -n quantity_name  bundle.vtk
+    """
+    parser = OptionParser(usage=usage)
+    parser.add_option('-o', "--output", dest="output_bundle",
+                      help="file with the output  tract")
+    parser.add_option('-i', "--image", dest="image",
+                      help="image to extract the scalar quantity from")
+    parser.add_option('-n', "--name", dest="name",
+                      help="name to give to the scalar quantity to add")
+
+    (options, args) = parser.parse_args()
+
+    import numpy
+
+    from tractographyGP import vtkInterface
+    from tractographyGP import tractography as tr
+
+    import nifti
+
+    from scipy import ndimage
+
+    image = nifti.NiftiImage( options.image )
+    tractography = tr.tractography_from_vtk_files( args[0] )
+
+    ras_points = numpy.vstack(tractography.getFibersToProcess())
+    ijk_points = numpy.dot( image.getInverseQForm(), numpy.hstack((
+          ras_points,
+          numpy.ones((len(ras_points), 1))
+                  )).T).T[:,:-1]
+
+    image_data = image.getDataArray().squeeze()
+    if image_data.ndim > 3:
+        output_name, ext = path.splitext(options.output_bundle)
+        output_name = output_name + '_%04d' + ext
+        for i, image in enumerate(image_data):
+            new_scalar_data = ndimage.map_coordinates( image.T, ijk_points.T )[:, None]
+            tractography.getOriginalFibersData()[options.name] = new_scalar_data
+            vtkInterface.writeLinesToVtkPolyData(output_name % i, tractography.getOriginalFibers(),  tractography.getOriginalFibersData())
+    else:
+        new_scalar_data = ndimage.map_coordinates( image_data.T, ijk_points.T )[:, None]
+        tractography.getOriginalFibersData()[options.name] = new_scalar_data
+
+        vtkInterface.writeLinesToVtkPolyData(options.output_bundle, tractography.getOriginalFibers(),  tractography.getOriginalFibersData())
+
+
+if __name__ == "__main__":
+    main()

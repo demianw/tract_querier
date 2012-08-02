@@ -46,6 +46,7 @@ if __name__ == "__main__":
             scripts=[
                 'scripts/tract_querier',
                 'scripts/tract_outlier_rejection',
+                'scripts/tq_map_image_to_tracts'
               ],
             **(configuration().todict())
     )
