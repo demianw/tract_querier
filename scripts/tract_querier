@@ -1,7 +1,7 @@
-#!/usr/bin/env python -O
+#!/usr/bin/env python
 from optparse import OptionParser
 import os
-
+import sys
 
 def main():
     parser = OptionParser(
@@ -17,7 +17,7 @@ def main():
                     help="query to run")
     parser.add_option('-o', "--output", dest="output_file_name",
                     help="clustering output file prefix")
-    parser.add_option('-I',  dest="include", default='.',
+    parser.add_option('-I',  dest="include",
                     help="folders to include query files")
     parser.add_option(
         '--threshold', dest='threshold', default=2,
@@ -59,11 +59,16 @@ def main():
 
     print "Loading files"
 
-    folders = options.include.split(':')
-    folders = [os.getcwd()] + folders
+    if options.include:
+        folders = options.include.split(':')
+    else:
+        folders = []
+
+    default_folder = os.path.join(sys.prefix, 'tract_querier', 'queries')
+    folders = [os.getcwd()] + folders + [default_folder]
     for folder in folders:
         if not (os.path.exists(folder) and os.path.isdir(folder)):
-            parser.error("Error in include folder %s", folder)
+            parser.error("Error in include folder %s" % folder)
 
     try:
         if os.path.exists(options.queries_string):
@@ -222,3 +227,4 @@ def save_tractography_file(
 
 if __name__ == "__main__":
     main()
+    sys.exit()
