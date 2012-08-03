@@ -14,6 +14,9 @@ def main():
                       help="image to extract the scalar quantity from")
     parser.add_option('-n', "--name", dest="name",
                       help="name to give to the scalar quantity to add")
+    parser.add_option('--output_point_value_file', dest="point_value_file",
+                      help="Name of a file with all the values on the tract points"
+                     )
 
     (options, args) = parser.parse_args()
 
@@ -48,6 +51,10 @@ def main():
         tractography.getOriginalFibersData()[options.name] = new_scalar_data
 
         vtkInterface.writeLinesToVtkPolyData(options.output_bundle, tractography.getOriginalFibers(),  tractography.getOriginalFibersData())
+
+        if options.point_value_file is not None:
+            values = numpy.vstack(tractography.getOriginalFibersData()[options.name]).flatten()
+            numpy.savetxt(options.point_value_file, values)
 
 
 if __name__ == "__main__":
