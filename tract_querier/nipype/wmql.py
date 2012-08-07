@@ -10,10 +10,10 @@ from nipype.interfaces.base import (CommandLine, CommandLineInputSpec, TraitedSp
 class TractQuerierInputSpec(CommandLineInputSpec):
     atlas_type = traits.Enum('Desikan', 'Mori', argstr='-q %s', usedefault=True,
                              desc='Atlas type for the queries')
-    input_atlas = traits.File(desc = "Input Atlas volume", exists = False, mandatory = True, argstr="-a %s", copy_file=False)
-    input_tractography = traits.File(desc = "Input Tractography", exists = False, mandatory = True, argstr="-t %s", copy_file=False)
-    out_prefix = traits.Str('query', des = "prefix for the results", mandatory = False, argstr="-o %s", usedefault=True)
-    queries = traits.List(desc = "Input queries", exists = True, mandatory = False, argstr="--query_selection %s")
+    input_atlas = traits.File(desc="Input Atlas volume", exists=False, mandatory=True, argstr="-a %s", copy_file=False)
+    input_tractography = traits.File(desc="Input Tractography", exists=False, mandatory=True, argstr="-t %s", copy_file=False)
+    out_prefix = traits.Str('query', des="prefix for the results", mandatory=False, argstr="-o %s", usedefault=True)
+    queries = traits.List(desc="Input queries", exists=True, mandatory=False, argstr="--query_selection %s")
 
 
 
@@ -26,7 +26,8 @@ class TractQuerier(CommandLine):
     Examples
     --------
 
-    >>> from .wmql_nipype import TractQuerier
+    >>> from ..nipype.wmql import TractQuerier
+    >>> import os
     >>> tract_querier = TractQuerier()
     >>> tract_querier.inputs.atlas_type = 'Desikan'
     >>> tract_querier.inputs.input_atlas = 'wmparc.nii.gz'
@@ -83,7 +84,7 @@ class MapImageToTracts(CommandLine):
     Examples
     --------
 
-    >>> from .wmql_nipype import MapImageToTracts
+    >>> from ..nipype.wmql import MapImageToTracts
     >>> tract_mapper = MapImageToTracts()
     >>> tract_mapper.inputs.output_tractography_prefix = 'out_'
     >>> tract_mapper.inputs.input_image = 'fa.nii.gz'

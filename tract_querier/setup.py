@@ -4,6 +4,7 @@ def configuration(parent_package='', top_path=None):
     from numpy.distutils.misc_util import Configuration
     config = Configuration('tract_querier', parent_package, top_path)
     config.add_subpackage('tensor_covariance')
+    config.add_subpackage('nipype')
     config.add_data_files(
         ('queries',[
         'data/FreeSurfer.qry',
