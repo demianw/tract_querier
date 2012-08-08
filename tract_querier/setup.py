@@ -8,7 +8,7 @@ def configuration(parent_package='', top_path=None):
     config.add_data_files(
         ('queries',[
         'data/FreeSurfer.qry',
-        'data/JHU_MNI_SS_WMPM_Type-II.qry',
+        'data/JHU_MNI_SS_WMPM_Type_II.qry',
         'data/freesurfer_queries.qry',
         'data/mori_queries.qry',
         ])

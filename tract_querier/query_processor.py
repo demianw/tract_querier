@@ -12,7 +12,13 @@ keywords = [
     'not in',
     'not',
     'only',
-    'endpoints_in'
+    'endpoints_in',
+    'anterior_of',
+    'posterior_of',
+    'medial_of',
+    'lateral_of',
+    'inferior_of',
+    'superior_of',
 ]
 
 
@@ -153,9 +159,21 @@ class RewritePreprocess(ast.NodeTransformer):
 
 
 class EvaluateQueries(ast.NodeVisitor):
+
+
+    relative_terms = [
+        'anterior_of',
+        'posterior_of',
+        'medial_of',
+        'lateral_of',
+        'inferior_of',
+        'superior_of'
+    ]
+
     def __init__(self,
                  crossing_fibers_labels, crossing_labels_fibers,
-                 ending_fibers_labels={}, ending_labels_fibers={}
+                 ending_fibers_labels={}, ending_labels_fibers={},
+                 fiber_bounding_boxes={}, label_bounding_boxes={},
                 ):
         self.crossing_fibers_labels = crossing_fibers_labels
         self.crossing_labels_fibers = crossing_labels_fibers
@@ -163,8 +181,13 @@ class EvaluateQueries(ast.NodeVisitor):
         self.ending_fibers_labels = ending_fibers_labels
         self.ending_labels_fibers = ending_labels_fibers
 
+        self.fiber_bounding_boxes = fiber_bounding_boxes
+        self.label_bounding_boxes = label_bounding_boxes
+
         self.evaluated_queries_fibers = {}
         self.evaluated_queries_labels = {}
+        self.evaluated_queries_labels_bounding_boxes = {}
+        self.evaluated_queries_fibers_bounding_boxes = {}
         self.queries_to_save = set()
 
     def visit_Module(self, node):
@@ -278,8 +301,56 @@ class EvaluateQueries(ast.NodeVisitor):
             elif (node.func.id.lower() == 'save' and isinstance(node.args, ast.Str)):
                 self.queries_to_save.add(node.args[0].s)
                 return
+            elif node.func.id.lower() in self.relative_terms:
+                return self.process_relative_term(node)
 
         raise TractQuerierSyntaxError("Invalid query in line %d" % node.lineno)
+
+    def process_relative_term(self, node):
+        arg = node.args[0]
+        if  isinstance(arg, ast.Name):
+                _, labels = self.visit(arg)
+        elif isinstance(arg, ast.Attribute):
+            if arg.attr.lower() in ('left', 'right'):
+                side = arg.attr.lower()
+                _, labels = self.visit(arg)
+        else:
+            raise TractQuerierSyntaxError(
+                "Attribute not recognized for relative specification."
+                "Line %d" % node.lineno
+            )
+
+        labels_generator = (l for l in labels)
+        bounding_box = self.label_bounding_boxes[labels_generator.next()]
+        for label in labels_generator:
+            bounding_box = bounding_box.union(self.label_bounding_boxes[label])
+
+        function_name = node.func.id.lower()
+
+        if function_name == 'anterior_of':
+            fibers = self.fiber_bounding_boxes['anterior'] > bounding_box.anterior
+        elif function_name == 'posterior_of':
+            fibers = self.fiber_bounding_boxes['posterior'] < bounding_box.posterior
+        elif function_name == 'superior_of':
+            fibers = self.fiber_bounding_boxes['superior'] > bounding_box.superior
+        elif function_name == 'inferior_of':
+            fibers = self.fiber_bounding_boxes['inferior'] < bounding_box.inferior
+        elif function_name == 'medial_of':
+            if side == 'left':
+                fibers = self.fiber_bounding_boxes['right'] > bounding_box.right
+            else:
+                fibers = self.fiber_bounding_boxes['left'] < bounding_box.left
+        elif function_name == 'lateral_of':
+            if side == 'right':
+                fibers = self.fiber_bounding_boxes['right'] > bounding_box.right
+            else:
+                fibers = self.fiber_bounding_boxes['left'] < bounding_box.left
+
+        fibers = set(fibers.nonzero()[0])
+        labels = set().union(*tuple((self.crossing_fibers_labels[fiber] for fiber in fibers)))
+
+        return fibers, labels
+
 
     def visit_Assign(self, node):
         if len(node.targets) > 1:
@@ -440,14 +511,15 @@ def queries_preprocess(query_file, filename='<unknown>', include_folders=[]):
     return preprocessed_module.body
 
 
-def eval_queries(
-    crossing_labels_fibers, crossing_fibers_labels,
-    ending_labels_fibers, ending_fibers_labels,
-    query_file_body
-):
+def eval_queries(query_file_body,
+                 crossing_labels_fibers={}, crossing_fibers_labels={},
+                 ending_labels_fibers={}, ending_fibers_labels={},
+                 fiber_bounding_boxes={}, label_bounding_boxes={}
+                ):
     eq = EvaluateQueries(
         crossing_fibers_labels, crossing_labels_fibers,
-        ending_fibers_labels, ending_labels_fibers
+        ending_fibers_labels, ending_labels_fibers,
+        fiber_bounding_boxes, label_bounding_boxes,
     )
     if isinstance(query_file_body, list):
         eq.visit(ast.Module(query_file_body))
@@ -458,7 +530,7 @@ def eval_queries(
 
 
 def queries_syntax_check(query_file_body):
-    eval_queries({}, {}, {}, {}, query_file_body)
+    eval_queries(query_file_body)
 
 
 def labels_for_fibers(crossing_fibers_labels):

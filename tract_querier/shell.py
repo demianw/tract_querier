@@ -94,6 +94,7 @@ class TractQuerierCmd(cmd.Cmd):
                  crossing_fibers_labels,
                  crossing_labels_fibers,
                  ending_fibers_labels, ending_labels_fibers,
+                 fiber_bounding_boxes, label_bounding_boxes,
                  initial_body=None, tractography=None,
                  save_query_callback=None,
                  include_folders=['.']
@@ -104,7 +105,8 @@ class TractQuerierCmd(cmd.Cmd):
         self.tractography = tractography
         self.querier = EvaluateQueries(
             crossing_fibers_labels, crossing_labels_fibers,
-            ending_fibers_labels, ending_labels_fibers
+            ending_fibers_labels, ending_labels_fibers,
+            fiber_bounding_boxes, label_bounding_boxes,
         )
         self.save_query_callback = save_query_callback
         self.save_query_visitor = SaveQueries(
@@ -142,6 +144,9 @@ class TractQuerierCmd(cmd.Cmd):
 
     @safe_method
     def default(self, line):
+        if len(line) == 0:
+            return False
+
         try:
             body = queries_preprocess(
                 line,

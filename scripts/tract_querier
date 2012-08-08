@@ -36,6 +36,12 @@ def main():
                       default=False, action="store_true",
                       help="Interactive prompt"
                      )
+    parser.add_option(
+        '--bounding_box_affine_transform', dest='bounding_box_affine_transform',
+        help="Bounding box to apply to the image affine transform and tracts "
+        "to put both in AC-PC coordinate space"
+    )
+
 
     (options, args) = parser.parse_args()
 
@@ -57,8 +63,17 @@ def main():
     import tract_querier
     from tractographyGP import tractography
 
-    print "Loading files"
+    if options.bounding_box_affine_transform:
+        bounding_box_affine_transform = np.fromstring(
+            options.bounding_box_affine_transform, sep=','
+        ).reshape(4, 4)
+        print "RAS transform:"
+        print bounding_box_affine_transform
+    else:
+        bounding_box_affine_transform = np.eye(4)
 
+
+    print "Loading files"
     if options.include:
         folders = options.include.split(':')
     else:
@@ -108,7 +123,8 @@ def main():
     )
 
     print "Calculating labels and crossings"
-    affine_ras_2_ijk = np.linalg.inv(labels_nii.get_affine())
+    affine_ijk_2_ras = labels_nii.get_affine()
+    affine_ras_2_ijk = np.linalg.inv(affine_ijk_2_ras)
     fibers = tr.getFibersToProcess()
 
     crossing_fibers_labels, crossing_labels_fibers, ending_fibers_labels, ending_labels_fibers =\
@@ -117,14 +133,19 @@ def main():
                 options.length_threshold, options.threshold
             )
 
+    fiber_bounding_boxes = tract_querier.compute_fiber_bounding_boxes(fibers, bounding_box_affine_transform)
+    label_bounding_boxes = tract_querier.compute_label_bounding_boxes(img, np.dot(bounding_box_affine_transform, affine_ijk_2_ras))
+
     if not options.interactive:
         print "Computing queries"
         evaluated_queries = tract_querier.eval_queries(
+            query_file_body,
             crossing_labels_fibers,
             crossing_fibers_labels,
             ending_labels_fibers,
             ending_fibers_labels,
-            query_file_body
+            fiber_bounding_boxes,
+            label_bounding_boxes,
         )
 
         query_names = evaluated_queries.keys()
@@ -145,6 +166,7 @@ def main():
         interactive_shell = tract_querier.TractQuerierCmd(
             crossing_fibers_labels, crossing_labels_fibers,
             ending_fibers_labels, ending_labels_fibers,
+            fiber_bounding_boxes, label_bounding_boxes,
             initial_body=query_script,
             save_query_callback=query_save,
             include_folders=folders
