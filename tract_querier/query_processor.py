@@ -307,6 +307,9 @@ class EvaluateQueries(ast.NodeVisitor):
         raise TractQuerierSyntaxError("Invalid query in line %d" % node.lineno)
 
     def process_relative_term(self, node):
+        if len(self.label_bounding_boxes) == 0:
+            return set(), set()
+
         arg = node.args[0]
         if  isinstance(arg, ast.Name):
                 _, labels = self.visit(arg)

@@ -52,21 +52,21 @@ class SaveQueries(ast.NodeVisitor):
                 self.querier.evaluated_queries_fibers[query_name]
             )
         elif (
-            isinstance(node, ast.Attribute) and
-            isinstance(node.value, ast.Name)
+            isinstance(value, ast.Attribute) and
+            isinstance(value.value, ast.Name)
         ):
-            self.save_attribute_name(node)
+            self.save_attribute_name(node.value)
         else:
             self.visit(value)
 
     def save_attribute_name(self, node):
-        query_prefix = node.value.id().lower()
+        query_prefix = node.value.id.lower()
         query_suffix = node.attr.lower()
         if query_suffix == 'side':
             for suffix in ('left', 'right'):
                 query_name = query_prefix + '.' + suffix
                 self.save_query_callback(
-                    query_name.replace('.', '_'),
+                    query_name,
                     self.querier.evaluated_queries_fibers[
                         query_name
                     ]
@@ -74,7 +74,7 @@ class SaveQueries(ast.NodeVisitor):
         else:
             query_name = query_prefix + '.' + query_suffix
             self.save_query_callback(
-                query_name.replace('.', '_'),
+                query_name,
                 self.querier.evaluated_queries_fibers[
                     query_name
                 ]
@@ -142,8 +142,12 @@ class TractQuerierCmd(cmd.Cmd):
         for k in keys:
             print k
 
+    def emptyline(self):
+        return
+
     @safe_method
     def default(self, line):
+        print line
         if len(line) == 0:
             return False
 
