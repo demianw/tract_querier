@@ -202,6 +202,62 @@ def compute_fiber_label_indices(affine_ras_2_ijk, img, fibers, length_threshold,
 
     return crossing_fibers_labels, crossing_labels_fibers, ending_fibers_labels, ending_labels_fibers
 
+def compute_fiber_occupation_image(affine_ras_2_ijk, img, fibers, length_threshold):
+    if length_threshold > 0:
+        fiber_length = lambda fiber: ((((fiber[1:] - fiber[:-1]) ** 2).sum(1)) ** .5).sum()
+        fibers = [f for f in fibers if fiber_length(f) >= length_threshold]
+
+    all_points = np.vstack(fibers)
+    all_points_ijk = (np.dot(affine_ras_2_ijk[:-1, :-1], all_points.T).T +\
+                      affine_ras_2_ijk[:-1, -1])
+    all_points_ijk_rounded = np.round(all_points_ijk).astype(int)
+
+    if any( ((all_points_ijk_rounded[:, i] >= img.shape[i]).any() for i in xrange(3)))  or (all_points_ijk_rounded < 0).any():
+        print >>sys.stderr, "Warning tract points fall outside the image"
+
+    for i in xrange(3):
+        all_points_ijk_rounded[:, i] = all_points_ijk_rounded[:, i].clip(0, img.shape[i] - 1)
+
+    image_points_to_traverse = np.empty(img.shape, dtype=bool)
+    coords = tuple(all_points_ijk_rounded.T)
+    image_points_to_traverse[coords] = True
+    points_to_traverse = np.transpose(image_points_to_traverse.nonzero())
+
+    label_occupation_image = np.empty(img.shape, dtype='object')
+    fiber_numbers = np.empty(len(all_points), dtype=int)
+
+    last_index = 0
+    for i, fiber in enumerate(fibers):
+        n = len(fiber)
+        fiber_numbers[last_index: last_index + n] = i
+        last_index += n
+
+    label_occupation_image[:] = set()
+    for point in points_to_traverse:
+        print i
+        i, j, k = point
+        points_in_fibers = (all_points_ijk_rounded == point).all(1)
+        label_occupation_image[i, j, k] = set(
+            fiber_numbers[points_in_fibers]
+        )
+
+    return label_occupation_image
+
+
+
+
+    point_labels = img[tuple(all_points_ijk_rounded.T)]
+    fiber_cumulative_lengths = np.cumsum([0] + [len(f) for f in fibers])
+
+    crossing_fibers_labels, crossing_labels_fibers = compute_label_crossings(
+        fiber_cumulative_lengths, point_labels, crossing_threshold
+    )
+
+    ending_fibers_labels, ending_labels_fibers = compute_label_endings(
+        fiber_cumulative_lengths, point_labels
+    )
+
+    return crossing_fibers_labels, crossing_labels_fibers, ending_fibers_labels, ending_labels_fibers
 
 
 #import collections
