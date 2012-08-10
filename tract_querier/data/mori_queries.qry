@@ -4,9 +4,9 @@ HEMISPHERE.left |= '*.left'
 HEMISPHERE.right |= '*.right'
 
 frontal.side |= SUPERIOR_FRONTAL_GYRUS.side or MIDDLE_FRONTAL_GYRUS.side or INFERIOR_FRONTAL_GYRUS.side or \
-                   MIDDLE_FRONTO_ORBITAL_GYRUS.side or LATERAL_FRONTO_ORBITAL_GYRUS.side
-occipital.side |= SUPERIOR_OCCIPITAL_GYRUS.side or INFERIOR_OCCIPITAL_GYRUS.side or MIDDLE_OCCIPITAL_GYRUS.side
-temporal.side |= SUPERIOR_TEMPORAL_GYRUS.side or INFERIOR_TEMPORAL_GYRUS.side or MIDDLE_TEMPORAL_GYRUS.side
+                   MIDDLE_FRONTO_ORBITAL_GYRUS.side or LATERAL_FRONTO_ORBITAL_GYRUS.side or PRECENTRAL_GYRUS.side or GYRUS_RECTUS.side
+occipital.side |= SUPERIOR_OCCIPITAL_GYRUS.side or INFERIOR_OCCIPITAL_GYRUS.side or MIDDLE_OCCIPITAL_GYRUS.side or CUNEUS.side or PRE_CUNEUS.side
+temporal.side |= SUPERIOR_TEMPORAL_GYRUS.side or INFERIOR_TEMPORAL_GYRUS.side or MIDDLE_TEMPORAL_GYRUS.side or LINGUAL_GYRUS.side or FUSIFORM_GYRUS.side or PARAHIPPOCAMPAL_GYRUS.side or ENTORHINAL_AREA.side
 
 corpus_callosum.side |= Genu_of_corpus_callosum.side or Body_of_corpus_callosum.side or Splenium_of_corpus_callosum.side
 
@@ -29,12 +29,14 @@ IFO.side = frontal.side and occipital.side and Sagittal_stratum.side and Inferio
            not in corpus_callosum not in THALAMUS.side not in SUPERIOR_PARIETAL_LOBULE.side not in PRE_CUNEUS.side\
            not in Superior_corona_radiata.side not in Uncinate_fasciculus.side
 
-ILF.side = temporal.side and occipital.side and Sagittal_stratum.side\
-           not in HEMISPHERE.opposite not in CEREBELLUM.side not in THALAMUS.side not in corpus_callosum not in frontal.side \
-           not in LINGUAL_GYRUS.side \
-           not in Inferior_fronto_occipital_fasciculus.side not in Superior_longitudinal_fasciculus.side not in CINGULATE_GYRUS.side\
-           not in Anterior_limb_of_internal_capsule.side not in Anterior_corona_radiata.side not in Superior_corona_radiata.side\
-           not in Fornix_column_and_body.side not in ANGULAR_GYRUS.side not in PRE_CUNEUS.side not in CUNEUS.side not in SUPRAMARGINAL_GYRUS.side
+ILF.side = (
+          temporal.side and occipital.side and Sagittal_stratum.side 
+          not in HEMISPHERE.opposite not in CEREBELLUM.side not in THALAMUS.side not in corpus_callosum not in frontal.side 
+          not in LINGUAL_GYRUS.side 
+          not in Inferior_fronto_occipital_fasciculus.side not in Superior_longitudinal_fasciculus.side not in CINGULATE_GYRUS.side
+          not in Anterior_limb_of_internal_capsule.side not in Anterior_corona_radiata.side not in Superior_corona_radiata.side
+          not in Fornix_column_and_body.side not in ANGULAR_GYRUS.side not in PRE_CUNEUS.side not in CUNEUS.side not in SUPRAMARGINAL_GYRUS.side
+)
 
 UNC.side = frontal.side and temporal.side\
            not in corpus_callosum not in CEREBELLUM.side not in THALAMUS.side not in Posterior_corona_radiata.side\
