@@ -61,7 +61,7 @@ def main():
 
     global tract_querier
     import tract_querier
-    from tractographyGP import tractography
+    from tract_querier import tractography
 
     if options.bounding_box_affine_transform:
         bounding_box_affine_transform = np.fromstring(
@@ -191,7 +191,7 @@ def save_tractography_file(
     filename, tractography, fiber_numbers,
     zscore_threshold=3
 ):
-    from tractographyGP import vtkInterface
+    from tract_querier.tractography import vtkInterface
     from itertools import izip
 
     fiber_numbers = list(fiber_numbers)

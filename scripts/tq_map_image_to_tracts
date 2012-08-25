@@ -22,8 +22,8 @@ def main():
 
     import numpy
 
-    from tractographyGP import vtkInterface
-    from tractographyGP import tractography as tr
+    from tract_querier.tractography import vtkInterface
+    from tract_querier.tractography import tractography as tr
 
     import nifti
 
