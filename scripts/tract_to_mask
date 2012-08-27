@@ -1,0 +1,66 @@
+#!/usr/bin/env python
+import os
+import sys
+
+import numpy as np
+import nibabel
+import vtk
+from vtk.util import numpy_support as ns
+
+
+from argparse import ArgumentParser
+
+usage = r"""
+usage: %(prog)s -i tracts.vtk -r MNI.nii.gz -o mask.nii.gz
+"""
+parser = ArgumentParser(usage=usage)
+parser.add_argument('-o', "--output", dest="outfile",
+                    help="file with the output  tract")
+parser.add_argument('-i', "--in", dest="infile",
+                    help="tractography file to convert to a mask", required=True)
+parser.add_argument('-r', "--ref", dest="reffile",
+                    help="reference file to put the tract into", required=True)
+parser.add_argument('--log', dest="logfile",
+                    help="file to output a log if it fails"
+                    )
+
+args = parser.parse_args()
+
+infile = args.infile
+reffile = args.reffile
+
+if args.outfile:
+    outfile = args.outfile
+else:
+	outfile = os.path.splitext(infile)[0] + '.nii.gz'
+
+pdr = vtk.vtkPolyDataReader()
+pdr.SetFileName(infile)
+pdr.Update()
+pd = pdr.GetOutput()
+pd.GetPoints().GetData()
+points = ns.vtk_to_numpy(pd.GetPoints().GetData())
+
+image = nibabel.load(reffile)
+aff = image.get_affine()
+im_data = image.get_data()
+new_image = np.zeros_like(im_data)
+affi = np.linalg.inv(aff)
+points_ijk = np.dot(affi[:-1, :-1], points.T).T + affi[:-1,-1]
+coords = points_ijk.round(0).astype(int)
+
+try:
+	coords = coords[(coords > 0).all(1)]
+	coords = coords[(coords < new_image.shape).all(1)]
+	new_image[tuple(coords.T)] = 1
+except Exception as e:
+	import datetime
+	now = datetime.datetime.now()
+	d = os.path.dirname(sys.argv[1])
+	f = os.path.basename(sys.argv[1])
+	logfile = file(os.path.join(
+		d,
+		'crash-' + now.strftime("%y%m%d-%H%M%S") + f +'.txt'),
+		'w')
+	logfile.write("Problem in: " + repr(sys.argv) + repr(e) + '\n')
+nibabel.save(nibabel.spatialimages.SpatialImage(new_image.astype(float), aff), outfile)
