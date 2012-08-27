@@ -1,0 +1,85 @@
+#!/usr/bin/env python
+import os
+import sys
+
+import numpy
+import nibabel
+import vtk
+from vtk.util import numpy_support as ns
+
+
+from argparse import ArgumentParser
+
+def main():
+    usage = r"""
+    usage: %(prog)s -r MNI.nii.gz -t1 tract1.vtk -t2 tract2.vtk
+    """
+    parser = ArgumentParser(usage=usage)
+    parser.add_argument('-r', "--ref", dest="reffile",
+                        help="reference file to put the tract into", required=True)
+    parser.add_argument('-1', dest="tract1",
+                        help="tractography file 1", required=True)
+    parser.add_argument('-2', dest="tract2",
+                        help="tractography file 2", required=True)
+
+
+    args = parser.parse_args()
+
+    image = nibabel.load(args.reffile)
+    aff = image.get_affine()
+    im_shape = image.get_data().shape
+
+    tract_mask_1 = tract_2_mask(args.tract1, im_shape, aff)
+    tract_mask_2 = tract_2_mask(args.tract2, im_shape, aff)
+
+    neg_tract_mask_1 = 1 - tract_mask_1
+    neg_tract_mask_2 = 1 - tract_mask_2
+
+    pp = (tract_mask_1 * tract_mask_2).sum()
+    pn = (tract_mask_1 * neg_tract_mask_2).sum()
+    np = (neg_tract_mask_1 * tract_mask_2).sum()
+    nn = (neg_tract_mask_1 * neg_tract_mask_2).sum()
+    print pp, pn, np, nn
+    N = pp + pn + np + nn
+
+    observed_agreement = (pp + nn) / N
+    chance_agreement = ((pp + pn) * (pp + np) + (nn + np) * (nn + pn)) / (N * N)
+
+    print observed_agreement, chance_agreement
+    k = (observed_agreement - chance_agreement) / (1 - chance_agreement)
+
+    print k
+
+
+def tract_2_mask(infile, im_shape, aff):
+    pdr = vtk.vtkPolyDataReader()
+    pdr.SetFileName(infile)
+    pdr.Update()
+    pd = pdr.GetOutput()
+    pd.GetPoints().GetData()
+    points = ns.vtk_to_numpy(pd.GetPoints().GetData())
+    new_image = numpy.zeros(im_shape)
+    affi = numpy.linalg.inv(aff)
+    points_ijk = numpy.dot(affi[:-1, :-1], points.T).T + affi[:-1,-1]
+    coords = points_ijk.round(0).astype(int)
+
+    try:
+        coords = coords[(coords > 0).all(1)]
+        coords = coords[(coords < new_image.shape).all(1)]
+        new_image[tuple(coords.T)] = 1
+    except Exception as e:
+        import datetime
+        now = datetime.datetime.now()
+        d = os.path.dirname(sys.argv[1])
+        f = os.path.basename(sys.argv[1])
+        logfile = file(os.path.join(
+            d,
+            'crash-' + now.strftime("%y%m%d-%H%M%S") + f +'.txt'),
+            'w')
+        logfile.write("Problem in: " + repr(sys.argv) + repr(e) + '\n')
+
+    return new_image
+
+
+if __name__ == "__main__":
+    main()

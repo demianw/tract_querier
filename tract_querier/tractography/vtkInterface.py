@@ -5,7 +5,7 @@ import numpy as np
 
 
 def read_vtkPolyData(filename):
-    if filename.endswith('xml'):
+    if filename.endswith('xml') or filename.endswith('vtp'):
         polydata_reader = vtk.vtkXMLPolyDataReader()
     else:
         polydata_reader = vtk.vtkPolyDataReader()
@@ -150,7 +150,7 @@ def lines_to_vtkPolyData(lines, lines_indices=None, point_data={}):
 def writeLinesToVtkPolyData(filename, lines, point_data={}):
     poly_data = lines_to_vtkPolyData(lines, point_data=point_data)
 
-    if filename.endswith('.xml'):
+    if filename.endswith('.xml') or filename.endswith('.vtp'):
         writer = vtk.vtkXMLPolyDataWriter()
         writer.SetDataModeToBinary()
     else:
