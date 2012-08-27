@@ -61,7 +61,7 @@ def main():
 
     global tract_querier
     import tract_querier
-    from tract_querier import tractography
+    from tract_querier.tractography import tractography
 
     if options.bounding_box_affine_transform:
         bounding_box_affine_transform = np.fromstring(
