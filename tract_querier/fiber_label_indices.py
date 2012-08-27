@@ -7,7 +7,7 @@ class BoundingBox(np.ndarray):
         try:
             if len(input_array) == 6 and np.isscalar(input_array[0]):
                 pass
-            elif len(input_array) > 1 and len(input_array[0]) == 3:
+            elif len(input_array) >= 1 and len(input_array[0]) == 3:
                 pass
             else:
                 raise ValueError("Bounding box must have 6 components or be a list of points")
