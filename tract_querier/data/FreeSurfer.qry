@@ -830,6 +830,10 @@ wm_S_temporal_inferior.right |= 4179
 wm_S_temporal_superior.right |= 4180
 wm_S_temporal_transverse.right |= 4181
 
+centrum_semiovale.left |= 5001
+centrum_semiovale.right |= 5002
+
+
 UnsegmentedWhiteMatter.left |= 5001
 UnsegmentedWhiteMatter.right |= 5002
 
