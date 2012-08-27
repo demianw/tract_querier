@@ -50,7 +50,8 @@ def main():
         new_scalar_data = ndimage.map_coordinates( image_data.T, ijk_points.T )[:, None]
         tractography.getOriginalFibersData()[options.name] = new_scalar_data
 
-        vtkInterface.writeLinesToVtkPolyData(options.output_bundle, tractography.getOriginalFibers(),  tractography.getOriginalFibersData())
+	if options.output_bundle is not None:
+		vtkInterface.writeLinesToVtkPolyData(options.output_bundle, tractography.getOriginalFibers(),  tractography.getOriginalFibersData())
 
         if options.point_value_file is not None:
             values = numpy.vstack(tractography.getOriginalFibersData()[options.name]).flatten()

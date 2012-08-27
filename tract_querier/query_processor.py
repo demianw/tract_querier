@@ -2,7 +2,6 @@ import ast
 from os import path
 from copy import deepcopy
 from itertools import takewhile
-from collections import Counter
 import fnmatch
 
 

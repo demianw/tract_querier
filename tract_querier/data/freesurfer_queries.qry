@@ -159,7 +159,9 @@ middle_frontal_gyrus.side |= caudalmiddlefrontal.side or rostralmiddlefrontal.si
 internal_capsule_new.side = ((frontal.side and thalamus_proper.side and (parietal.side or occipital.side))
 	not in cingular.side
 	not in precentral.side not in postcentral.side
-	not in hemisphere.opposite)
+	not in hemisphere.opposite
+	not in brain_stem
+	)
 
 
 #ioff_dorsal_claustrum.side = ((frontal.side and superiorparietal.side and putamen.side)
@@ -194,7 +196,13 @@ ioff.side = (
 	not in hemisphere.opposite
 )
 
-
+soff.side = (
+            (lateralorbitofrontal.side and occipital.side)
+	not in temporal.side
+        not in subcortical.side
+	not in cingular.side
+	not in hemisphere.opposite
+)
 
 # updated uf per nikos' suggestions by adding a general definition for the middle_frontal_gyrus.side  and inferior_frontal_gyrus.side and adding them to UF definition, also added IOFF as exclusion
 UF.side = (
@@ -252,19 +260,22 @@ SLF_I.side = (
         not in HEMISPHERE.opposite
       )
 
+slf_ii.side = ((
+	(lateraloccipital.side or supramarginal.side or inferiorparietal.side) and 
+	endpoints_in(middle_frontal_gyrus.side))  
+	not in hemisphere.opposite not in temporal.side not in cingular.side not in subcortical.side)
 
-SLF_II_III.side = (((inferiorparietal.side or supramarginal.side or lateraloccipital.side) and inferior_frontal_gyrus.side 
-	and middle_frontal_gyrus.side)
-	not in temporal.side
-        not in subcortical.side
-        not in HEMISPHERE.opposite
-  )
+slf_iii.side = ((
+	(lateraloccipital.side or supramarginal.side or inferiorparietal.side) and 
+	endpoints_in(inferior_frontal_gyrus.side))  
+	not in hemisphere.opposite not in temporal.side not in cingular.side not in subcortical.side)
 
 extreme_capsule.side = (((superiortemporal.side or temporalpole.side) 
 	and (inferior_frontal_gyrus.side or middle_frontal_gyrus.side) and inferiorparietal.side)
 	not in MDLF.side
 	not in SLF_I.side 
-        not in SLF_II_III.side
+        not in SLF_II.side
+	not in SLF_III.side
         not in IOFF.side
         not in HEMISPHERE.opposite
 )
@@ -286,22 +297,23 @@ CC = (
 )
 
 
-AC = (
-  (temporalpole.left and temporalpole.right) or
-  (middletemporal.left and middletemporal.right) or
-  (inferiortemporal.left and inferiortemporal.right) or
-  (Amygdala.left and Amygdala.right)
-  not in (corpuscallosum.left or corpuscallosum.right)
-  )
+#AC = (
+#  (temporalpole.left and temporalpole.right) or
+#  (middletemporal.left and middletemporal.right) or
+#  (inferiortemporal.left and inferiortemporal.right) or
+#  (Amygdala.left and Amygdala.right)
+#  not in (corpuscallosum.left or corpuscallosum.right)
+#  )
 
-DHC = (
-  parahippocampal.left and parahippocampal.right
-  not in (corpuscallosum.left or corpuscallosum.right)
-  )
+#DHC = (
+#  parahippocampal.left and parahippocampal.right
+#  not in (corpuscallosum.left or corpuscallosum.right)
+#  )
 
 internal_capsule.side |= ((rostralmiddlefrontal.side and temporal.side and Putamen.side and UnsegmentedWhiteMatter.side)
         not in occipital.side not in corpus_callosum not in cerebellum 
-	not in HEMISPHERE.opposite
+	
+not in HEMISPHERE.opposite
         not in subcortical.side not in cingular.side)
 
 
@@ -338,4 +350,16 @@ af.side = (
 #  not in ventricles 
 #  not in posteriorcingulate.side 
 #)
+
+thalamo_frontal.side = endpoints_in(thalamus_proper.side) and endpoints_in(frontal.side)
+thalamo_parietal.side = endpoints_in(thalamus_proper.side) and endpoints_in(parietal.side)
+thalamo_occipital.side = endpoints_in(thalamus_proper.side) and endpoints_in(occipital.side)
+
+
+striatum.side |= putamen.side or pallidum.side or caudate.side
+
+striato_frontal.side = endpoints_in(striatum.side) and endpoints_in(frontal.side)
+striato_parietal.side = endpoints_in(striatum.side) and endpoints_in(parietal.side)
+striato_occipital.side = endpoints_in(striatum.side) and endpoints_in(occipital.side)
+
 
