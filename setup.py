@@ -48,7 +48,8 @@ if __name__ == "__main__":
                 'scripts/tract_outlier_rejection',
                 'scripts/tq_map_image_to_tracts',
                 'scripts/tract_to_mask',
-                'scripts/kappa'
+                'scripts/kappa',
+                'scripts/tract_math'
               ],
             **(configuration().todict())
     )
