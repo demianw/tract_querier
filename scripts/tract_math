@@ -5,6 +5,7 @@ from warnings import warn
 
 from argparse import ArgumentParser, FileType
 
+
 def function_help_decorator(help_text):
     def internal_decorator(func):
         func.help_text = help_text
@@ -22,12 +23,6 @@ def main():
 
     Available operations:
     """
-#        count: counts the number of tracts
-#        mean_std_length: reports the mean and standard deviation of the tract length
-#        scalars: print the names of scalar data associated with each tract
-#        volume <resolution>: estimate the volume by counting the voxels traversed at a certain resolution in mm
-#        map_image <image> <scalar name> <output tractography>: maps the values of an image to the tract points
-#        generate_mask <image> <image_out>: generate a mask in the space of the image given as a parameter
 
     function_list_names = functions_list.keys()
     function_list_names.sort()
@@ -41,7 +36,6 @@ def main():
     parser.add_argument('operation_parameters', type=str, nargs="*",
                         help="operation to use")
 
-
     args = parser.parse_args()
     global tr, vtkInterface, numpy, nibabel
     from tract_querier.tractography import tractography as tr
@@ -49,7 +43,9 @@ def main():
     import numpy
     import nibabel
 
-    tractography = tr.tractography_from_vtk_files( [f.name for f in args.tractographies] )
+    tractography = tr.tractography_from_vtk_files(
+        [f.name for f in args.tractographies]
+    )
     if  args.operation in functions_list:
         try:
             functions_list[args.operation](tractography, *args.operation_parameters)
@@ -59,21 +55,23 @@ def main():
         parser.error("Operation not found")
 
 
-
 @function_help_decorator(': counts the number of tracts')
 def count(tractography):
     print len(tractography.getFibersToProcess())
 
+
 @function_help_decorator(': print the names of scalar data associated with each tract')
 def scalars(tractography):
-    for k in tractography.getOriginalData().keys(): print k,' '
+    for k in tractography.getOriginalData().keys():
+        print k, ' '
+
 
 @function_help_decorator(': calculates mean and std of fiber length')
 def length_mean_std(tractography):
     lengths = numpy.empty(len(tractography.getFibersToProcess()))
 
     for i, tract in enumerate(tractography.getFibersToProcess()):
-        d2 = numpy.sqrt((numpy.diff(tract, 0) ** 2).sum(1))
+        d2 = numpy.sqrt((numpy.diff(tract, axis=0) ** 2).sum(1))
         lengths[i] = d2.sum()
 
     mean = lengths.mean()
@@ -82,17 +80,19 @@ def length_mean_std(tractography):
     print mean, std
     return mean, std
 
+
 @function_help_decorator('<volume unit>: calculates the volume of a tract based on voxel occupancy of a certain voxel volume')
-def volume(tractography, resolution):
+def tract_volume(tractography, resolution):
     resolution = float(resolution)
     all_points = numpy.vstack(tractography.getFibersToProcess())
 
     all_points /= resolution
     all_points = (all_points - .5).round(0).astype(int)
-    num_voxels = len( set((tuple(point) for point in all_points)) )
+    num_voxels = len(set((tuple(point) for point in all_points)))
 
     print num_voxels * (resolution ** 3)
     return num_voxels * (resolution ** 3)
+
 
 @function_help_decorator('<scalar>: calculates mean and std of a scalar quantity for each tract')
 def scalar_tract_mean_std(tractography, scalar):
@@ -109,6 +109,7 @@ def scalar_tract_mean_std(tractography, scalar):
 
     except KeyError:
         raise ValueError("Tractography does not contain this scalar data")
+
 
 @function_help_decorator('<scalar>: calculates median of a scalar quantity for each tract')
 def scalar_tract_median(tractography, scalar):
@@ -139,6 +140,7 @@ def scalar_mean_std(tractography, scalar):
     except KeyError:
         raise ValueError("Tractography does not contain this scalar data")
 
+
 @function_help_decorator('<scalar>: calculates median of a scalar quantity over tracts')
 def scalar_median(tractography, scalar):
     try:
@@ -167,34 +169,75 @@ def tract_map_image(tractography, image, quantity_name, tractography_file_output
         output_name, ext = path.splitext(tractography_file_output)
         output_name = output_name + '_%04d' + ext
         for i, image in enumerate(image_data):
-            new_scalar_data = ndimage.map_coordinates( image.T, ijk_points.T )[:, None]
+            new_scalar_data = ndimage.map_coordinates(
+                image.T, ijk_points.T
+            )[:, None]
             tractography.getOriginalFibersData()[quantity_name] = new_scalar_data
             vtkInterface.writeLinesToVtkPolyData(output_name % i, tractography.getOriginalFibers(),  tractography.getOriginalFibersData())
     else:
-        new_scalar_data = ndimage.map_coordinates( image_data.T, ijk_points.T )[:, None]
+        new_scalar_data = ndimage.map_coordinates(
+            image_data.T, ijk_points.T
+        )[:, None]
         tractography.getOriginalFibersData()[quantity_name] = new_scalar_data
         vtkInterface.writeLinesToVtkPolyData(
             tractography_file_output, tractography.getOriginalFibers(),  tractography.getOriginalFibersData()
         )
 
+
 @function_help_decorator('<image> <mask_out>: calculates the mask image from a tract on the space of the given image')
-def image_generate_mask(tractography, image, image_out):
+def tract_generate_mask(tractography, image, image_out):
     image = nibabel.load(image)
 
-    ijk_points = tract_in_ijk(image, tractography)
-    image_data = image.get_data()
-
-    ijk_clipped = ijk_points.clip((0,0,0), image_data.shape).astype(int)
-
-    mask = numpy.empty_like(image_data, dtype=float)
-    mask[tuple(ijk_clipped.T)] = 1
+    mask = tract_mask(image, tractography)
 
     nibabel.save(nibabel.spatialimages.SpatialImage(mask, image.get_affine()), image_out)
+
+@function_help_decorator('<volume unit> <tract1.vtk> ... <tractN.vtk>: calculates the kappa value of the first tract with the rest in the space of the reference image')
+def tract_kappa(tractography, resolution, *other_tracts):
+    resolution = float(resolution)
+
+    voxels = voxelized_tract(tractography, resolution)
+
+    for tract in other_tracts:
+        voxels1 = voxelized_tract(tr.tractography_from_vtk_files(tract), resolution)
+
+        all_voxels = numpy.array(list(voxels1.union(voxels1)))
+        N = (all_voxels.max(0) - all_voxels.min(0)).prod()
+        pp = len(voxels.intersection(voxels1)) * 1.
+        pn = len(voxels.difference(voxels1)) * 1.
+        np = len(voxels1.difference(voxels)) * 1.
+        nn = N - pp - pn - np
+        #print pp, pn, np, nn
+        observed_agreement = (pp + nn) / N
+        chance_agreement = ((pp + pn) * (pp + np) + (nn + np) * (nn + pn)) / (N * N)
+
+        k = (observed_agreement - chance_agreement) / (1 - chance_agreement)
+
+        print k
+
+
+@function_help_decorator('<volume unit> <tract1.vtk> ... <tractN.vtk>: calculates the dice coefficient of the first tract with the rest in the space of the reference image')
+def tract_dice(tractography, resolution, *other_tracts):
+    resolution = float(resolution)
+
+    voxels = voxelized_tract(tractography, resolution)
+
+    for tract in other_tracts:
+        voxels1 = voxelized_tract(tr.tractography_from_vtk_files(tract), resolution)
+        print len(voxels.intersection(voxels1)) * 1. / len(voxels.union(voxels1))
+
+
+def voxelized_tract(tractography, resolution):
+    from itertools import izip
+    all_points = numpy.vstack(tractography.getFibersToProcess())
+    all_points /= resolution
+    all_points = (all_points - .5).round(0).astype(int)
+    return set(izip(*(all_points.T)))
+
 
 
 @function_help_decorator('<var> <tract_out>: smoothes the tract by convolving with a sliding window')
 def tract_smooth(tractography, var, tractography_file_output):
-    print('*' * 80 + "\nWarning: Still at work, should use the mahalanobis distance instead of the L2 distance\n" + '*' * 80)
     from sklearn.neighbors import BallTree
 
     var = float(var)
@@ -202,18 +245,43 @@ def tract_smooth(tractography, var, tractography_file_output):
 
     points = tractography.getOriginalFibers()
 
-    N = max(100, 2 * len(points) / 3)
-
+    all_points = numpy.vstack(points)
+    bt = BallTree(all_points)
+    N = len(all_points) / 3
     norm_term = 1. / (numpy.sqrt(2 * numpy.pi) * std)
+    I = numpy.eye(3)[None, ...]
     for i, tract in enumerate(tractography.getOriginalFibers()):
-        all_points = numpy.vstack(points[:i] + points[i + 1:])
-        bt = BallTree(all_points)
+        #all_points = numpy.vstack(points[:i] + points[i + 1:])
+        #bt = BallTree(all_points)
+
+        diff = numpy.diff(tract, axis=0)
+        diff = numpy.vstack((diff, diff[-1]))
+        lengths = numpy.sqrt((diff ** 2).sum(1))
+        #cum_lengths = numpy.cumsum(lengths)
+
+#        diff_norm = diff / lengths[:, None]
+#        tangent_lines = diff_norm[:, None, :] * diff_norm[:, :, None]
+#        normal_planes = I - tangent_lines
+#        weight_matrices = normal_planes + 1e10 * tangent_lines
+
+        N = max(len(d) for d in bt.query_radius(tract, var * 3))
+        print '\n', N
 
         close_point_distances, close_point_indices = bt.query(
             tract, N
         )
 
+        difference_vectors = tract[:, None, :] - all_points[close_point_indices]
+
+#        weighted_distances = (
+#            weight_matrices[:, None, :] *
+#            difference_vectors[..., None]
+#        ).sum(-2)
+#        weighted_distances *= difference_vectors
+#        weighted_distances = weighted_distances.sum(-1) ** .5
+
         weights = numpy.exp(
+#            -.5 * weighted_distances ** 2 / std
             -.5 * close_point_distances ** 2 / std
         )[..., None]
         norm_term = (weights).sum(1) + 1
@@ -222,24 +290,33 @@ def tract_smooth(tractography, var, tractography_file_output):
         tract /= norm_term
 
     vtkInterface.writeLinesToVtkPolyData(
-        tractography_file_output, tractography.getOriginalFibers(),  tractography.getOriginalFibersData()
+        tractography_file_output,
+        tractography.getOriginalFibers(),  tractography.getOriginalFibersData()
     )
+
+
+def tract_mask(image, tractography):
+    ijk_points = tract_in_ijk(image, tractography)
+    image_data = image.get_data()
+
+    ijk_clipped = ijk_points.clip(
+        (0, 0, 0), image_data.shape
+    ).astype(int)
+
+    mask = numpy.empty_like(image_data, dtype=float)
+    mask[tuple(ijk_clipped.T)] = 1
+    return mask
 
 
 def tract_in_ijk(image, tractography):
     ras_points = numpy.vstack(tractography.getFibersToProcess())
-    ijk_points = numpy.dot( numpy.linalg.inv(image.get_affine()), numpy.hstack((
+    ijk_points = numpy.dot(numpy.linalg.inv(image.get_affine()), numpy.hstack((
           ras_points,
           numpy.ones((len(ras_points), 1))
-                  )).T).T[:,:-1]
+                  )).T).T[:, :-1]
     return ijk_points
 
 
 if __name__ == "__main__":
     main()
     sys.exit()
-
-
-
-
-
