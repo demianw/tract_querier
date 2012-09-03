@@ -22,11 +22,11 @@ def read_vtkPolyData(filename):
 
     data = {}
     if polydata.GetPointData().GetScalars():
-        data['ActiveScalars'] =  polydata.GetPointData.GetScalars().GetName()
+        data['ActiveScalars'] =  polydata.GetPointData().GetScalars().GetName()
     if polydata.GetPointData().GetVectors():
-        data['ActiveVectors'] =  polydata.GetPointData.GetVectors().GetName()
+        data['ActiveVectors'] =  polydata.GetPointData().GetVectors().GetName()
     if polydata.GetPointData().GetTensors():
-        data['ActiveTensors'] =  polydata.GetPointData.GetTensors().GetName()
+        data['ActiveTensors'] =  polydata.GetPointData().GetTensors().GetName()
 
     for i in xrange(polydata.GetPointData().GetNumberOfArrays()):
         array = polydata.GetPointData().GetArray(i)
