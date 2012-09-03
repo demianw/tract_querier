@@ -14,9 +14,9 @@ def function_help_decorator(help_text):
 
 
 def main():
-    functions_list = {
-        f[0]: f[1] for f in globals().items() if hasattr(f[1], 'help_text')
-    }
+    functions_list = dict((
+        (f[0], f[1]) for f in globals().items() if hasattr(f[1], 'help_text')
+    ))
 
     usage = r"""
     usage: %(prog)s <tract1.vtk> ... <tractN.vtk> operation <operation parameter1> ... <operation parameterN> <output_tract.vtk>
@@ -201,13 +201,13 @@ def tract_kappa(tractography, resolution, *other_tracts):
     for tract in other_tracts:
         voxels1 = voxelized_tract(tr.tractography_from_vtk_files(tract), resolution)
 
-        all_voxels = numpy.array(list(voxels1.union(voxels1)))
+        all_voxels = numpy.array(list(voxels.union(voxels1)))
         N = (all_voxels.max(0) - all_voxels.min(0)).prod()
         pp = len(voxels.intersection(voxels1)) * 1.
         pn = len(voxels.difference(voxels1)) * 1.
         np = len(voxels1.difference(voxels)) * 1.
         nn = N - pp - pn - np
-        #print pp, pn, np, nn
+        print pp, pn, np, nn
         observed_agreement = (pp + nn) / N
         chance_agreement = ((pp + pn) * (pp + np) + (nn + np) * (nn + pn)) / (N * N)
 
