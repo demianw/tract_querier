@@ -207,7 +207,6 @@ def tract_kappa(tractography, resolution, *other_tracts):
         pn = len(voxels.difference(voxels1)) * 1.
         np = len(voxels1.difference(voxels)) * 1.
         nn = N - pp - pn - np
-        print pp, pn, np, nn
         observed_agreement = (pp + nn) / N
         chance_agreement = ((pp + pn) * (pp + np) + (nn + np) * (nn + pn)) / (N * N)
 
