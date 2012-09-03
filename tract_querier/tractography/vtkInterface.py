@@ -125,7 +125,10 @@ def lines_to_vtkPolyData(lines, lines_indices=None, point_data={}):
             name = key
 
         if len(value) == len(lines):
-            value_ = ns.numpy.vstack(value)
+            if value[0].ndim == 1:
+                value_ = ns.numpy.hstack(value)[:, None]
+            else:
+                value_ = ns.numpy.vstack(value)
         elif len(value) == len(points):
             value_ = value
         else:
