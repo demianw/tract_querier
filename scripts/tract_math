@@ -288,6 +288,30 @@ def tract_generate_probability_map(tractographies, image, image_out):
     nibabel.save(nibabel.spatialimages.SpatialImage(prob_map, image.get_affine()), image_out)
 
 
+@function_help_decorator('<tractography_out>: takes the union of all tractographies')
+def tract_merge(tractographies, tractography_file_output):
+    all_tracts = []
+    all_data = {}
+    keys = [set(t.getFibersDataToProcess().keys()) for t in tractographies]
+    common_keys = keys[0].intersection(*keys[1:])
+    for tract in tractographies:
+        tracts = tract.getFibersToProcess()
+        all_tracts += tract.getFibersToProcess()
+        data = tract.getFibersDataToProcess()
+        for k in common_keys:
+            if len(data[k]) == len(tracts):
+                if k not in all_data:
+                    all_data[k] = []
+                all_data[k] += data[k]
+            else:
+                all_data[k] = data[k]
+
+    vtkInterface.writeLinesToVtkPolyData(
+        tractography_file_output,
+        all_tracts, all_data
+    )
+
+
 @function_help_decorator('<volume unit> <tract1.vtk> ... <tractN.vtk>: calculates the kappa value of the first tract with the rest in the space of the reference image')
 def tract_kappa(tractography, resolution, *other_tracts):
     resolution = float(resolution)
