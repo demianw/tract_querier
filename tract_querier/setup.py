@@ -11,6 +11,7 @@ def configuration(parent_package='', top_path=None):
         'data/FreeSurfer.qry',
         'data/JHU_MNI_SS_WMPM_Type_II.qry',
         'data/freesurfer_queries.qry',
+        'data/freesurfer_queries_new.qry',
         'data/mori_queries.qry',
         ])
     )
