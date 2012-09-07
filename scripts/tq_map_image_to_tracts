@@ -23,7 +23,6 @@ def main():
     import numpy
 
     from tract_querier.tractography import vtkInterface
-    from tract_querier.tractography import tractography as tr
 
     import nifti
 

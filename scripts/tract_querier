@@ -197,7 +197,7 @@ def save_tractography_file(
 
     fiber_numbers = list(fiber_numbers)
 
-    original_fibers = tractography.getOriginalFibers()
+    original_fibers = tractography.original_tracts()
 
     fibers_to_analyze_for_outlier_rejection = [
         original_fibers[i] for i in fiber_numbers
@@ -220,7 +220,7 @@ def save_tractography_file(
         return
 
     fibers_data_to_save = {}
-    for key, data in tractography.getOriginalFibersData().items():
+    for key, data in tractography.original_tracts_data().items():
         fibers_data_to_save[key] = [data[f] for f in fiber_numbers]
 
     if (

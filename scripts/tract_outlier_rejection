@@ -32,7 +32,7 @@ def main():
     )
 
     if options.subsample_fibers is not None:
-        tr.subsampleFibers(int(options.subsample_fibers))
+        tr.subsample_tracts(int(options.subsample_fibers))
 
     save_tractography_file(
         options.output_file_name,
@@ -45,11 +45,11 @@ def save_tractography_file(filename, tractography, zscore_threshold=3):
     from itertools import izip
     import numpy as np
 
-    fiber_numbers = np.arange(len(tractography.getOriginalFibers()))
+    fiber_numbers = np.arange(len(tractography.original_tracts()))
     print "Number of fibers to process: ", len(fiber_numbers)
 
-    fibers_to_process = tractography.getFibersToProcess()
-    original_fibers = tractography.getOriginalFibers()
+    fibers_to_process = tractography.tracts_to_process()
+    original_fibers = tractography.original_tracts()
 
     fiber_numbers_to_save, zscore_per_fiber = tract_querier.z_score_outlier_rejection(fibers_to_process, z_score_reject=zscore_threshold)
     zscore_per_fiber.sort()
@@ -61,7 +61,7 @@ def save_tractography_file(filename, tractography, zscore_threshold=3):
         return
 
     fibers_data_to_save = {}
-    for key, data in tractography.getOriginalFibersData().items():
+    for key, data in tractography.original_tracts_data().items():
         fibers_data_to_save[key] = [data[f] for f in fiber_numbers]
 
     if 'ActiveTensors' not in fibers_data_to_save and 'Tensors_' in fibers_data_to_save:
