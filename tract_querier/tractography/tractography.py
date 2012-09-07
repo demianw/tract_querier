@@ -47,7 +47,6 @@ class Tractography:
             ):
                 raise ValueError('First argument is not a list of tracts')
 
-
     def from_dictionary(self, dictionary, append=False):
         dictionary_keys = set('lines', 'points', 'numberOfLines')
         if not dictionary_keys.issuperset(dictionary.keys()):
@@ -78,11 +77,11 @@ class Tractography:
         for l in xrange(number_of_tracts):
             self._tracts.append(
                 points[
-                       lines[
-                           actual_line_index + 1:
-                           actual_line_index + lines[actual_line_index] + 1
-                       ]
-                      ]
+                    lines[
+                        actual_line_index + 1:
+                        actual_line_index + lines[actual_line_index] + 1
+                    ]
+                ]
             )
             self._original_lines.append(
                 np.array(
@@ -123,7 +122,7 @@ class Tractography:
 
         self._original_tracts = list(self._tracts)
 
-        if self._quantity_of_points_per_tract != None:
+        if self._quantity_of_points_per_tract is not None:
             self.subsample_tracts(self._quantity_of_points_per_tract)
 
     def unsubsample_tracts(self):
@@ -200,7 +199,7 @@ class Tractography:
             xrange(len(self._original_tracts))
         )
 
-        if self._quantity_of_points_per_tract != None:
+        if self._quantity_of_points_per_tract is not None:
             if self._interpolated:
                 self.subsample_interpolated_tracts(
                     self._quantity_of_points_per_tract
