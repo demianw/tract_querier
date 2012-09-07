@@ -268,7 +268,3 @@ def test_not():
         query_evaluator.evaluated_queries_fibers['A'] == fibers_in_all_but_0 and
         query_evaluator.evaluated_queries_labels['A'] == set(labels_fibers.keys()).difference((0,))
     ))
-
-
-
-

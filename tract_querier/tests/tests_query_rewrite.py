@@ -49,4 +49,3 @@ def test_rewrite_notin_precedence():
     assert(ast.dump(tree3) == ast.dump(tree3_rw))
 
     assert(ast.dump(tree1) == ast.dump(tree3_rw))
-

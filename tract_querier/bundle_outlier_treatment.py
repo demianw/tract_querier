@@ -92,5 +92,3 @@ def z_score_outlier_rejection(fibers, z_score_reject=4, **kwargs):
     z_score = centered_measure / std
 
     return np.where(z_score < z_score_reject)[0], z_score
-
-

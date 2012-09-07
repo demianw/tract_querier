@@ -311,7 +311,7 @@ class EvaluateQueries(ast.NodeVisitor):
 
         arg = node.args[0]
         if  isinstance(arg, ast.Name):
-                _, labels = self.visit(arg)
+            _, labels = self.visit(arg)
         elif isinstance(arg, ast.Attribute):
             if arg.attr.lower() in ('left', 'right'):
                 side = arg.attr.lower()

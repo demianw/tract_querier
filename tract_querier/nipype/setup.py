@@ -5,4 +5,3 @@ def configuration(parent_package='', top_path=None):
     config = Configuration('nipype', parent_package, top_path)
     config.set_options(quiet=True)
     return config
-

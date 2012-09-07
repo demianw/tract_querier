@@ -378,5 +378,3 @@ def compute_fiber_occupation_image(affine_ras_2_ijk, img, fibers, length_thresho
 #    def __setitem__(self, key, value):
 #        if len(key) != 6:
 #            raise ValueError("Keys must be 6 components")
-
-

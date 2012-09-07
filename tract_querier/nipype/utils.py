@@ -197,7 +197,7 @@ class GenWarpFields(utils.ANTSCommand):
                 'metric_weights' in self._internal
             ):
                 arg_string = ''
-                N = len(self._internal['reference_images']) 
+                N = len(self._internal['reference_images'])
                 if  len(self._internal['input_images']) != N:
                     raise ValueError(
                         'The number of reference and'
@@ -242,7 +242,7 @@ class GenWarpFields(utils.ANTSCommand):
 
         if os.path.exists(out_warp):
             outputs['warp_field'] = out_warp
-    
+
         if os.path.exists(out_inv_warp):
             outputs['inverse_warp_field'] = out_inv_warp
 
