@@ -32,7 +32,7 @@ reffile = args.reffile
 if args.outfile:
     outfile = args.outfile
 else:
-	outfile = os.path.splitext(infile)[0] + '.nii.gz'
+    outfile = os.path.splitext(infile)[0] + '.nii.gz'
 
 pdr = vtk.vtkPolyDataReader()
 pdr.SetFileName(infile)
@@ -50,17 +50,17 @@ points_ijk = np.dot(affi[:-1, :-1], points.T).T + affi[:-1,-1]
 coords = points_ijk.round(0).astype(int)
 
 try:
-	coords = coords[(coords > 0).all(1)]
-	coords = coords[(coords < new_image.shape).all(1)]
-	new_image[tuple(coords.T)] = 1
+    coords = coords[(coords > 0).all(1)]
+    coords = coords[(coords < new_image.shape).all(1)]
+    new_image[tuple(coords.T)] = 1
 except Exception as e:
-	import datetime
-	now = datetime.datetime.now()
-	d = os.path.dirname(sys.argv[1])
-	f = os.path.basename(sys.argv[1])
-	logfile = file(os.path.join(
-		d,
-		'crash-' + now.strftime("%y%m%d-%H%M%S") + f +'.txt'),
-		'w')
-	logfile.write("Problem in: " + repr(sys.argv) + repr(e) + '\n')
+    import datetime
+    now = datetime.datetime.now()
+    d = os.path.dirname(sys.argv[1])
+    f = os.path.basename(sys.argv[1])
+    logfile = file(os.path.join(
+            d,
+            'crash-' + now.strftime("%y%m%d-%H%M%S") + f +'.txt'),
+            'w')
+    logfile.write("Problem in: " + repr(sys.argv) + repr(e) + '\n')
 nibabel.save(nibabel.spatialimages.SpatialImage(new_image.astype(float), aff), outfile)

@@ -5,6 +5,7 @@ from warnings import warn
 from itertools import takewhile
 
 from argparse import ArgumentParser, FileType, REMAINDER
+import tract_querier.tractography
 
 
 def function_help_decorator(help_text):
@@ -52,10 +53,10 @@ def main():
 
     tractography = []
     for f in args.tractographies:
-	try:
-		tractography.append(tr.tractography_from_vtk_files(f.name))
-	except e:
-		print >>sys.stderr, "Error reading file ",f.name
+        try:
+            tractography.append(tract_querier.tractography.tractography_from_vtk_files(f.name))
+        except e:
+            print >>sys.stderr, "Error reading file ",f.name
 
     if len(tractography) == 1:
         tractography = tractography[0]
@@ -275,7 +276,7 @@ def tract_generate_mask(tractography, image, image_out):
 
 
 @function_help_decorator('<image> <image_out>: calculates the probabilistic tract image for these tracts')
-def tract_generate_probability_map(tractographies, image, image_out):
+def tract_generate_population_probability_map(tractographies, image, image_out):
     image = nibabel.load(image)
 
     if isinstance(tractographies, tr.tractography):
@@ -288,6 +289,21 @@ def tract_generate_probability_map(tractographies, image, image_out):
 
     prob_map /= len(tractographies)
 
+    nibabel.save(nibabel.spatialimages.SpatialImage(prob_map, image.get_affine()), image_out)
+
+
+@function_help_decorator('<image> <image_out>: calculates the probabilistic tract image for these tracts')
+def tract_generate_probability_map(tractographies, image, image_out):
+    image = nibabel.load(image)
+
+    if isinstance(tractographies, tr.tractography):
+        tractographies = [tractographies]
+
+    prob_map = tract_probability_map(image, tractographies[0]).astype(float)
+
+    for tract in tractographies[1:]:
+        new_prob_map = tract_mask(image, tract)
+        prob_map = prob_map + new_prob_map - (prob_map * new_prob_map)
 
     nibabel.save(nibabel.spatialimages.SpatialImage(prob_map, image.get_affine()), image_out)
 
@@ -445,6 +461,34 @@ def tract_mask(image, tractography):
     mask = numpy.empty_like(image_data, dtype=float)
     mask[tuple(ijk_clipped.T)] = 1
     return mask
+
+
+def tract_probability_map(image, tractography):
+    ijk_tracts = each_tract_in_ijk(image, tractography)
+    image_data = image.get_data()
+
+
+    probability_map = numpy.zeros_like(image_data, dtype=float)
+    for ijk_points in ijk_tracts:
+        ijk_clipped = ijk_points.clip(
+            (0, 0, 0), numpy.array(image_data.shape) - 1
+        ).astype(int)
+
+        probability_map[tuple(ijk_clipped.T)] += 1
+
+    probability_map /= len(ijk_tracts)
+    return probability_map
+
+
+def each_tract_in_ijk(image, tractography):
+    ijk_tracts = []
+    for tract in tractography.getFibersToProcess():
+        ijk_tracts.append(numpy.dot(numpy.linalg.inv(image.get_affine()), numpy.hstack((
+          tract,
+          numpy.ones((len(tract), 1))
+                  )).T).T[:, :-1]
+        )
+    return ijk_tracts
 
 
 def tract_in_ijk(image, tractography):

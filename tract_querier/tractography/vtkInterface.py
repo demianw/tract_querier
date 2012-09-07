@@ -202,8 +202,8 @@ def writeLinesToVtkPolyData_pure_python( filename, lines, point_data={} ):
 
 def get_number_of_components( data ):
     if hasattr(data[0], 'shape'):
-	if len(data[0].shape)==0:
-		return 1
+        if len(data[0].shape)==0:
+            return 1
         return data[0].shape[-1]
     if hasattr(data[0][0], '__len__'):
         return len(data[0][0])
@@ -313,26 +313,25 @@ ASCII
 __polyDataType__ = "DATASET POLYDATA\n"
 
 def __points_header__(number_of_points):
-	return "POINTS %d float\n" % number_of_points
+    return "POINTS %d float\n" % number_of_points
 
 def __lines_header__(number_of_lines, number_of_points):
-	return "LINES %d %d\n" % (number_of_lines, number_of_lines+number_of_points)
+    return "LINES %d %d\n" % (number_of_lines, number_of_lines+number_of_points)
 
 def __point_data_header__(number_of_points):
-	return "POINT_DATA %d\n" % number_of_points
+    return "POINT_DATA %d\n" % number_of_points
 
 def __point_data_attribute_header__(type_, name, number_of_components = 0):
-	return  "%s %s float %.d\n" % (type_, name, number_of_components)
+    return  "%s %s float %.d\n" % (type_, name, number_of_components)
 
 def __field_data_header__(number_of_arrays):
-	return "FIELD FieldData %d\n" % number_of_arrays
+    return "FIELD FieldData %d\n" % number_of_arrays
 
 def __field_data_attribute_header__(
     array_name = '', number_of_components = 1,
     number_of_points = 1, data_type = 'float'
 ):
-	return " % s %d %d %s\n" % (
-        array_name, number_of_components,
-        number_of_points, data_type
-    )
-
+    return " % s %d %d %s\n" % (
+    array_name, number_of_components,
+    number_of_points, data_type
+)

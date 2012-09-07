@@ -1,321 +1,246 @@
 import numpy as np
 
 try:
-    import vtk
-except:
-    pass
-
-try:
     from . import fiber_reparametrization as fr
 except:
     pass
 
-from . import vtkInterface
 
-class tractography:
+class Tractography:
 
-    _originalFibers = []
-    _originalLines = []
-    _originalData = {}
-    _fiberData = {}
-    _fibers = []
-    _fibersMap = []
-    _subsampledFibers = []
-    _quantitiyOfPointsPerfiber = None
+    _original_tracts = []
+    _original_lines = []
+    _original_data = {}
+    _tract_data = {}
+    _tracts = []
+    _tract_map = []
+    _subsampled_tracts = []
+    _quantity_of_points_per_tract = None
     _interpolated = False
 
-    def __init__(self):
-        self._originalFibers = []
-        self._fiberData = {}
-        self._originalLines = []
-        self._originalData = {}
-        self._fibers = []
-        self._fibersMap = []
-        self._quantitiyOfPointsPerfiber = None
+    def __init__(self, **args):
+        self._original_tracts = []
+        self._tract_data = {}
+        self._original_lines = []
+        self._original_data = {}
+        self._tracts = []
+        self._tract_map = []
+        self._quantity_of_points_per_tract = None
 
         self._interpolated = False
-        self._fiberKeepRatio = None
+        self._fiber_keep_ratio = None
 
-        self._subsampledFibers = []
-        self._subsampledLines = []
-        self._subsampledData = []
+        self._subsampled_tracts = []
+        self._subsampled_lines = []
+        self._subsampled_data = []
 
-        return
+        if isinstance(args[0], dict):
+            self.from_dictionary(args[0])
+        elif hasattr('len', args[0]) and hasattr('__setitem__', args[0]):
+            self._tracts = args[0]
+            if any(
+                not (
+                    hasattr('shape', t) and
+                    len(t.shape != 2) and
+                    t.shape[1] != 3
+                ) for t in self._tracts
+            ):
+                raise ValueError('First argument is not a list of tracts')
 
 
-    def from_vtkPolyData(self, vtkPolyData, ratio=1, append=False ):
-        #Fibers and Lines are the same thing
+    def from_dictionary(self, dictionary, append=False):
+        dictionary_keys = set('lines', 'points', 'numberOfLines')
+        if not dictionary_keys.issuperset(dictionary.keys()):
+            raise ValueError("Dictionary must have the keys lines and points")
+
+        #Tracts and Lines are the same thing
         if not append:
-            self._originalFibers = []
-            self._fiberData = {}
-            self._originalLines = []
-            self._originalData = {}
-            self._fibers = []
-            self._fibersMap = []
-            self._quantitiyOfPointsPerfiber = None
+            self._original_tracts = []
+            self._tract_data = {}
+            self._original_lines = []
+            self._original_data = {}
+            self._tracts = []
+            self._tract_map = []
+            self._quantity_of_points_per_tract = None
 
         self._interpolated = False
-        self._fiberKeepRatio = ratio
+        self._fiber_keep_ratio = 1
 
-        self._subsampledFibers = []
-        self._subsampledLines = []
-        self._subsampledData = []
+        self._subsampled_tracts = []
+        self._subsampled_lines = []
+        self._subsampled_data = []
 
-        #Bug fix for the inhability to convert vtkId to a numeric type np array
-        linesUnsignedInt = vtk.vtkUnsignedIntArray()
-        linesUnsignedInt.DeepCopy( vtkPolyData.GetLines().GetData() )
-        lines = linesUnsignedInt.ToArray().squeeze()
-        points = vtkPolyData.GetPoints().GetData().ToArray()
+        lines = np.asarray(dictionary['lines']).squeeze()
+        points = dictionary['points']
 
-        actualLineIndex = 0
-        numberOfFibers = vtkPolyData.GetLines().GetNumberOfCells()
-        for l in xrange( numberOfFibers ):
-            #print '%.2f%%'%(l*1./numberOfFibers * 100.)
-            self._fibers.append( points[ lines[actualLineIndex+1: actualLineIndex+lines[actualLineIndex]+1] ] )
-            self._originalLines.append( np.array(lines[actualLineIndex+1: actualLineIndex+lines[actualLineIndex]+1],copy=True)  )
-            actualLineIndex += lines[actualLineIndex]+1
+        actual_line_index = 0
+        number_of_tracts = dictionary['numberOfLines']
+        for l in xrange(number_of_tracts):
+            self._tracts.append(
+                points[
+                       lines[
+                           actual_line_index + 1:
+                           actual_line_index + lines[actual_line_index] + 1
+                       ]
+                      ]
+            )
+            self._original_lines.append(
+                np.array(
+                    lines[
+                        actual_line_index + 1:
+                        actual_line_index + lines[actual_line_index] + 1],
+                    copy=True
+                ))
+            actual_line_index += lines[actual_line_index] + 1
 
-        for i in xrange( vtkPolyData.GetPointData().GetNumberOfArrays() ):
-            array = vtkPolyData.GetPointData().GetArray(i)
-            array_data = array.ToArray()
-            self._originalData[ array.GetName() ] = array_data
-            self._fiberData[ array.GetName() ] =  map( lambda f: array_data[ f ], self._originalLines )
+        if 'pointData' in dictionary:
+            point_data_keys = [
+                it[0] for it in dictionary['pointData'].items()
+                if isinstance(it[1], np.ndarray)
+            ]
+            if (
+                len(self._original_data.keys()) > 0 and
+                (self._original_data.keys() != point_data_keys)
+            ):
+                raise ValueError('PointData not compatible')
 
-        if (vtkPolyData.GetPointData().GetScalars()!=[]):
-            self._originalData['vtkScalars']=vtkPolyData.GetPointData().GetScalars().ToArray()
-        if (vtkPolyData.GetPointData().GetTensors()!=[]):
-            self._originalData['vtkTensors']=vtkPolyData.GetPointData().GetTensors().ToArray()
-        if (vtkPolyData.GetPointData().GetVectors()!=[]):
-            self._originalData['vtkVectors']=vtkPolyData.GetPointData().GetTensors().ToArray()
+            for k in point_data_keys:
+                array_data = dictionary['pointData'][k]
+                if not k in self._original_data:
+                    self._original_data[k] = array_data
+                    self._tract_data[k] = [
+                        array_data[f]
+                        for f in self._original_lines
+                    ]
+                else:
+                    np.vstack(self._original_data[k])
+                    self._tract_data[k].extend(
+                        [
+                            array_data[f]
+                            for f in self._original_lines[-number_of_tracts:]
+                        ]
+                    )
 
-        self._originalFibers = list(self._fibers)
-        if self._fiberKeepRatio!=1:
-            self._fibers = self._originalFibers[::np.round(len(self._originalFibers)*self._fiberKeepRatio)]
+        self._original_tracts = list(self._tracts)
 
+        if self._quantity_of_points_per_tract != None:
+            self.subsample_tracts(self._quantity_of_points_per_tract)
 
+    def unsubsample_tracts(self):
+        self._subsampled_tracts = []
 
-    def from_dictionary(self, d, ratio=1, append=False ):
-        #Fibers and Lines are the same thing
-        if not append:
-            self._originalFibers = []
-            self._fiberData = {}
-            self._originalLines = []
-            self._originalData = {}
-            self._fibers = []
-            self._fibersMap = []
-            self._quantitiyOfPointsPerfiber = None
+    def unfilter_tracts(self):
+        self._tract_map = []
 
-        self._interpolated = False
-        self._fiberKeepRatio = ratio
+    def subsample_tracts(self, quality_of_points_per_tract):
+        self._quantity_of_points_per_tract = quality_of_points_per_tract
+        self._subsampled_tracts = []
+        self._subsampled_lines = []
+        self._subsampled_data = {}
 
-        self._subsampledFibers = []
-        self._subsampledLines = []
-        self._subsampledData = []
+        for k in self._tract_data:
+            self._subsampled_data[k] = []
 
+        for i in xrange(len(self._tracts)):
+            f = self._tracts[i]
+            s = np.linspace(
+                0,
+                f.shape[0] - 1,
+                min(f.shape[0], self._quantity_of_points_per_tract)
+            ).round().astype(int)
 
+            self._subsampled_tracts.append(f[s, :])
+            self._subsampled_lines.append(s)
 
-        #Bug fix for the inhability to convert vtkId to a numeric type np array
-        lines = np.asarray(d['lines']).squeeze()
-        points = d['points']
-
-        actualLineIndex = 0
-        numberOfFibers = d['numberOfLines']
-        for l in xrange( numberOfFibers ):
-            #print '%.2f%%'%(l*1./numberOfFibers * 100.)
-            self._fibers.append( points[ lines[actualLineIndex+1: actualLineIndex+lines[actualLineIndex]+1] ] )
-            self._originalLines.append( np.array(lines[actualLineIndex+1: actualLineIndex+lines[actualLineIndex]+1],copy=True)  )
-            actualLineIndex += lines[actualLineIndex]+1
-
-
-        pointDataKeys = [ it[0] for it in d['pointData'].items() if isinstance( it[1], np.ndarray ) ]
-        if len(self._originalData.keys())>0 and (self._originalData.keys()!=pointDataKeys):
-            raise ValueError('PointData not compatible')
-
-        for k in pointDataKeys:
-            array_data = d['pointData'][k]
-            if not k in self._originalData:
-                self._originalData[ k ] = array_data
-                self._fiberData[ k ] =  map( lambda f: array_data[ f ], self._originalLines )
-            else:
-                np.vstack(self._originalData[k])
-                self._fiberData[ k ].extend( map( lambda f: array_data[ f ], self._originalLines[-numberOfFibers:] ) )
-
-
-#    if (vtkPolyData.GetPointData().GetScalars()!=[]):
-#      self._originalData['vtkScalars']=vtkPolyData.GetPointData().GetScalars().ToArray()
-#    if (vtkPolyData.GetPointData().GetTensors()!=[]):
-#      self._originalData['vtkTensors']=vtkPolyData.GetPointData().GetTensors().ToArray()
-#    if (vtkPolyData.GetPointData().GetVectors()!=[]):
-#      self._originalData['vtkVectors']=vtkPolyData.GetPointData().GetTensors().ToArray()
-
-        self._originalFibers = list(self._fibers)
-        if self._fiberKeepRatio!=1:
-            self._fibers = self._originalFibers[::np.round(len(self._originalFibers)*self._fiberKeepRatio)]
-
-
-        if self._quantitiyOfPointsPerfiber!=None:
-            self.subsampleFibers( self._quantitiyOfPointsPerfiber )
-
-    def to_vtkPolyData(self,vtkPolyData, selectedFibers=None):
-
-        fibers = self.getOriginalFibers()
-        if selectedFibers!=None:
-            fibers = [ fibers[i] for i in selectedFibers]
-
-        numberOfPoints = reduce( lambda x,y: x+y.shape[0], fibers,0 )
-        numberOfCells = len(fibers)
-        numberOfCellIndexes = numberOfPoints+numberOfCells
-
-        linesUnsignedInt = vtk.vtkUnsignedIntArray()
-        linesUnsignedInt.SetNumberOfComponents(1)
-        linesUnsignedInt.SetNumberOfTuples(numberOfCellIndexes)
-        lines = linesUnsignedInt.ToArray().squeeze()
-        #print lines.shape
-
-
-        points_vtk = vtkPolyData.GetPoints()
-        if points_vtk==[]:
-            point_vtk = vtk.vtkPoints()
-            vtkPolyData.SetPoints(points_vtk)
-#      points_vtk.Delete()
-        points_vtk.SetNumberOfPoints(numberOfPoints)
-        points_vtk.SetDataTypeToFloat()
-        points = points_vtk.GetData().ToArray()
-
-        actualLineIndex = 0
-        actualPointIndex = 0
-        for i in xrange(numberOfCells):
-            lines[actualLineIndex] = fibers[i].shape[0]
-            lines[actualLineIndex+1: actualLineIndex+1+lines[actualLineIndex]] = np.arange( lines[actualLineIndex] )+actualPointIndex
-            points[ lines[ actualLineIndex+1: actualLineIndex+1+lines[actualLineIndex] ] ] = fibers[i]
-            actualPointIndex += lines[actualLineIndex]
-            actualLineIndex = actualLineIndex + lines[actualLineIndex]+1
-
-
-        vtkPolyData.GetLines().GetData().DeepCopy(linesUnsignedInt)
-
-    def unsubsampleFibers(self):
-        self._subsampledFibers = []
-
-    def unfilterFibers(self):
-        self._fibersMap = []
-
-    def subsampleFibers(self, quantitiyOfPointsPerfiber):
-        self._quantitiyOfPointsPerfiber = quantitiyOfPointsPerfiber
-        self._subsampledFibers = []
-        self._subsampledLines= []
-        self._subsampledData = {}
-
-        for k in self._fiberData:
-            self._subsampledData[ k ] = []
-
-        for i in xrange(len(self._fibers)):
-            f = self._fibers[i]
-            s = np.linspace( 0, f.shape[0]-1,min(f.shape[0],self._quantitiyOfPointsPerfiber) ).round().astype(int)
-            self._subsampledFibers.append( f[s,:] )
-            self._subsampledLines.append(s)
-            for k in self._fiberData:
-                self._subsampledData[ k ].append( self._fiberData[k][i][s] )
-
+            for k in self._tract_data:
+                self._subsampled_data[k].append(self._tract_data[k][i][s])
 
         self._interpolated = False
 
-    def subsampleFibersEqualStep(self, step_ratio):
+    def subsample_tracts_equal_step(self, step_ratio):
         self._step_ratio = step_ratio
-        self._subsampledFibers = []
-        self._subsampledLines= []
-        self._subsampledData = {}
+        self._subsampled_tracts = []
+        self._subsampled_lines = []
+        self._subsampled_data = {}
 
-        for k in self._fiberData:
-            self._subsampledData[ k ] = []
+        for k in self._tract_data:
+            self._subsampled_data[k] = []
 
-        for i in xrange(len(self._fibers)):
-            f = self._fibers[i]
+        for i in xrange(len(self._tracts)):
+            f = self._tracts[i]
             s = np.arange(0, len(f), step_ratio)
-            self._subsampledFibers.append( f[s, :] )
-            self._subsampledLines.append(s)
-            for k in self._fiberData:
-                self._subsampledData[ k ].append( self._fiberData[k][i][s] )
-
+            self._subsampled_tracts.append(f[s, :])
+            self._subsampled_lines.append(s)
+            for k in self._tract_data:
+                self._subsampled_data[k].append(self._tract_data[k][i][s])
 
         self._interpolated = False
 
-
-    def subsampleInterpolatedFibers(self, step):
-
-        self._quantitiyOfPointsPerfiber = step
-        self._subsampledFibers = []
-        for i, f in enumerate(self._fibers):
-            print f
-            reparametrized_fiber = fr.arc_length_fiber_parametrization(f, step=step)
-            print reparametrized_fiber
+    def subsample_interpolated_tracts(self, step):
+        self._quantity_of_points_per_tract = step
+        self._subsampled_tracts = []
+        for i, f in enumerate(self._tracts):
+            reparametrized_fiber = fr.arc_length_fiber_parametrization(
+                f, step=step
+            )
             if f is not None:
-                self._subsampledFibers.append(reparametrized_fiber[1:].T)
+                self._subsampled_tracts.append(reparametrized_fiber[1:].T)
         self._interpolated = True
 
-    def filterFibers(self, minimumNumberOfSamples ):
+    def filter_tracts(self, min_num_of_samples):
+        if len(self._original_tracts) == 0:
+            self._original_tracts = self._tracts
 
-        if len(self._originalFibers)==0:
-            self._originalFibers = self._fibers
+        self._tracts = filter(
+            lambda f: f.shape[0] >= min_num_of_samples,
+            self._original_tracts
+        )
+        self._tract_map = filter(
+            lambda i: self._original_tracts[i].shape[0] >= min_num_of_samples,
+            xrange(len(self._original_tracts))
+        )
 
-        self._fibers = filter( lambda f: f.shape[0]>= minimumNumberOfSamples, self._originalFibers )
-        self._fibersMap = filter( lambda i: self._originalFibers[i].shape[0]>= minimumNumberOfSamples, range(len(self._originalFibers)) )
-
-
-        if self._quantitiyOfPointsPerfiber!=None:
+        if self._quantity_of_points_per_tract != None:
             if self._interpolated:
-                self.subsampleInterpolatedFibers( self._quantitiyOfPointsPerfiber )
+                self.subsample_interpolated_tracts(
+                    self._quantity_of_points_per_tract
+                )
             else:
-                self.subsampleFibers( self._quantitiyOfPointsPerfiber )
+                self.subsample_tracts(self._quantity_of_points_per_tract)
 
-    def areFibersFiltered(self):
-        return self._fibersMap!=[]
+    def are_tracts_filtered(self):
+        return self._tract_map != []
 
-    def areFibersSubsampled(self):
-        return self._subsampledFibers!=[]
+    def are_tracts_subsampled(self):
+        return self._subsampled_tracts != []
 
-    def areSubsampledFibersInterpolated(self):
+    def are_subsampled_tracts_interpolated(self):
         return self._interpolated
 
-    def getOriginalFibersData(self):
-        return self._fiberData
+    def original_tracts_data(self):
+        return self._tract_data
 
-    def getOriginalFibers(self):
-        return self._originalFibers
+    def original_tracts(self):
+        return self._original_tracts
 
-    def getOriginalLines(self):
-        return self._originalLines
+    def original_lines(self):
+        return self._original_lines
 
-    def getOriginalData(self):
-        return self._originalData
+    def original_data(self):
+        return self._original_data
 
-    def getFilteredFibersMap(self):
-        return self._fibersMap
+    def filtered_tracts_map(self):
+        return self._tract_map
 
-    def getFibersToProcess(self):
-        if self._subsampledFibers!=[]:
-            return self._subsampledFibers
-        elif self._fibers!=[]:
-            return self._fibers
+    def tracts_to_process(self):
+        if self._subsampled_tracts != []:
+            return self._subsampled_tracts
+        elif self._tracts != []:
+            return self._tracts
 
-    def getFibersDataToProcess(self):
-        if self._subsampledData!=[]:
-            return self._subsampledData
-        elif self._fiberData!=[]:
-            return self._fiberData
-
-def tractography_from_vtk_files(vtk_file_names):
-    tr = tractography()
-
-    if len(vtk_file_names) == 1:
-        vtk_file_names = vtk_file_names[0]
-
-    if isinstance(vtk_file_names, str):
-        pd_as_dictiononary = vtkInterface.read_vtkPolyData(vtk_file_names)
-        tr.from_dictionary(pd_as_dictiononary)
-    else:
-        for file_name in vtk_file_names:
-            pd_as_dictiononary = vtkInterface.read_vtkPolyData(file_name)
-            tr.from_dictionary(pd_as_dictiononary, append = True)
-
-    return tr
+    def tracts_data_to_process(self):
+        if self._subsampled_data != []:
+            return self._subsampled_data
+        elif self._tract_data != []:
+            return self._tract_data
+            return self._tract_data

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-
 from os import path
 
 from optparse import OptionParser
+import tract_querier.tractography
 def main():
     usage = """
     usage: %prog [options] -o bundle.vtk -i image -n quantity_name  bundle.vtk
@@ -30,9 +30,9 @@ def main():
     from scipy import ndimage
 
     image = nifti.NiftiImage( options.image )
-    tractography = tr.tractography_from_vtk_files( args[0] )
+    tractography = tract_querier.tractography.tractography_from_vtk_files( args[0] )
 
-    ras_points = numpy.vstack(tractography.getFibersToProcess())
+    ras_points = numpy.vstack(tractography.tracts_to_process())
     ijk_points = numpy.dot( image.getInverseQForm(), numpy.hstack((
           ras_points,
           numpy.ones((len(ras_points), 1))
@@ -44,17 +44,17 @@ def main():
         output_name = output_name + '_%04d' + ext
         for i, image in enumerate(image_data):
             new_scalar_data = ndimage.map_coordinates( image.T, ijk_points.T )[:, None]
-            tractography.getOriginalFibersData()[options.name] = new_scalar_data
-            vtkInterface.writeLinesToVtkPolyData(output_name % i, tractography.getOriginalFibers(),  tractography.getOriginalFibersData())
+            tractography.original_tracts_data()[options.name] = new_scalar_data
+            vtkInterface.writeLinesToVtkPolyData(output_name % i, tractography.original_tracts(),  tractography.original_tracts_data())
     else:
         new_scalar_data = ndimage.map_coordinates( image_data.T, ijk_points.T )[:, None]
-        tractography.getOriginalFibersData()[options.name] = new_scalar_data
+        tractography.original_tracts_data()[options.name] = new_scalar_data
 
-	if options.output_bundle is not None:
-		vtkInterface.writeLinesToVtkPolyData(options.output_bundle, tractography.getOriginalFibers(),  tractography.getOriginalFibersData())
+        if options.output_bundle is not None:
+            vtkInterface.writeLinesToVtkPolyData(options.output_bundle, tractography.original_tracts(),  tractography.original_tracts_data())
 
         if options.point_value_file is not None:
-            values = numpy.vstack(tractography.getOriginalFibersData()[options.name]).flatten()
+            values = numpy.vstack(tractography.original_tracts_data()[options.name]).flatten()
             numpy.savetxt(options.point_value_file, values)
 
 
