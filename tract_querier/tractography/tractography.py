@@ -34,6 +34,9 @@ class Tractography:
         self._subsampled_lines = []
         self._subsampled_data = []
 
+        if len(args) == 0:
+            return
+
         if isinstance(args[0], dict):
             self.from_dictionary(args[0])
         elif hasattr('len', args[0]) and hasattr('__setitem__', args[0]):
@@ -48,9 +51,9 @@ class Tractography:
                 raise ValueError('First argument is not a list of tracts')
 
     def from_dictionary(self, dictionary, append=False):
-        dictionary_keys = set('lines', 'points', 'numberOfLines')
-        if not dictionary_keys.issuperset(dictionary.keys()):
-            raise ValueError("Dictionary must have the keys lines and points")
+        dictionary_keys = set(('lines', 'points', 'numberOfLines'))
+        if not dictionary_keys.issubset(dictionary.keys()):
+            raise ValueError("Dictionary must have the keys lines and points" + repr(dictionary.keys()))
 
         #Tracts and Lines are the same thing
         if not append:

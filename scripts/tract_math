@@ -6,9 +6,10 @@ from argparse import ArgumentParser, FileType, REMAINDER
 import tract_querier.tractography
 
 
-def tract_math_function(help_text):
+def tract_math_function(help_text, needs_one_tract=True):
     def internal_decorator(func):
         func.help_text = help_text
+        func.needs_one_tract = needs_one_tract
         return func
     return internal_decorator
 
@@ -44,21 +45,23 @@ def main():
 
     args = parser.parse_args()
     #Load the global modules after the parsing of parameters
-    global tr, vtkInterface, numpy, nibabel
+    global tr, vtkInterface, numpy, nibabel, tractography_from_vtk_files
+    from tract_querier.tractography import tractography_from_vtk_files
     from tract_querier.tractography import tractography as tr
     from tract_querier.tractography import vtkInterface
     import numpy
     import nibabel
 
-    tractography = []
-    for f in args.tractographies:
+    if  (args.operation in functions_list) and functions_list[args.operation].needs_one_tract:
+        tractography = tractography_from_vtk_files([f.name for f in args.tractographies])
+    else:
+        tractography = []
         try:
-            tractography.append(tract_querier.tractography.tractography_from_vtk_files(f.name))
-        except:
-            print >>sys.stderr, "Error reading file ", f.name
+            for f in args.tractographies:
+                tractography.append(tractography_from_vtk_files(f.name))
+        except IOError as e:
+            print >>sys.stderr, "Error reading file ", f.name, "(%s)" % repr(e)
 
-    if len(tractography) == 1:
-        tractography = tractography[0]
     if  args.operation in functions_list:
         try:
             functions_list[args.operation](tractography, *args.operation_parameters)
@@ -74,7 +77,7 @@ def count(tractography):
 
 
 @tract_math_function(': print the names of scalar data associated with each tract')
-deCf scalars(tractography):
+def scalars(tractography):
     for k in tractography.getOriginalData().keys():
         print k, ' '
 
@@ -187,7 +190,7 @@ def tract_point_distance_min_max(tractography):
 def tract_subsample(tractography, points_per_tract, tractography_file_output):
     tractography.subsample_tracts(int(points_per_tract))
     vtkInterface.writeLinesToVtkPolyData(
-        tractography_file_output, tractography.tracts_to_process(),  tractography.tract_data_to_process()
+        tractography_file_output, tractography.tracts_to_process(),  tractography.tracts_data_to_process()
     )
 
 
@@ -197,7 +200,7 @@ def tract_remove_short_fibers(tractography, min_tract_length, tractography_file_
     min_tract_length = float(min_tract_length)
 
     tracts = tractography.tracts_to_process()
-    data = tractography.tract_data_to_process()
+    data = tractography.tracts_data_to_process()
 
     tract_ix_to_keep = [
         i for i, tract in enumerate(tractography.tracts_to_process())
@@ -229,7 +232,7 @@ def tract_tensor_similarity(tractography, thickness, subsampling, *tracts):
     bundle = fiberSegments.FiberBundleSegmentGaussianProcess(t_gp)
     bundle_norm = bundle * bundle
     for tract in tracts:
-        tract = tr.tractography_from_vtk_files(tract)
+        tract = tractography_from_vtk_files(tract)
         tract.subsample_tracts(subsampling)
         t_gp1 = [fiberSegments.FiberSegmentGaussianProcess(t, thickness) for t in tract.tracts_to_process()]
         bundle1 = fiberSegments.FiberBundleSegmentGaussianProcess(t_gp1)
@@ -278,7 +281,7 @@ def tract_generate_mask(tractography, image, image_out):
 def tract_generate_population_probability_map(tractographies, image, image_out):
     image = nibabel.load(image)
 
-    if isinstance(tractographies, tr.tractography):
+    if isinstance(tractographies, tr.Tractography):
         tractographies = [tractographies]
 
     prob_map = tract_mask(image, tractographies[0]).astype(float)
@@ -291,12 +294,9 @@ def tract_generate_population_probability_map(tractographies, image, image_out):
     nibabel.save(nibabel.spatialimages.SpatialImage(prob_map, image.get_affine()), image_out)
 
 
-@tract_math_function('<image> <image_out>: calculates the probabilistic tract image for these tracts')
+@tract_math_function('<image> <image_out>: calculates the probabilistic tract image for these tracts', needs_one_tract=False)
 def tract_generate_probability_map(tractographies, image, image_out):
     image = nibabel.load(image)
-
-    if isinstance(tractographies, tr.tractography):
-        tractographies = [tractographies]
 
     prob_map = tract_probability_map(image, tractographies[0]).astype(float)
 
@@ -307,16 +307,16 @@ def tract_generate_probability_map(tractographies, image, image_out):
     nibabel.save(nibabel.spatialimages.SpatialImage(prob_map, image.get_affine()), image_out)
 
 
-@tract_math_function('<tractography_out>: takes the union of all tractographies')
+@tract_math_function('<tractography_out>: takes the union of all tractographies', needs_one_tract=False)
 def tract_merge(tractographies, tractography_file_output):
     all_tracts = []
     all_data = {}
-    keys = [set(t.tract_data_to_process().keys()) for t in tractographies]
+    keys = [set(t.tracts_data_to_process().keys()) for t in tractographies]
     common_keys = keys[0].intersection(*keys[1:])
     for tract in tractographies:
         tracts = tract.tracts_to_process()
         all_tracts += tract.tracts_to_process()
-        data = tract.tract_data_to_process()
+        data = tract.tracts_data_to_process()
         for k in common_keys:
             if len(data[k]) == len(tracts):
                 if k not in all_data:
@@ -338,7 +338,7 @@ def tract_kappa(tractography, resolution, *other_tracts):
     voxels = voxelized_tract(tractography, resolution)
 
     for tract in other_tracts:
-        voxels1 = voxelized_tract(tr.tractography_from_vtk_files(tract), resolution)
+        voxels1 = voxelized_tract(tractography_from_vtk_files(tract), resolution)
 
         all_voxels = numpy.array(list(voxels.union(voxels1)))
         N = (all_voxels.max(0) - all_voxels.min(0)).prod()
@@ -354,6 +354,32 @@ def tract_kappa(tractography, resolution, *other_tracts):
         print k
 
 
+@tract_math_function('<volume> <threshold> <tract1.vtk> ... <tractN.vtk>: calculates the kappa value of the first tract with the rest in the space of the reference image')
+def tract_kappa_volume(tractography, volume, threshold, *other_tracts):
+    resolution = float(resolution)
+
+    volume = nibabel.load(volume)
+    mask = (volume.get_data() > threshold).astype(int)
+    voxels = tract_mask(mask, tractography)
+
+    for tract in other_tracts:
+        voxels1 = voxelized_tract(tractography_from_vtk_files(tract), resolution)
+
+        all_voxels = numpy.array(list(voxels.union(voxels1)))
+        N = (all_voxels.max(0) - all_voxels.min(0)).prod()
+        pp = len(voxels.intersection(voxels1)) * 1.
+        pn = len(voxels.difference(voxels1)) * 1.
+        np = len(voxels1.difference(voxels)) * 1.
+        nn = N - pp - pn - np
+        observed_agreement = (pp + nn) / N
+        chance_agreement = ((pp + pn) * (pp + np) + (nn + np) * (nn + pn)) / (N * N)
+
+        k = (observed_agreement - chance_agreement) / (1 - chance_agreement)
+
+        print k
+
+
+
 @tract_math_function('<volume unit> <tract1.vtk> ... <tractN.vtk>: calculates the dice coefficient of the first tract with the rest in the space of the reference image')
 def tract_dice(tractography, resolution, *other_tracts):
     resolution = float(resolution)
@@ -361,7 +387,7 @@ def tract_dice(tractography, resolution, *other_tracts):
     voxels = voxelized_tract(tractography, resolution)
 
     for tract in other_tracts:
-        voxels1 = voxelized_tract(tr.tractography_from_vtk_files(tract), resolution)
+        voxels1 = voxelized_tract(tractography_from_vtk_files(tract), resolution)
         print 2 * len(voxels.intersection(voxels1)) * 1. / (len(voxels) + len(voxels1))
 
 

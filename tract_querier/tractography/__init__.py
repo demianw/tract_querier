@@ -1,5 +1,5 @@
-from tract_querier.tractography import vtkInterface
-from tract_querier.tractography.tractography import Tractography
+from . import vtkInterface
+from .tractography import Tractography
 
 
 def tractography_from_vtk_files(vtk_file_names):
@@ -14,7 +14,7 @@ def tractography_from_vtk_files(vtk_file_names):
     else:
         for file_name in vtk_file_names:
             pd_as_dictiononary = vtkInterface.read_vtkPolyData(file_name)
-            tr.from_dictionary(pd_as_dictiononary, append = True)
+            tr.from_dictionary(pd_as_dictiononary, append=True)
 
     return tr
 
@@ -24,7 +24,7 @@ def tractography_to_vtkPolyData(tractography, vtkPolyData, selected_tracts=None)
     import numpy as np
 
     fibers = tractography.original_tracts()
-    if selected_tracts != None:
+    if selected_tracts is not None:
         fibers = [fibers[i] for i in selected_tracts]
 
     numberOfPoints = reduce(lambda x, y: x + y.shape[0], fibers, 0)
@@ -60,4 +60,3 @@ def tractography_to_vtkPolyData(tractography, vtkPolyData, selected_tracts=None)
         actual_line_index = line_end
 
     vtkPolyData.GetLines().GetData().DeepCopy(linesUnsignedInt)
-
