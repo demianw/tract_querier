@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 import sys
 from itertools import takewhile
-
 from argparse import ArgumentParser, FileType, REMAINDER
-import tract_querier.tractography
 
 
 def tract_math_function(help_text, needs_one_tract=True):
@@ -104,14 +102,29 @@ def tract_length(tract):
 @tract_math_function('<volume unit>: calculates the volume of a tract based on voxel occupancy of a certain voxel volume')
 def tract_volume(tractography, resolution):
     resolution = float(resolution)
-    all_points = numpy.vstack(tractography.tracts_to_process())
+    voxels = voxelized_tract(tractography, resolution)
 
-    all_points /= resolution
-    all_points = (all_points - .5).round(0).astype(int)
-    num_voxels = len(set((tuple(point) for point in all_points)))
+    neighbors = numpy.array([
+        [0, 1, 0],
+        [0, -1, 0],
+        [1, 0, 0],
+        [-1, 0, 0],
+        [0, 0, 1],
+        [0, 0, -1]
+    ])
+    dilated_voxels = set()
+    dilated_voxels.update(voxels)
+    eroded_voxels = set()
+    for voxel in voxels:
+        neighbors_list = zip(*(neighbors + voxel).T)
+        dilated_voxels.update(neighbors_list)
+        if len(voxels.intersection(neighbors_list)) == len(neighbors):
+            eroded_voxels.add(voxel)
 
-    print num_voxels * (resolution ** 3)
-    return num_voxels * (resolution ** 3)
+    #print len(dilated_voxels), len(voxels), len(eroded_voxels)
+    approx_voxels = (len(dilated_voxels) - len(eroded_voxels)) / 2.
+    print approx_voxels * (resolution ** 3)
+    return approx_voxels * (resolution ** 3)
 
 
 @tract_math_function('<scalar>: calculates mean and std of a scalar quantity for each tract')
@@ -228,13 +241,13 @@ def tract_tensor_similarity(tractography, thickness, subsampling, *tracts):
     subsampling = int(subsampling)
 
     tractography.subsample_tracts(subsampling)
-    t_gp = [fiberSegments.FiberSegmentGaussianProcess(t, thickness) for t in tractography.tracts_to_process()]
+    t_gp = [fiberSegments.FiberSegmentGaussianProcess(t, thickness) for t in tractography.tracts_to_process() if len(t) > 2]
     bundle = fiberSegments.FiberBundleSegmentGaussianProcess(t_gp)
     bundle_norm = bundle * bundle
     for tract in tracts:
         tract = tractography_from_vtk_files(tract)
         tract.subsample_tracts(subsampling)
-        t_gp1 = [fiberSegments.FiberSegmentGaussianProcess(t, thickness) for t in tract.tracts_to_process()]
+        t_gp1 = [fiberSegments.FiberSegmentGaussianProcess(t, thickness) for t in tract.tracts_to_process() if len(t) > 2]
         bundle1 = fiberSegments.FiberBundleSegmentGaussianProcess(t_gp1)
         print (bundle * bundle1) / numpy.sqrt(bundle_norm * (bundle1 * bundle1))
 
@@ -379,7 +392,6 @@ def tract_kappa_volume(tractography, volume, threshold, *other_tracts):
         print k
 
 
-
 @tract_math_function('<volume unit> <tract1.vtk> ... <tractN.vtk>: calculates the dice coefficient of the first tract with the rest in the space of the reference image')
 def tract_dice(tractography, resolution, *other_tracts):
     resolution = float(resolution)
@@ -395,7 +407,7 @@ def voxelized_tract(tractography, resolution):
     from itertools import izip
     all_points = numpy.vstack(tractography.tracts_to_process())
     all_points /= resolution
-    all_points = (all_points - .5).round(0).astype(int)
+    all_points = all_points.round(0).astype(int)
     return set(izip(*(all_points.T)))
 
 
