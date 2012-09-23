@@ -290,17 +290,24 @@ def tract_generate_mask(tractography, image, image_out):
     nibabel.save(nibabel.spatialimages.SpatialImage(mask, image.get_affine()), image_out)
 
 
-@tract_math_function('<image> <image_out>: calculates the probabilistic tract image for these tracts')
-def tract_generate_population_probability_map(tractographies, image, image_out):
+@tract_math_function('<image> <smoothing> <image_out>: calculates the probabilistic tract image for these tracts', needs_one_tract=False)
+def tract_generate_population_probability_map(tractographies, image, smoothing, image_out):
+    from scipy import ndimage
     image = nibabel.load(image)
+    smoothing = float(smoothing)
 
     if isinstance(tractographies, tr.Tractography):
         tractographies = [tractographies]
 
     prob_map = tract_mask(image, tractographies[0]).astype(float)
+    if smoothing > 0:
+	prob_map = ndimage.gaussian_filter(prob_map, smoothing)
 
     for tract in tractographies[1:]:
-        prob_map += tract_mask(image, tract)
+        aux_map = tract_mask(image, tract)
+	if smoothing > 0:
+		aux_map = ndimage.gaussian_filter(aux_map, smoothing)
+	prob_map += aux_map
 
     prob_map /= len(tractographies)
 
@@ -491,7 +498,7 @@ def tract_mask(image, tractography):
         (0, 0, 0), numpy.array(image_data.shape) - 1
     ).astype(int)
 
-    mask = numpy.empty_like(image_data, dtype=float)
+    mask = numpy.zeros_like(image_data, dtype=float)
     mask[tuple(ijk_clipped.T)] = 1
     return mask
 
