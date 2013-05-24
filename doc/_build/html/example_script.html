@@ -1,0 +1,208 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Example WMQL usage &mdash; WMQL 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="WMQL 0.1 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">WMQL</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Example WMQL usage</a><ul>
+<li><a class="reference internal" href="#wmql-terms">WMQL Terms</a></li>
+<li><a class="reference internal" href="#first-wmql-example-script-cortico-spinal-tract">First WMQL example script: Cortico-Spinal Tract</a></li>
+<li><a class="reference internal" href="#more-complex-example-the-uncinate-fasciculus">More complex example: The Uncinate Fasciculus</a></li>
+<li><a class="reference internal" href="#globbing-example-commissural-tracts">Globbing example: Commissural Tracts</a><ul>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/example_script.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="example-wmql-usage">
+<span id="example-script"></span><h1>Example WMQL usage<a class="headerlink" href="#example-wmql-usage" title="Permalink to this headline">¶</a></h1>
+<p>To run a WMQL script over and automatically extract a set of white matter tract bundles you will need:</p>
+<ul class="simple">
+<li>A full-brain tractography in VTK format: It must be a vtkPolyData object where all the cells are lines.</li>
+<li>A brain parcellation, such as the <em>wmparc.mgz</em> file obtained from  <a class="reference external" href="https://surfer.nmr.mgh.harvard.edu">freesurfer</a> in the same space as the full-brain tractography.</li>
+<li>A WMQL query file</li>
+</ul>
+<p>Once all of these files are setup, the tract bundles are obtained by issuing the command:</p>
+<div class="highlight-bash"><div class="highlight"><pre>tract_querier -t tractography_file.vtk -a wmparc.nii.gz -q wmql_script.qry -o tract_output
+</pre></div>
+</div>
+<p>where <strong>tractography_file.vtk</strong> is the full-brain tractography, <strong>wmparc.nii.gz</strong> is the brain parcellation, <strong>wmql_script.qry</strong> is the WMQL script and <strong>tract_output</strong> is the prefix for the output bundles.</p>
+<div class="section" id="wmql-terms">
+<h2>WMQL Terms<a class="headerlink" href="#wmql-terms" title="Permalink to this headline">¶</a></h2>
+<p>WMQL queries are based on combinations of the following terms</p>
+<a class="reference internal image-reference" href="_images/WMQL_terms.svg"><div align="center" class="align-center"><img alt="Terms of the WMQL language" src="_images/WMQL_terms.svg" width="80%" /></div>
+</a>
+</div>
+<div class="section" id="first-wmql-example-script-cortico-spinal-tract">
+<h2>First WMQL example script: Cortico-Spinal Tract<a class="headerlink" href="#first-wmql-example-script-cortico-spinal-tract" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-wmql"><div class="highlight"><pre><span class="c">#Import the freesurfer label definitions from the Desikan atlas (Desikan et al 2006)</span>
+<span class="kn">import</span> <span class="nn">FreeSurfer.qry</span>
+
+<span class="c">#Define bi-laterally the cortico-spinal tract</span>
+<span class="n">cortico_spinal</span><span class="o">.</span><span class="n">side</span> <span class="o">=</span>  <span class="p">(</span>
+  <span class="kp">endpoints_in</span><span class="p">(</span><span class="n">brain_stem</span><span class="p">)</span> <span class="ow">and</span>
+  <span class="p">(</span><span class="kp">endpoints_in</span><span class="p">(</span><span class="n">precentral</span><span class="o">.</span><span class="n">side</span><span class="p">)</span> <span class="ow">or</span> <span class="kp">endpoints_in</span><span class="p">(</span><span class="n">postcentral</span><span class="o">.</span><span class="n">side</span><span class="p">))</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="more-complex-example-the-uncinate-fasciculus">
+<h2>More complex example: The Uncinate Fasciculus<a class="headerlink" href="#more-complex-example-the-uncinate-fasciculus" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-wmql"><div class="highlight"><pre><span class="c">#Import the freesurfer label definitions from the Desikan atlas (Desikan et al 2006)</span>
+<span class="kn">import</span> <span class="nn">FreeSurfer.qry</span>
+
+<span class="c">#Define the temporal lobe but ignore it on the output using the |= operator</span>
+<span class="n">temporal</span><span class="o">.</span><span class="n">side</span> <span class="o">|=</span> <span class="p">(</span>
+        <span class="p">(</span><span class="n">entorhinal</span><span class="o">.</span><span class="n">side</span> <span class="ow">or</span> <span class="n">parahippocampal</span><span class="o">.</span><span class="n">side</span> <span class="ow">or</span> <span class="n">temporalpole</span><span class="o">.</span><span class="n">side</span> <span class="ow">or</span>
+         <span class="n">fusiform</span><span class="o">.</span><span class="n">side</span> <span class="ow">or</span> <span class="n">superiortemporal</span><span class="o">.</span><span class="n">side</span> <span class="ow">or</span> <span class="n">middletemporal</span><span class="o">.</span><span class="n">side</span> <span class="ow">or</span>
+         <span class="n">inferiortemporal</span><span class="o">.</span><span class="n">side</span> <span class="ow">or</span> <span class="n">transversetemporal</span><span class="o">.</span><span class="n">side</span> <span class="ow">or</span> <span class="n">bankssts</span><span class="o">.</span><span class="n">side</span><span class="p">)</span>  
+     <span class="p">)</span>
+
+
+<span class="n">temporal_anterior_section</span><span class="o">.</span><span class="n">side</span> <span class="o">|=</span> <span class="n">temporal</span><span class="o">.</span><span class="n">side</span> <span class="ow">and</span> <span class="kp">anterior_of</span><span class="p">(</span><span class="n">amygdala</span><span class="o">.</span><span class="n">side</span><span class="p">)</span>
+
+<span class="c">#Define the frontal regions connected to the uncinate fasciculus</span>
+<span class="n">inferior_frontal_gyrus</span><span class="o">.</span><span class="n">side</span> <span class="o">|=</span> <span class="p">(</span>
+  <span class="n">parsopercularis</span><span class="o">.</span><span class="n">side</span> <span class="ow">or</span> <span class="n">parstriangularis</span><span class="o">.</span><span class="n">side</span> <span class="ow">or</span> <span class="n">parsorbitalis</span><span class="o">.</span><span class="n">side</span>
+<span class="p">)</span>
+
+<span class="n">orbito_frontal_gyrus</span><span class="o">.</span><span class="n">side</span> <span class="o">|=</span> <span class="p">(</span>
+			<span class="n">lateralorbitofrontal</span><span class="o">.</span><span class="n">side</span> <span class="ow">or</span>
+			<span class="n">medialorbitofrontal</span><span class="o">.</span><span class="n">side</span>
+                    <span class="p">)</span>
+
+<span class="n">middle_frontal_gyrus</span><span class="o">.</span><span class="n">side</span> <span class="o">|=</span> <span class="n">caudalmiddlefrontal</span><span class="o">.</span><span class="n">side</span> <span class="ow">or</span> <span class="n">rostralmiddlefrontal</span><span class="o">.</span><span class="n">side</span> 
+
+
+
+<span class="c">#Define bi-laterally the uncinate-fasciculus</span>
+<span class="n">uncinate</span><span class="o">.</span><span class="n">side</span> <span class="o">=</span>  <span class="p">(</span>
+  <span class="kp">endpoints_in</span><span class="p">(</span><span class="n">temporal_anterior_section</span><span class="o">.</span><span class="n">side</span><span class="p">)</span> <span class="ow">and</span> 
+  <span class="n">insula</span><span class="o">.</span><span class="n">side</span> <span class="ow">and</span>
+  <span class="kp">endpoints_in</span><span class="p">(</span>
+    <span class="n">inferior_frontal_gyrus</span><span class="o">.</span><span class="n">side</span> <span class="ow">or</span>
+    <span class="n">middle_frontal_gyrus</span><span class="o">.</span><span class="n">side</span> <span class="ow">or</span>
+    <span class="n">orbito_frontal_gyrus</span><span class="o">.</span><span class="n">side</span>
+  <span class="p">)</span>
+<span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="kp">posterior_of</span><span class="p">(</span><span class="n">amygdala</span><span class="o">.</span><span class="n">side</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="globbing-example-commissural-tracts">
+<h2>Globbing example: Commissural Tracts<a class="headerlink" href="#globbing-example-commissural-tracts" title="Permalink to this headline">¶</a></h2>
+<p>The whole point of this example is showing the use of
+<a class="reference external" href="http://en.wikipedia.org/wiki/Glob_(programming)">glob expressions</a> to
+define a region such as the left hemisphere</p>
+<div class="highlight-wmql"><div class="highlight"><pre><span class="c">#Import the freesurfer label definitions from the Desikan atlas (Desikan et al 2006)</span>
+<span class="kn">import</span> <span class="nn">FreeSurfer.qry</span>
+
+<span class="c">#Define hemispheres using glob patterns ( http://en.wikipedia.org/wiki/Glob_(programming) )</span>
+<span class="n">hemisphere</span><span class="o">.</span><span class="n">left</span> <span class="o">|=</span> <span class="s">&#39;*.left&#39;</span>
+<span class="n">hemisphere</span><span class="o">.</span><span class="n">right</span> <span class="o">|=</span> <span class="s">&#39;*.right&#39;</span>
+
+<span class="c">#Define all the commissural tracts</span>
+<span class="n">all_commissural</span> <span class="o">=</span> <span class="kp">endpoints_in</span><span class="p">(</span><span class="n">hemisphere</span><span class="o">.</span><span class="n">left</span><span class="p">)</span> <span class="ow">and</span> <span class="kp">endpoints_in</span><span class="p">(</span><span class="n">hemisphere</span><span class="o">.</span><span class="n">right</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="toctree-wrapper compound">
+<ul class="simple">
+</ul>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">WMQL</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Demian Wassermann (BSD License).
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

@@ -1,92 +1,18 @@
 import sys
 import numpy as np
+from collections import namedtuple
 
-class BoundingBox(np.ndarray):
-    """Bounding box assuming RAS coordinate system"""
-    def __new__(cls, input_array, info=None):
-        try:
-            if len(input_array) == 6 and np.isscalar(input_array[0]):
-                pass
-            elif len(input_array) >= 1 and len(input_array[0]) == 3:
-                pass
-            else:
-                raise ValueError("Bounding box must have 6 components or be a list of points")
-        except TypeError:
-            raise ValueError("Bounding box must have 6 components or be a list of points")
-        except ValueError:
-            raise ValueError("Bounding box must have 6 components or be a list of points")
+from .aabb import BoundingBox
 
-        input_array = np.asanyarray(input_array)
-
-        if len(input_array) != 6 or input_array.ndim > 1:
-            input_array = np.r_[
-                np.min(input_array, axis=0),
-                np.max(input_array, axis=0),
-            ]
-
-        return input_array.view(cls)
-
-    def __setitem__(self, *args, **kwargs):
-        raise   NotImplementedError("Can not set item")
-
-    def __setslice__(self, *args, **kwargs):
-        raise   NotImplementedError("Can not set slice")
-
-    @property
-    def left(self):
-        return self[0]
-
-    @property
-    def posterior(self):
-        return self[1]
-
-    @property
-    def inferior(self):
-        return self[2]
-
-    @property
-    def right(self):
-        return self[3]
-
-    @property
-    def anterior(self):
-        return self[4]
-
-    @property
-    def superior(self):
-        return self[5]
-
-    def union(self, bounding_box):
-        if isinstance(bounding_box, BoundingBox):
-            _bounding_box = bounding_box
-        else:
-            _bounding_box = BoundingBox(bounding_box)
-        return BoundingBox(np.r_[
-            np.minimum(self[:3], _bounding_box[:3]),
-            np.maximum(self[3:], _bounding_box[3:]),
-        ])
-
-    def intersection(self, bounding_box):
-        if isinstance(bounding_box, BoundingBox):
-            _bounding_box = bounding_box
-        else:
-            _bounding_box = BoundingBox(bounding_box)
-
-        one_point_self_inside_bounding_box = np.all(
-            (self.reshape(2, 3)>=_bounding_box[:3]) *
-            (self.reshape(2, 3)<=_bounding_box[3:])
-        )
-        one_point_bounding_box_inside_self = np.all(
-            (_bounding_box.reshape(2, 3)>=self[:3]) *
-            (_bounding_box.reshape(2, 3)<=self[3:])
-        )
-        if one_point_self_inside_bounding_box or one_point_bounding_box_inside_self:
-            return BoundingBox(np.r_[
-                np.maximum(self[:3], _bounding_box[:3]),
-                np.minimum(self[3:], _bounding_box[3:]),
-            ])
-        else:
-            return None
+TractLabelIndices = namedtuple(
+    'TractLabelIndices',
+    [
+        'crossing_tracts_labels',
+        'crossing_labels_tracts',
+        'ending_tracts_labels',
+        'ending_labels_tracts'
+    ]
+)
 
 
 def compute_label_bounding_boxes(image, affine_ijk_2_ras):
@@ -110,12 +36,12 @@ def compute_label_bounding_boxes(image, affine_ijk_2_ras):
     return label_bounding_boxes
 
 
-def compute_fiber_bounding_boxes(fibers, affine_transform):
-    bounding_boxes = np.empty((len(fibers), 6), dtype=float)
+def compute_tract_bounding_boxes(tracts, affine_transform):
+    bounding_boxes = np.empty((len(tracts), 6), dtype=float)
     linear_component = affine_transform[:3, :3]
     translation = affine_transform[:-1, -1]
 
-    for i, tract in enumerate(fibers):
+    for i, tract in enumerate(tracts):
         ras_coords = (
             (linear_component.dot(tract.T).T +
              translation)
@@ -124,7 +50,7 @@ def compute_fiber_bounding_boxes(fibers, affine_transform):
         bounding_boxes[i] = BoundingBox(ras_coords)
 
     box_array = np.empty(
-        len(fibers),
+        len(tracts),
         dtype=[(name, float) for name in (
             'left', 'posterior', 'inferior',
             'right', 'anterior', 'superior'
@@ -136,134 +62,88 @@ def compute_fiber_bounding_boxes(fibers, affine_transform):
     return box_array
 
 
-def compute_label_crossings(fiber_cumulative_lengths, point_labels, threshold):
-    fibers_labels = {}
-    for i in xrange(len(fiber_cumulative_lengths) - 1):
-        start = fiber_cumulative_lengths[i]
-        end = fiber_cumulative_lengths[i + 1]
+def compute_label_crossings(tract_cumulative_lengths, point_labels, threshold):
+    tracts_labels = {}
+    for i in xrange(len(tract_cumulative_lengths) - 1):
+        start = tract_cumulative_lengths[i]
+        end = tract_cumulative_lengths[i + 1]
         label_crossings = np.asanyarray(point_labels[start:end], dtype=int)
         bincount = np.bincount(label_crossings)
         percentages = bincount * 1. / bincount.sum()
-        fibers_labels[i] = set(np.where(percentages >= (threshold / 100.))[0])
+        tracts_labels[i] = set(np.where(percentages >= (threshold / 100.))[0])
 
-    labels_fibers = {}
-    for i, f in fibers_labels.items():
+    labels_tracts = {}
+    for i, f in tracts_labels.items():
         for l in f:
-            if l in labels_fibers:
-                labels_fibers[l].add(i)
+            if l in labels_tracts:
+                labels_tracts[l].add(i)
             else:
-                labels_fibers[l] = set((i,))
-    return fibers_labels, labels_fibers
+                labels_tracts[l] = set((i,))
+    return tracts_labels, labels_tracts
 
 
-def compute_label_endings(fiber_cumulative_lengths, point_labels):
-    fibers_labels = {}
-    for i in xrange(len(fiber_cumulative_lengths) - 1):
-        start = fiber_cumulative_lengths[i]
-        end = fiber_cumulative_lengths[i + 1]
-        fibers_labels[i] = set((int(point_labels[start]), int(point_labels[end - 1])))
+def compute_label_endings(tract_cumulative_lengths, point_labels):
+    tracts_labels = {}
+    for i in xrange(len(tract_cumulative_lengths) - 1):
+        start = tract_cumulative_lengths[i]
+        end = tract_cumulative_lengths[i + 1]
+        tracts_labels[i] = set((int(point_labels[
+                               start]), int(point_labels[end - 1])))
 
-    labels_fibers = {}
-    for i, f in fibers_labels.items():
+    labels_tracts = {}
+    for i, f in tracts_labels.items():
         for l in f:
-            if l in labels_fibers:
-                labels_fibers[l].add(i)
+            if l in labels_tracts:
+                labels_tracts[l].add(i)
             else:
-                labels_fibers[l] = set((i,))
-    return fibers_labels, labels_fibers
+                labels_tracts[l] = set((i,))
+    return tracts_labels, labels_tracts
 
 
-def compute_fiber_label_indices(affine_ras_2_ijk, img, fibers, length_threshold, crossing_threshold):
+def compute_tract_label_indices(
+    affine_ras_2_ijk, img,
+    tracts, length_threshold, crossing_threshold
+):
     if length_threshold > 0:
-        fiber_length = lambda fiber: ((((fiber[1:] - fiber[:-1]) ** 2).sum(1)) ** .5).sum()
-        fibers = [f for f in fibers if fiber_length(f) >= length_threshold]
+        tract_length = lambda tract: ((((tract[
+                                      1:] - tract[:-1]) ** 2).sum(1)) ** .5).sum()
+        tracts = [f for f in tracts if tract_length(f) >= length_threshold]
 
-    all_points = np.vstack(fibers)
-    all_points_ijk = (np.dot(affine_ras_2_ijk[:-1, :-1], all_points.T).T +\
+    all_points = np.vstack(tracts)
+    all_points_ijk = (np.dot(affine_ras_2_ijk[:-1, :-1], all_points.T).T +
                       affine_ras_2_ijk[:-1, -1])
     all_points_ijk_rounded = np.round(all_points_ijk).astype(int)
 
-    if any( ((all_points_ijk_rounded[:, i] >= img.shape[i]).any() for i in xrange(3)))  or (all_points_ijk_rounded < 0).any():
+    if any(((all_points_ijk_rounded[:, i] >= img.shape[i]).any() for i in xrange(3))) or (all_points_ijk_rounded < 0).any():
         print >>sys.stderr, "Warning tract points fall outside the image"
 
     for i in xrange(3):
-        all_points_ijk_rounded[:, i] = all_points_ijk_rounded[:, i].clip(0, img.shape[i] - 1)
+        all_points_ijk_rounded[:, i] = all_points_ijk_rounded[
+            :, i].clip(0, img.shape[i] - 1)
 
     point_labels = img[tuple(all_points_ijk_rounded.T)]
-    fiber_cumulative_lengths = np.cumsum([0] + [len(f) for f in fibers])
+    tract_cumulative_lengths = np.cumsum([0] + [len(f) for f in tracts])
 
-    crossing_fibers_labels, crossing_labels_fibers = compute_label_crossings(
-        fiber_cumulative_lengths, point_labels, crossing_threshold
+    crossing_tracts_labels, crossing_labels_tracts = compute_label_crossings(
+        tract_cumulative_lengths, point_labels, crossing_threshold
     )
 
-    ending_fibers_labels, ending_labels_fibers = compute_label_endings(
-        fiber_cumulative_lengths, point_labels
+    ending_tracts_labels, ending_labels_tracts = compute_label_endings(
+        tract_cumulative_lengths, point_labels
     )
 
-    return crossing_fibers_labels, crossing_labels_fibers, ending_fibers_labels, ending_labels_fibers
-
-def compute_fiber_occupation_image(affine_ras_2_ijk, img, fibers, length_threshold):
-    if length_threshold > 0:
-        fiber_length = lambda fiber: ((((fiber[1:] - fiber[:-1]) ** 2).sum(1)) ** .5).sum()
-        fibers = [f for f in fibers if fiber_length(f) >= length_threshold]
-
-    all_points = np.vstack(fibers)
-    all_points_ijk = (np.dot(affine_ras_2_ijk[:-1, :-1], all_points.T).T +\
-                      affine_ras_2_ijk[:-1, -1])
-    all_points_ijk_rounded = np.round(all_points_ijk).astype(int)
-
-    if any( ((all_points_ijk_rounded[:, i] >= img.shape[i]).any() for i in xrange(3)))  or (all_points_ijk_rounded < 0).any():
-        print >>sys.stderr, "Warning tract points fall outside the image"
-
-    for i in xrange(3):
-        all_points_ijk_rounded[:, i] = all_points_ijk_rounded[:, i].clip(0, img.shape[i] - 1)
-
-    image_points_to_traverse = np.empty(img.shape, dtype=bool)
-    coords = tuple(all_points_ijk_rounded.T)
-    image_points_to_traverse[coords] = True
-    points_to_traverse = np.transpose(image_points_to_traverse.nonzero())
-
-    label_occupation_image = np.empty(img.shape, dtype='object')
-    fiber_numbers = np.empty(len(all_points), dtype=int)
-
-    last_index = 0
-    for i, fiber in enumerate(fibers):
-        n = len(fiber)
-        fiber_numbers[last_index: last_index + n] = i
-        last_index += n
-
-    label_occupation_image[:] = set()
-    for point in points_to_traverse:
-        print i
-        i, j, k = point
-        points_in_fibers = (all_points_ijk_rounded == point).all(1)
-        label_occupation_image[i, j, k] = set(
-            fiber_numbers[points_in_fibers]
-        )
-
-    return label_occupation_image
-
-
-
-
-    point_labels = img[tuple(all_points_ijk_rounded.T)]
-    fiber_cumulative_lengths = np.cumsum([0] + [len(f) for f in fibers])
-
-    crossing_fibers_labels, crossing_labels_fibers = compute_label_crossings(
-        fiber_cumulative_lengths, point_labels, crossing_threshold
+    return TractLabelIndices(
+        crossing_tracts_labels,
+        crossing_labels_tracts,
+        ending_tracts_labels,
+        ending_labels_tracts
     )
 
-    ending_fibers_labels, ending_labels_fibers = compute_label_endings(
-        fiber_cumulative_lengths, point_labels
-    )
 
-    return crossing_fibers_labels, crossing_labels_fibers, ending_fibers_labels, ending_labels_fibers
+# import collections
+# BinaryTreeNode = collections.namedtuple('key value left right')
 
-
-#import collections
-#BinaryTreeNode = collections.namedtuple('key value left right')
-
-#class BinaryTreeDict:
+# class BinaryTreeDict:
 #    go_left = 1
 #    go_right = 2
 #    def __init__(self):
@@ -371,7 +251,7 @@ def compute_fiber_occupation_image(affine_ras_2_ijk, img, fibers, length_thresho
 
 
 
-#class SixTreeDict:
+# class SixTreeDict:
 #    def __init__(self):
 #        pass
 

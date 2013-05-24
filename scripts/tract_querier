@@ -2,7 +2,7 @@
 from optparse import OptionParser
 import os
 import sys
-import tract_querier.tractography
+
 
 def main():
     parser = OptionParser(
@@ -11,45 +11,46 @@ def main():
         "-q queries -o result_prefix"
     )
     parser.add_option("-t", "--tractography", dest="tractography_file_name",
-                    help="name of the tractography file")
+                      help="name of the tractography file")
     parser.add_option("-a", "--atlas", dest="atlas_file_name",
-                    help="name of the atlas file")
+                      help="name of the atlas file")
     parser.add_option("-q", "--queries", dest="queries_string",
-                    help="query to run")
+                      help="query to run")
     parser.add_option('-o', "--output", dest="output_file_name",
-                    help="clustering output file prefix")
+                      help="clustering output file prefix")
     parser.add_option('-I',  dest="include",
-                    help="folders to include query files")
+                      help="folders to include query files")
     parser.add_option(
         '--threshold', dest='threshold', default=2,
-        help="Minimum percentage of the fiber to be "
+        help="Minimum percentage of the tract to be "
         "considered inside of the label default %default %"
     )
     parser.add_option('--length_threshold', dest='length_threshold', default=0,
-        help="Minimum length of the fiber to be considered (in mm) "
+                      help="Minimum length of the tract to be considered (in mm) "
                       "default %default %"
-    )
+                      )
     parser.add_option('--zscore_threshold', dest='zscore_threshold', default=0,
-                    help="Outlier rejection threshold default %default %")
+                      help="Outlier rejection threshold default %default %")
     parser.add_option('--query_selection', dest='query_selection', default='',
-                    help="Query selection %default %")
+                      help="Query selection %default %")
     parser.add_option('--interactive', dest='interactive',
                       default=False, action="store_true",
                       help="Interactive prompt"
-                     )
+                      )
     parser.add_option(
         '--bounding_box_affine_transform', dest='bounding_box_affine_transform',
         help="Bounding box to apply to the image affine transform and tracts "
         "to put both in AC-PC coordinate space"
     )
 
-
     (options, args) = parser.parse_args()
 
-    if not options.tractography_file_name or\
-       not options.atlas_file_name or\
-       not options.queries_string or\
-       not options.output_file_name:
+    if (
+        not options.tractography_file_name or
+        not options.atlas_file_name or
+        not options.queries_string or
+        not options.output_file_name
+    ):
         parser.error("incorrect number of arguments")
 
     options.threshold = float(options.threshold)
@@ -60,9 +61,7 @@ def main():
     import numpy as np
     import nibabel
 
-    global tract_querier
     import tract_querier
-    from tract_querier.tractography import tractography
 
     if options.bounding_box_affine_transform:
         bounding_box_affine_transform = np.fromstring(
@@ -72,7 +71,6 @@ def main():
         print bounding_box_affine_transform
     else:
         bounding_box_affine_transform = np.eye(4)
-
 
     print "Loading files"
     if options.include:
@@ -110,8 +108,6 @@ def main():
             include_folders=folders
         )
 
-
-
         tract_querier.queries_syntax_check(query_file_body)
     except tract_querier.TractQuerierSyntaxError, e:
         parser.error(e.value)
@@ -126,26 +122,29 @@ def main():
     print "Calculating labels and crossings"
     affine_ijk_2_ras = labels_nii.get_affine()
     affine_ras_2_ijk = np.linalg.inv(affine_ijk_2_ras)
-    fibers = tr.tracts_to_process()
+    tracts = tr.tracts()
 
-    crossing_fibers_labels, crossing_labels_fibers, ending_fibers_labels, ending_labels_fibers =\
-            tract_querier.compute_fiber_label_indices(
-                affine_ras_2_ijk, img, fibers,
-                options.length_threshold, options.threshold
-            )
+    tract_label_indices = tract_querier.compute_tract_label_indices(
+        affine_ras_2_ijk, img, tracts,
+        options.length_threshold, options.threshold
+    )
 
-    fiber_bounding_boxes = tract_querier.compute_fiber_bounding_boxes(fibers, bounding_box_affine_transform)
-    label_bounding_boxes = tract_querier.compute_label_bounding_boxes(img, np.dot(bounding_box_affine_transform, affine_ijk_2_ras))
+    tract_bounding_boxes = tract_querier.compute_tract_bounding_boxes(
+        tracts, bounding_box_affine_transform
+    )
+    label_bounding_boxes = tract_querier.compute_label_bounding_boxes(
+        img, np.dot(bounding_box_affine_transform, affine_ijk_2_ras)
+    )
 
     if not options.interactive:
         print "Computing queries"
         evaluated_queries = tract_querier.eval_queries(
             query_file_body,
-            crossing_labels_fibers,
-            crossing_fibers_labels,
-            ending_labels_fibers,
-            ending_fibers_labels,
-            fiber_bounding_boxes,
+            tract_label_indices.crossing_labels_tracts,
+            tract_label_indices.crossing_tracts_labels,
+            tract_label_indices.ending_labels_tracts,
+            tract_label_indices.ending_tracts_labels,
+            tract_bounding_boxes,
             label_bounding_boxes,
         )
 
@@ -161,13 +160,15 @@ def main():
     else:
         query_save = (
             lambda query_name, query_result:
-                save_query(query_name, tr, options, {query_name: query_result})
+            save_query(query_name, tr, options, {query_name: query_result})
         )
 
         interactive_shell = tract_querier.TractQuerierCmd(
-            crossing_fibers_labels, crossing_labels_fibers,
-            ending_fibers_labels, ending_labels_fibers,
-            fiber_bounding_boxes, label_bounding_boxes,
+            tract_label_indices.crossing_tracts_labels,
+            tract_label_indices.crossing_labels_tracts,
+            tract_label_indices.ending_tracts_labels,
+            tract_label_indices.ending_labels_tracts,
+            tract_bounding_boxes, label_bounding_boxes,
             initial_body=query_script,
             save_query_callback=query_save,
             include_folders=folders
@@ -177,74 +178,75 @@ def main():
 
 
 def save_query(query_name, tractography, options, evaluated_queries):
-    fiber_numbers = evaluated_queries[query_name]
-    print "\tQuery %s: %.6d" % (query_name, len(fiber_numbers))
-    if fiber_numbers:
+    tract_numbers = evaluated_queries[query_name]
+    print "\tQuery %s: %.6d" % (query_name, len(tract_numbers))
+    if tract_numbers:
         save_tractography_file(
             options.output_file_name + "_" + query_name + '.vtk',
             tractography,
-            fiber_numbers,
+            tract_numbers,
             zscore_threshold=float(options.zscore_threshold)
         )
 
 
 def save_tractography_file(
-    filename, tractography, fiber_numbers,
+    filename, tractography, tract_numbers,
     zscore_threshold=3
 ):
-    from tract_querier.tractography import vtkInterface
     from itertools import izip
 
-    fiber_numbers = list(fiber_numbers)
+    tract_numbers = list(tract_numbers)
 
-    original_fibers = tractography.original_tracts()
+    original_tracts = tractography.original_tracts()
 
-    fibers_to_analyze_for_outlier_rejection = [
-        original_fibers[i] for i in fiber_numbers
+    tracts_to_analyze_for_outlier_rejection = [
+        original_tracts[i] for i in tract_numbers
     ]
 
     if zscore_threshold > 0:
-        fiber_numbers_to_save, zscore_per_fiber = (
+        tract_numbers_to_save, zscore_per_tract = (
             tract_querier.z_score_outlier_rejection(
-                fibers_to_analyze_for_outlier_rejection,
+                tracts_to_analyze_for_outlier_rejection,
                 z_score_reject=zscore_threshold
             )
         )
-        zscore_per_fiber.sort()
-        print '\t', len(fiber_numbers_to_save)
-        fiber_numbers = [fiber_numbers[i] for i in fiber_numbers_to_save]
+        zscore_per_tract.sort()
+        print '\t', len(tract_numbers_to_save)
+        tract_numbers = [tract_numbers[i] for i in tract_numbers_to_save]
 
-    fibers_to_save = [original_fibers[i] for i in fiber_numbers]
+    tracts_to_save = [original_tracts[i] for i in tract_numbers]
 
-    if len(fibers_to_save) == 0:
+    if len(tracts_to_save) == 0:
         return
 
-    fibers_data_to_save = {}
+    tracts_data_to_save = {}
     for key, data in tractography.original_tracts_data().items():
-        fibers_data_to_save[key] = [data[f] for f in fiber_numbers]
+        tracts_data_to_save[key] = [data[f] for f in tract_numbers]
 
     if (
-        'ActiveTensors' not in fibers_data_to_save and
-        'Tensors_' in fibers_data_to_save
+        'ActiveTensors' not in tracts_data_to_save and
+        'Tensors_' in tracts_data_to_save
     ):
-        fibers_data_to_save['ActiveTensors'] = 'Tensors_'
+        tracts_data_to_save['ActiveTensors'] = 'Tensors_'
     if (
-        'ActiveVectors' not in fibers_data_to_save and
-        'Vectors_' in fibers_data_to_save
+        'ActiveVectors' not in tracts_data_to_save and
+        'Vectors_' in tracts_data_to_save
     ):
-        fibers_data_to_save['ActiveVectors'] = 'Vectors_'
+        tracts_data_to_save['ActiveVectors'] = 'Vectors_'
 
     if zscore_threshold > 0:
-        z_scores_fiber_data = [
-            np.repeat(z_score, len(fiber))[:, None]
-            for z_score, fiber in izip(zscore_per_fiber, fibers_to_save)
+        z_scores_tract_data = [
+            np.repeat(z_score, len(tract))[:, None]
+            for z_score, tract in izip(zscore_per_tract, tracts_to_save)
         ]
-        fibers_data_to_save['z_score'] = z_scores_fiber_data
+        tracts_data_to_save['z_score'] = z_scores_tract_data
 
-    vtkInterface.writeLinesToVtkPolyData(
+    tract_querier.tractography.tractography_to_vtk_file(
         filename,
-        fibers_to_save,
-        fibers_data_to_save
+        tract_querier.tractography.Tractography(
+            tracts_to_save,
+            tracts_data_to_save
+        )
     )
 
 

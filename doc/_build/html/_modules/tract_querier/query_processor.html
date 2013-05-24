@@ -1,0 +1,753 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>tract_querier.query_processor &mdash; WMQL 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="WMQL 0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">WMQL</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for tract_querier.query_processor</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">ast</span>
+<span class="kn">from</span> <span class="nn">os</span> <span class="kn">import</span> <span class="n">path</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">takewhile</span>
+<span class="kn">import</span> <span class="nn">fnmatch</span>
+
+<span class="kn">from</span> <span class="nn">.code_util</span> <span class="kn">import</span> <span class="n">DocStringInheritor</span>
+
+<span class="n">keywords</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s">&#39;and&#39;</span><span class="p">,</span>
+    <span class="s">&#39;or&#39;</span><span class="p">,</span>
+    <span class="s">&#39;not in&#39;</span><span class="p">,</span>
+    <span class="s">&#39;not&#39;</span><span class="p">,</span>
+    <span class="s">&#39;only&#39;</span><span class="p">,</span>
+    <span class="s">&#39;endpoints_in&#39;</span><span class="p">,</span>
+    <span class="s">&#39;anterior_of&#39;</span><span class="p">,</span>
+    <span class="s">&#39;posterior_of&#39;</span><span class="p">,</span>
+    <span class="s">&#39;medial_of&#39;</span><span class="p">,</span>
+    <span class="s">&#39;lateral_of&#39;</span><span class="p">,</span>
+    <span class="s">&#39;inferior_of&#39;</span><span class="p">,</span>
+    <span class="s">&#39;superior_of&#39;</span><span class="p">,</span>
+<span class="p">]</span>
+
+
+<div class="viewcode-block" id="EvaluateQueries"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.EvaluateQueries">[docs]</a><span class="k">class</span> <span class="nc">EvaluateQueries</span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">NodeVisitor</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    This class implements the parser to process</span>
+<span class="sd">    White Matter Query Language modules. By inheriting from</span>
+<span class="sd">    :py:mod:`ast.NodeVisitor` it uses a syntax close to the</span>
+<span class="sd">    python language.</span>
+
+<span class="sd">    Every node expression visitor has the following signature</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    node : ast.Node</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    fibers : set</span>
+<span class="sd">        numbers of the fibers that result of this</span>
+<span class="sd">        query</span>
+
+<span class="sd">    labels : set</span>
+<span class="sd">        numbers of the labels that are traversed by</span>
+<span class="sd">        the fibers resulting from this query</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__metaclass__</span> <span class="o">=</span> <span class="n">DocStringInheritor</span>
+
+    <span class="n">relative_terms</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s">&#39;anterior_of&#39;</span><span class="p">,</span>
+        <span class="s">&#39;posterior_of&#39;</span><span class="p">,</span>
+        <span class="s">&#39;medial_of&#39;</span><span class="p">,</span>
+        <span class="s">&#39;lateral_of&#39;</span><span class="p">,</span>
+        <span class="s">&#39;inferior_of&#39;</span><span class="p">,</span>
+        <span class="s">&#39;superior_of&#39;</span>
+    <span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">crossing_fibers_labels</span><span class="p">,</span> <span class="n">crossing_labels_fibers</span><span class="p">,</span>
+        <span class="n">ending_fibers_labels</span><span class="o">=</span><span class="p">{},</span> <span class="n">ending_labels_fibers</span><span class="o">=</span><span class="p">{},</span>
+        <span class="n">fiber_bounding_boxes</span><span class="o">=</span><span class="p">{},</span> <span class="n">label_bounding_boxes</span><span class="o">=</span><span class="p">{},</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">crossing_fibers_labels</span> <span class="o">=</span> <span class="n">crossing_fibers_labels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">crossing_labels_fibers</span> <span class="o">=</span> <span class="n">crossing_labels_fibers</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ending_fibers_labels</span> <span class="o">=</span> <span class="n">ending_fibers_labels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ending_labels_fibers</span> <span class="o">=</span> <span class="n">ending_labels_fibers</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">fiber_bounding_boxes</span> <span class="o">=</span> <span class="n">fiber_bounding_boxes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label_bounding_boxes</span> <span class="o">=</span> <span class="n">label_bounding_boxes</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">evaluated_queries_fibers</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">evaluated_queries_labels</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">evaluated_queries_labels_bounding_boxes</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">evaluated_queries_fibers_bounding_boxes</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">queries_to_save</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+<div class="viewcode-block" id="EvaluateQueries.visit_Module"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.EvaluateQueries.visit_Module">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Module</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">body</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="EvaluateQueries.visit_Compare"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.EvaluateQueries.visit_Compare">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Compare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">NotIn</span><span class="p">)</span> <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">ops</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">TractQuerierSyntaxError</span><span class="p">(</span>
+                <span class="s">&quot;Invalid syntax in query line </span><span class="si">%d</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">node</span><span class="o">.</span><span class="n">lineno</span>
+            <span class="p">)</span>
+
+        <span class="n">fibers</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">left</span><span class="p">)</span>
+        <span class="n">fibers</span> <span class="o">=</span> <span class="n">fibers</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">comparators</span><span class="p">:</span>
+            <span class="n">fibers_</span><span class="p">,</span> <span class="n">labels_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="n">fibers</span><span class="o">.</span><span class="n">difference_update</span><span class="p">(</span><span class="n">fibers_</span><span class="p">)</span>
+            <span class="n">labels</span><span class="o">.</span><span class="n">difference_update</span><span class="p">(</span><span class="n">labels_</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">fibers</span><span class="p">,</span> <span class="n">labels</span>
+</div>
+<div class="viewcode-block" id="EvaluateQueries.visit_BoolOp"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.EvaluateQueries.visit_BoolOp">[docs]</a>    <span class="k">def</span> <span class="nf">visit_BoolOp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="n">fibers</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">fibers</span> <span class="o">=</span> <span class="n">fibers</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Or</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+                <span class="n">fibers_</span><span class="p">,</span> <span class="n">labels_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="n">fibers</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">fibers_</span><span class="p">)</span>
+                <span class="n">labels</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">labels_</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">And</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+                <span class="n">fibers_</span><span class="p">,</span> <span class="n">labels_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="n">fibers</span><span class="o">.</span><span class="n">intersection_update</span><span class="p">(</span><span class="n">fibers_</span><span class="p">)</span>
+                <span class="n">labels</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">labels_</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">generic_visit</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">fibers</span><span class="p">,</span> <span class="n">labels</span>
+</div>
+<div class="viewcode-block" id="EvaluateQueries.visit_BinOp"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.EvaluateQueries.visit_BinOp">[docs]</a>    <span class="k">def</span> <span class="nf">visit_BinOp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="n">fibers_left</span><span class="p">,</span> <span class="n">label_left</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">left</span><span class="p">)</span>
+        <span class="n">fibers_right</span><span class="p">,</span> <span class="n">label_right</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">right</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Add</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">fibers_left</span> <span class="o">|</span> <span class="n">fibers_right</span><span class="p">,</span> <span class="n">label_left</span> <span class="o">|</span> <span class="n">label_right</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Mult</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">fibers_left</span> <span class="o">&amp;</span> <span class="n">fibers_right</span><span class="p">,</span> <span class="n">label_left</span> <span class="o">|</span> <span class="n">label_right</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Sub</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="n">fibers_left</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">fibers_right</span><span class="p">),</span>
+                <span class="n">label_left</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">label_right</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">generic_visit</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="EvaluateQueries.visit_UnaryOp"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.EvaluateQueries.visit_UnaryOp">[docs]</a>    <span class="k">def</span> <span class="nf">visit_UnaryOp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="n">fibers</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">operand</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Invert</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">set</span><span class="p">(</span><span class="n">fiber</span> <span class="k">for</span> <span class="n">fiber</span> <span class="ow">in</span> <span class="n">fibers</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">crossing_fibers_labels</span><span class="p">[</span><span class="n">fiber</span><span class="p">]</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">labels</span><span class="p">)),</span> <span class="n">labels</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">UAdd</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">fibers</span><span class="p">,</span> <span class="n">labels</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">USub</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Not</span><span class="p">):</span>
+            <span class="n">new_labels</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">crossing_labels_fibers</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="n">new_labels</span><span class="o">.</span><span class="n">difference_update</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+            <span class="n">new_fibers</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">crossing_labels_fibers</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+            <span class="n">new_fibers</span><span class="o">.</span><span class="n">difference_update</span><span class="p">(</span><span class="n">fibers</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">new_fibers</span><span class="p">,</span> <span class="n">new_labels</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TractQuerierSyntaxError</span><span class="p">(</span>
+                <span class="s">&quot;Syntax error in query line </span><span class="si">%d</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">node</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="EvaluateQueries.visit_Str"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.EvaluateQueries.visit_Str">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Str</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="n">matching_fibers</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">matching_labels</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">fnmatch</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">evaluated_queries_fibers</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">node</span><span class="o">.</span><span class="n">s</span><span class="p">):</span>
+            <span class="n">matching_fibers</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">evaluated_queries_fibers</span><span class="p">[</span><span class="n">name</span><span class="p">])</span>
+            <span class="n">matching_labels</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">evaluated_queries_labels</span><span class="p">[</span><span class="n">name</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">matching_fibers</span><span class="p">,</span> <span class="n">matching_labels</span>
+</div>
+<div class="viewcode-block" id="EvaluateQueries.visit_Call"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.EvaluateQueries.visit_Call">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="c"># Single string argument function</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">func</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">)</span> <span class="ow">and</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">starargs</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">keywords</span> <span class="o">==</span> <span class="p">[]</span> <span class="ow">and</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">kwargs</span> <span class="ow">is</span> <span class="bp">None</span>
+        <span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;only&#39;</span><span class="p">):</span>
+                <span class="n">fibers</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="k">return</span> <span class="p">(</span>
+                    <span class="nb">set</span><span class="p">(</span>
+                        <span class="n">fiber</span> <span class="k">for</span> <span class="n">fiber</span> <span class="ow">in</span> <span class="n">fibers</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">crossing_fibers_labels</span><span class="p">[</span><span class="n">fiber</span><span class="p">]</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+                    <span class="p">),</span> <span class="n">labels</span>
+                <span class="p">)</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;endpoints_in&#39;</span><span class="p">):</span>
+                <span class="n">fibers</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">fibers</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span>
+                    <span class="n">fiber</span> <span class="k">for</span> <span class="n">fiber</span> <span class="ow">in</span> <span class="n">fibers</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ending_fibers_labels</span><span class="p">[</span><span class="n">fiber</span><span class="p">]</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">labels</span><span class="p">))</span>
+                <span class="p">)</span>
+                <span class="n">labels</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span><span class="o">.</span><span class="n">union</span><span class="p">(</span>
+                    <span class="o">*</span><span class="nb">tuple</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">crossing_fibers_labels</span><span class="p">[</span><span class="n">fiber</span><span class="p">]</span> <span class="k">for</span> <span class="n">fiber</span> <span class="ow">in</span> <span class="n">fibers</span><span class="p">))</span>
+                <span class="p">)</span>
+                <span class="k">return</span> <span class="n">fibers</span><span class="p">,</span> <span class="n">labels</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;save&#39;</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Str</span><span class="p">)):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">queries_to_save</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">s</span><span class="p">)</span>
+                <span class="k">return</span>
+            <span class="k">elif</span> <span class="n">node</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">relative_terms</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">process_relative_term</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+        <span class="k">raise</span> <span class="n">TractQuerierSyntaxError</span><span class="p">(</span><span class="s">&quot;Invalid query in line </span><span class="si">%d</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">node</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="EvaluateQueries.process_relative_term"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.EvaluateQueries.process_relative_term">[docs]</a>    <span class="k">def</span> <span class="nf">process_relative_term</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">        Processes the relative terms</span>
+
+<span class="sd">        * anterior_of</span>
+<span class="sd">        * posterior_of</span>
+<span class="sd">        * superior_of</span>
+<span class="sd">        * inferior_of</span>
+<span class="sd">        * medial_of</span>
+<span class="sd">        * lateral_of</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        node :  :py:class:`ast.Node`</span>
+<span class="sd">            Parsed tree</span>
+
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+
+<span class="sd">        fibers, labels</span>
+
+<span class="sd">        fibers :  set</span>
+<span class="sd">            Numbers of the fibers that result of this</span>
+<span class="sd">            query</span>
+
+<span class="sd">        labels :  set</span>
+<span class="sd">            Numbers of the labels that are traversed by</span>
+<span class="sd">            the fibers resulting from this query</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label_bounding_boxes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">set</span><span class="p">(),</span> <span class="nb">set</span><span class="p">()</span>
+
+        <span class="n">arg</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">):</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Attribute</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">attr</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;left&#39;</span><span class="p">,</span> <span class="s">&#39;right&#39;</span><span class="p">):</span>
+                <span class="n">side</span> <span class="o">=</span> <span class="n">arg</span><span class="o">.</span><span class="n">attr</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+                <span class="n">_</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TractQuerierSyntaxError</span><span class="p">(</span>
+                <span class="s">&quot;Attribute not recognized for relative specification.&quot;</span>
+                <span class="s">&quot;Line </span><span class="si">%d</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">node</span><span class="o">.</span><span class="n">lineno</span>
+            <span class="p">)</span>
+
+        <span class="n">labels_generator</span> <span class="o">=</span> <span class="p">(</span><span class="n">l</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">)</span>
+        <span class="n">bounding_box</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_bounding_boxes</span><span class="p">[</span><span class="n">labels_generator</span><span class="o">.</span><span class="n">next</span><span class="p">()]</span>
+        <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">labels_generator</span><span class="p">:</span>
+            <span class="n">bounding_box</span> <span class="o">=</span> <span class="n">bounding_box</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label_bounding_boxes</span><span class="p">[</span><span class="n">label</span><span class="p">])</span>
+
+        <span class="n">function_name</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">function_name</span> <span class="o">==</span> <span class="s">&#39;anterior_of&#39;</span><span class="p">:</span>
+            <span class="n">fibers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fiber_bounding_boxes</span><span class="p">[</span>
+                <span class="s">&#39;anterior&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">bounding_box</span><span class="o">.</span><span class="n">anterior</span>
+        <span class="k">elif</span> <span class="n">function_name</span> <span class="o">==</span> <span class="s">&#39;posterior_of&#39;</span><span class="p">:</span>
+            <span class="n">fibers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fiber_bounding_boxes</span><span class="p">[</span>
+                <span class="s">&#39;posterior&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">bounding_box</span><span class="o">.</span><span class="n">posterior</span>
+        <span class="k">elif</span> <span class="n">function_name</span> <span class="o">==</span> <span class="s">&#39;superior_of&#39;</span><span class="p">:</span>
+            <span class="n">fibers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fiber_bounding_boxes</span><span class="p">[</span>
+                <span class="s">&#39;superior&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">bounding_box</span><span class="o">.</span><span class="n">superior</span>
+        <span class="k">elif</span> <span class="n">function_name</span> <span class="o">==</span> <span class="s">&#39;inferior_of&#39;</span><span class="p">:</span>
+            <span class="n">fibers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fiber_bounding_boxes</span><span class="p">[</span>
+                <span class="s">&#39;inferior&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">bounding_box</span><span class="o">.</span><span class="n">inferior</span>
+        <span class="k">elif</span> <span class="n">function_name</span> <span class="o">==</span> <span class="s">&#39;medial_of&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">side</span> <span class="o">==</span> <span class="s">&#39;left&#39;</span><span class="p">:</span>
+                <span class="n">fibers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fiber_bounding_boxes</span><span class="p">[</span>
+                    <span class="s">&#39;right&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">bounding_box</span><span class="o">.</span><span class="n">right</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">fibers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fiber_bounding_boxes</span><span class="p">[</span><span class="s">&#39;left&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">bounding_box</span><span class="o">.</span><span class="n">left</span>
+        <span class="k">elif</span> <span class="n">function_name</span> <span class="o">==</span> <span class="s">&#39;lateral_of&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">side</span> <span class="o">==</span> <span class="s">&#39;right&#39;</span><span class="p">:</span>
+                <span class="n">fibers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fiber_bounding_boxes</span><span class="p">[</span>
+                    <span class="s">&#39;right&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">bounding_box</span><span class="o">.</span><span class="n">right</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">fibers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fiber_bounding_boxes</span><span class="p">[</span><span class="s">&#39;left&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">bounding_box</span><span class="o">.</span><span class="n">left</span>
+
+        <span class="n">fibers</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">fibers</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="nb">tuple</span><span class="p">((</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">crossing_fibers_labels</span><span class="p">[</span><span class="n">fiber</span><span class="p">]</span> <span class="k">for</span> <span class="n">fiber</span> <span class="ow">in</span> <span class="n">fibers</span><span class="p">)))</span>
+
+        <span class="k">return</span> <span class="n">fibers</span><span class="p">,</span> <span class="n">labels</span>
+</div>
+<div class="viewcode-block" id="EvaluateQueries.visit_Assign"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.EvaluateQueries.visit_Assign">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Assign</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">targets</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TractQuerierSyntaxError</span><span class="p">(</span>
+                <span class="s">&quot;Invalid assignment in line </span><span class="si">%d</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">node</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+
+        <span class="n">queries_to_evaluate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">process_assignment</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">query_name</span><span class="p">,</span> <span class="n">value_node</span> <span class="ow">in</span> <span class="n">queries_to_evaluate</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">fibers</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">value_node</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">queries_to_save</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">query_name</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">evaluated_queries_fibers</span><span class="p">[</span><span class="n">query_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">fibers</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">evaluated_queries_labels</span><span class="p">[</span><span class="n">query_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">labels</span>
+</div>
+<div class="viewcode-block" id="EvaluateQueries.visit_AugAssign"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.EvaluateQueries.visit_AugAssign">[docs]</a>    <span class="k">def</span> <span class="nf">visit_AugAssign</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">BitOr</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">TractQuerierSyntaxError</span><span class="p">(</span>
+                <span class="s">&quot;Invalid assignment in line </span><span class="si">%d</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">node</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+
+        <span class="n">queries_to_evaluate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">process_assignment</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">query_name</span><span class="p">,</span> <span class="n">value_node</span> <span class="ow">in</span> <span class="n">queries_to_evaluate</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">fibers</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">value_node</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">evaluated_queries_fibers</span><span class="p">[</span><span class="n">query_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">fibers</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">evaluated_queries_labels</span><span class="p">[</span><span class="n">query_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">labels</span>
+</div>
+<div class="viewcode-block" id="EvaluateQueries.process_assignment"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.EvaluateQueries.process_assignment">[docs]</a>    <span class="k">def</span> <span class="nf">process_assignment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">        Processes the assignment operations</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        node :  :py:class:`ast.Node`</span>
+<span class="sd">            Parsed tree</span>
+
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+
+<span class="sd">        queries_to_evaluate: dict</span>
+<span class="sd">            A dictionary or pairs &#39;&lt;name of the query&gt;&#39;= &lt;node to evaluate&gt;</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">queries_to_evaluate</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="s">&#39;target&#39;</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">_fields</span><span class="p">:</span>
+            <span class="n">target</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">target</span>
+        <span class="k">if</span> <span class="s">&#39;targets&#39;</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">_fields</span><span class="p">:</span>
+            <span class="n">target</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">):</span>
+            <span class="n">queries_to_evaluate</span><span class="p">[</span><span class="n">target</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">elif</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Attribute</span><span class="p">)</span> <span class="ow">and</span>
+            <span class="n">target</span><span class="o">.</span><span class="n">attr</span> <span class="o">==</span> <span class="s">&#39;side&#39;</span>
+        <span class="p">):</span>
+            <span class="n">node_left</span><span class="p">,</span> <span class="n">node_right</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rewrite_side_query</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node_left</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node_right</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Attribute</span><span class="p">)</span> <span class="ow">and</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="n">queries_to_evaluate</span><span class="p">[</span>
+                <span class="n">target</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">+</span> <span class="s">&#39;.&#39;</span> <span class="o">+</span> <span class="n">target</span><span class="o">.</span><span class="n">attr</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TractQuerierSyntaxError</span><span class="p">(</span>
+                <span class="s">&quot;Invalid assignment in line </span><span class="si">%d</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">node</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">queries_to_evaluate</span>
+</div>
+<div class="viewcode-block" id="EvaluateQueries.rewrite_side_query"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.EvaluateQueries.rewrite_side_query">[docs]</a>    <span class="k">def</span> <span class="nf">rewrite_side_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">        Processes the side suffixes in a query</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        node :  :py:class:`ast.Node`</span>
+<span class="sd">            Parsed tree</span>
+
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+
+<span class="sd">        node_left, node_right: nodes</span>
+<span class="sd">            two AST nodes, one for the query instantiated on the left hemisphere</span>
+<span class="sd">            one for the query instantiated on the right hemisphere</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">node_left</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="n">node_right</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">node_</span> <span class="ow">in</span> <span class="n">ast</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">node_left</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node_</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Attribute</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">node_</span><span class="o">.</span><span class="n">attr</span> <span class="o">==</span> <span class="s">&#39;side&#39;</span><span class="p">:</span>
+                    <span class="n">node_</span><span class="o">.</span><span class="n">attr</span> <span class="o">=</span> <span class="s">&#39;left&#39;</span>
+                <span class="k">elif</span> <span class="n">node_</span><span class="o">.</span><span class="n">attr</span> <span class="o">==</span> <span class="s">&#39;opposite&#39;</span><span class="p">:</span>
+                    <span class="n">node_</span><span class="o">.</span><span class="n">attr</span> <span class="o">=</span> <span class="s">&#39;right&#39;</span>
+
+        <span class="k">for</span> <span class="n">node_</span> <span class="ow">in</span> <span class="n">ast</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">node_right</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node_</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Attribute</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">node_</span><span class="o">.</span><span class="n">attr</span> <span class="o">==</span> <span class="s">&#39;side&#39;</span><span class="p">:</span>
+                    <span class="n">node_</span><span class="o">.</span><span class="n">attr</span> <span class="o">=</span> <span class="s">&#39;right&#39;</span>
+                <span class="k">elif</span> <span class="n">node_</span><span class="o">.</span><span class="n">attr</span> <span class="o">==</span> <span class="s">&#39;opposite&#39;</span><span class="p">:</span>
+                    <span class="n">node_</span><span class="o">.</span><span class="n">attr</span> <span class="o">=</span> <span class="s">&#39;left&#39;</span>
+
+        <span class="k">return</span> <span class="n">node_left</span><span class="p">,</span> <span class="n">node_right</span>
+</div>
+<div class="viewcode-block" id="EvaluateQueries.visit_Name"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.EvaluateQueries.visit_Name">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluated_queries_fibers</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluated_queries_fibers</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluated_queries_labels</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TractQuerierSyntaxError</span><span class="p">(</span>
+                <span class="s">&quot;Invalid query name in line </span><span class="si">%d</span><span class="s">: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">lineno</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="EvaluateQueries.visit_Attribute"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.EvaluateQueries.visit_Attribute">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">TractQuerierSyntaxError</span><span class="p">(</span>
+                <span class="s">&quot;Invalid query in line </span><span class="si">%d</span><span class="s">: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">node</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+
+        <span class="n">query_name</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">id</span> <span class="o">+</span> <span class="s">&#39;.&#39;</span> <span class="o">+</span> <span class="n">node</span><span class="o">.</span><span class="n">attr</span>
+        <span class="k">if</span> <span class="n">query_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluated_queries_fibers</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluated_queries_fibers</span><span class="p">[</span><span class="n">query_name</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluated_queries_labels</span><span class="p">[</span><span class="n">query_name</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TractQuerierSyntaxError</span><span class="p">(</span>
+                <span class="s">&quot;Invalid query name in line </span><span class="si">%d</span><span class="s">: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">lineno</span><span class="p">,</span> <span class="n">query_name</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="EvaluateQueries.visit_Num"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.EvaluateQueries.visit_Num">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Num</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">crossing_labels_fibers</span><span class="p">:</span>
+            <span class="n">fibers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">crossing_labels_fibers</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">n</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fibers</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">fibers</span><span class="p">,</span> <span class="nb">set</span><span class="p">((</span><span class="n">node</span><span class="o">.</span><span class="n">n</span><span class="p">,))</span>
+</div>
+<div class="viewcode-block" id="EvaluateQueries.visit_Expr"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.EvaluateQueries.visit_Expr">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Expr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluated_queries_fibers</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">queries_to_save</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">TractQuerierSyntaxError</span><span class="p">(</span>
+                    <span class="s">&quot;Query </span><span class="si">%s</span><span class="s"> not known line: </span><span class="si">%d</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">lineno</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TractQuerierSyntaxError</span><span class="p">(</span>
+                <span class="s">&quot;Invalid expression at line: </span><span class="si">%d</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">lineno</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="EvaluateQueries.generic_visit"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.EvaluateQueries.generic_visit">[docs]</a>    <span class="k">def</span> <span class="nf">generic_visit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">TractQuerierSyntaxError</span><span class="p">(</span>
+            <span class="s">&quot;Invalid Operation </span><span class="si">%s</span><span class="s"> line: </span><span class="si">%d</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">node</span><span class="p">),</span> <span class="n">node</span><span class="o">.</span><span class="n">lineno</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="EvaluateQueries.visit_For"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.EvaluateQueries.visit_For">[docs]</a>    <span class="k">def</span> <span class="nf">visit_For</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="n">id_to_replace</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+        <span class="n">iter_</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">iter</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">iter_</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Str</span><span class="p">):</span>
+            <span class="n">list_items</span> <span class="o">=</span> <span class="n">fnmatch</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">evaluated_queries_fibers</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">iter_</span><span class="o">.</span><span class="n">s</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">iter_</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">List</span><span class="p">):</span>
+            <span class="n">list_items</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">iter_</span><span class="o">.</span><span class="n">elts</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">):</span>
+                    <span class="n">list_items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">TractQuerierSyntaxError</span><span class="p">(</span>
+                        <span class="s">&#39;Error in FOR statement in line </span><span class="si">%d</span><span class="s">, elements in the list must be query names&#39;</span> <span class="o">%</span> <span class="n">node</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span>
+
+        <span class="n">original_body</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">Module</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">body</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">list_items</span><span class="p">:</span>
+            <span class="n">aux_body</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">original_body</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">node_</span> <span class="ow">in</span> <span class="n">ast</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">aux_body</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node_</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">)</span> <span class="ow">and</span> <span class="n">node_</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="n">id_to_replace</span><span class="p">:</span>
+                    <span class="n">node_</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">item</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">aux_body</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="TractQuerierSyntaxError"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.TractQuerierSyntaxError">[docs]</a><span class="k">class</span> <span class="nc">TractQuerierSyntaxError</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="RewriteChangeNotInPrescedence"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.RewriteChangeNotInPrescedence">[docs]</a><span class="k">class</span> <span class="nc">RewriteChangeNotInPrescedence</span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">NodeTransformer</span><span class="p">):</span>
+<div class="viewcode-block" id="RewriteChangeNotInPrescedence.visit_BoolOp"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.RewriteChangeNotInPrescedence.visit_BoolOp">[docs]</a>    <span class="k">def</span> <span class="nf">visit_BoolOp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="n">predicate</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">value</span><span class="p">:</span> <span class="ow">not</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Compare</span><span class="p">)</span> <span class="ow">and</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">ops</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ast</span><span class="o">.</span><span class="n">NotIn</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">values_which_are_not_in_op</span> <span class="o">=</span> <span class="p">[</span><span class="n">value</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">takewhile</span><span class="p">(</span>
+            <span class="n">predicate</span><span class="p">,</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="p">)]</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">values_which_are_not_in_op</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">values</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">node</span>
+
+        <span class="n">old_CompareNode</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">values_which_are_not_in_op</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">new_CompareNodeLeft</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">copy_location</span><span class="p">(</span>
+            <span class="n">ast</span><span class="o">.</span><span class="n">BoolOp</span><span class="p">(</span>
+                <span class="n">op</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">,</span>
+                <span class="n">values</span><span class="o">=</span><span class="p">(</span>
+                    <span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">+</span>
+                    <span class="n">values_which_are_not_in_op</span> <span class="o">+</span>
+                    <span class="p">[</span><span class="n">old_CompareNode</span><span class="o">.</span><span class="n">left</span><span class="p">]</span>
+                <span class="p">)</span>
+            <span class="p">),</span>
+            <span class="n">node</span>
+        <span class="p">)</span>
+
+        <span class="n">new_CompareNode</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">copy_location</span><span class="p">(</span>
+            <span class="n">ast</span><span class="o">.</span><span class="n">Compare</span><span class="p">(</span>
+                <span class="n">left</span><span class="o">=</span><span class="n">new_CompareNodeLeft</span><span class="p">,</span>
+                <span class="n">ops</span><span class="o">=</span><span class="n">old_CompareNode</span><span class="o">.</span><span class="n">ops</span><span class="p">,</span>
+                <span class="n">comparators</span><span class="o">=</span><span class="n">old_CompareNode</span><span class="o">.</span><span class="n">comparators</span>
+            <span class="p">),</span>
+            <span class="n">node</span>
+        <span class="p">)</span>
+
+        <span class="n">rest_of_the_values</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">values_which_are_not_in_op</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span><span class="p">:]</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rest_of_the_values</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">new_CompareNode</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">copy_location</span><span class="p">(</span>
+                <span class="n">ast</span><span class="o">.</span><span class="n">BoolOp</span><span class="p">(</span>
+                    <span class="n">op</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">,</span>
+                    <span class="n">values</span><span class="o">=</span><span class="p">(</span>
+                        <span class="p">[</span><span class="n">new_CompareNode</span><span class="p">]</span> <span class="o">+</span>
+                        <span class="n">rest_of_the_values</span>
+                    <span class="p">)</span>
+                <span class="p">),</span>
+                <span class="n">node</span>
+            <span class="p">))</span>
+
+</div></div>
+<div class="viewcode-block" id="RewritePreprocess"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.RewritePreprocess">[docs]</a><span class="k">class</span> <span class="nc">RewritePreprocess</span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">NodeTransformer</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s">&#39;include_folders&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">include_folders</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;include_folders&#39;</span><span class="p">]</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;include_folders&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="k">del</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;include_folders&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">include_folders</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;.&#39;</span><span class="p">]</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">RewritePreprocess</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="RewritePreprocess.visit_Attribute"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.RewritePreprocess.visit_Attribute">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ast</span><span class="o">.</span><span class="n">copy_location</span><span class="p">(</span>
+            <span class="n">ast</span><span class="o">.</span><span class="n">Attribute</span><span class="p">(</span>
+                <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">),</span>
+                <span class="n">attr</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">attr</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="p">),</span>
+            <span class="n">node</span>
+        <span class="p">)</span>
+</div>
+<div class="viewcode-block" id="RewritePreprocess.visit_Name"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.RewritePreprocess.visit_Name">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ast</span><span class="o">.</span><span class="n">copy_location</span><span class="p">(</span>
+            <span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">lower</span><span class="p">()),</span>
+            <span class="n">node</span>
+        <span class="p">)</span>
+</div>
+<div class="viewcode-block" id="RewritePreprocess.visit_Str"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.RewritePreprocess.visit_Str">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Str</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ast</span><span class="o">.</span><span class="n">copy_location</span><span class="p">(</span>
+            <span class="n">ast</span><span class="o">.</span><span class="n">Str</span><span class="p">(</span><span class="n">s</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">s</span><span class="o">.</span><span class="n">lower</span><span class="p">()),</span>
+            <span class="n">node</span>
+        <span class="p">)</span>
+</div>
+<div class="viewcode-block" id="RewritePreprocess.visit_Import"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.RewritePreprocess.visit_Import">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Import</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">module_names</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">module_name</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
+                <span class="n">file_name</span> <span class="o">=</span> <span class="n">module_name</span><span class="o">.</span><span class="n">name</span>
+                <span class="n">found</span> <span class="o">=</span> <span class="bp">False</span>
+                <span class="k">for</span> <span class="n">folder</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_folders</span><span class="p">:</span>
+                    <span class="n">file_</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">file_name</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">file_</span><span class="p">)</span> <span class="ow">and</span> <span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">file_</span><span class="p">):</span>
+                        <span class="n">module_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">file_</span><span class="p">)</span>
+                        <span class="n">found</span> <span class="o">=</span> <span class="bp">True</span>
+                        <span class="k">break</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">found</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">TractQuerierSyntaxError</span><span class="p">(</span>
+                        <span class="s">&#39;Imported file not found: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">file_name</span>
+                    <span class="p">)</span>
+            <span class="n">imported_modules</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">ast</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="nb">file</span><span class="p">(</span><span class="n">module_name</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span> <span class="n">filename</span><span class="o">=</span><span class="n">module_name</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">module_name</span> <span class="ow">in</span> <span class="n">module_names</span>
+            <span class="p">]</span>
+        <span class="k">except</span> <span class="ne">SyntaxError</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">sys</span>
+            <span class="kn">import</span> <span class="nn">traceback</span>
+            <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_value</span><span class="p">,</span> <span class="n">exc_traceback</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()</span>
+            <span class="n">formatted_lines</span> <span class="o">=</span> <span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+            <span class="k">raise</span> <span class="n">TractQuerierSyntaxError</span><span class="p">(</span>
+                <span class="s">&#39;syntax error in line </span><span class="si">%s</span><span class="s"> line </span><span class="si">%d</span><span class="s">: </span><span class="se">\n</span><span class="si">%s</span><span class="se">\n</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span>
+                <span class="p">(</span>
+                    <span class="n">module_name</span><span class="p">,</span>
+                    <span class="n">exc_value</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
+                    <span class="n">formatted_lines</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">],</span>
+                    <span class="n">formatted_lines</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="n">new_node</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">Module</span><span class="p">(</span><span class="n">imported_modules</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">ast</span><span class="o">.</span><span class="n">copy_location</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">new_node</span><span class="p">),</span>
+            <span class="n">node</span>
+        <span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="queries_preprocess"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.queries_preprocess">[docs]</a><span class="k">def</span> <span class="nf">queries_preprocess</span><span class="p">(</span><span class="n">query_file</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="s">&#39;&lt;unknown&gt;&#39;</span><span class="p">,</span> <span class="n">include_folders</span><span class="o">=</span><span class="p">[]):</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">query_file_module</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">query_file</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="s">&#39;&lt;unknown&gt;&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">SyntaxError</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">sys</span>
+        <span class="kn">import</span> <span class="nn">traceback</span>
+        <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_value</span><span class="p">,</span> <span class="n">exc_traceback</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">exc_info</span><span class="p">()</span>
+        <span class="n">formatted_lines</span> <span class="o">=</span> <span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="n">TractQuerierSyntaxError</span><span class="p">(</span>
+            <span class="s">&#39;syntax error in line </span><span class="si">%s</span><span class="s"> line </span><span class="si">%d</span><span class="s">: </span><span class="se">\n</span><span class="si">%s</span><span class="se">\n</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span>
+            <span class="p">(</span>
+                <span class="n">filename</span><span class="p">,</span>
+                <span class="n">exc_value</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
+                <span class="n">formatted_lines</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">],</span>
+                <span class="n">formatted_lines</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="n">rewrite_preprocess</span> <span class="o">=</span> <span class="n">RewritePreprocess</span><span class="p">(</span><span class="n">include_folders</span><span class="o">=</span><span class="n">include_folders</span><span class="p">)</span>
+    <span class="n">rewrite_precedence_not_in</span> <span class="o">=</span> <span class="n">RewriteChangeNotInPrescedence</span><span class="p">()</span>
+
+    <span class="n">preprocessed_module</span> <span class="o">=</span> <span class="n">rewrite_precedence_not_in</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span>
+        <span class="n">rewrite_preprocess</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">query_file_module</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">preprocessed_module</span><span class="o">.</span><span class="n">body</span>
+
+</div>
+<div class="viewcode-block" id="eval_queries"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.eval_queries">[docs]</a><span class="k">def</span> <span class="nf">eval_queries</span><span class="p">(</span>
+    <span class="n">query_file_body</span><span class="p">,</span>
+    <span class="n">crossing_labels_fibers</span><span class="o">=</span><span class="p">{},</span> <span class="n">crossing_fibers_labels</span><span class="o">=</span><span class="p">{},</span>
+    <span class="n">ending_labels_fibers</span><span class="o">=</span><span class="p">{},</span> <span class="n">ending_fibers_labels</span><span class="o">=</span><span class="p">{},</span>
+    <span class="n">fiber_bounding_boxes</span><span class="o">=</span><span class="p">{},</span> <span class="n">label_bounding_boxes</span><span class="o">=</span><span class="p">{}</span>
+<span class="p">):</span>
+    <span class="n">eq</span> <span class="o">=</span> <span class="n">EvaluateQueries</span><span class="p">(</span>
+        <span class="n">crossing_fibers_labels</span><span class="p">,</span> <span class="n">crossing_labels_fibers</span><span class="p">,</span>
+        <span class="n">ending_fibers_labels</span><span class="p">,</span> <span class="n">ending_labels_fibers</span><span class="p">,</span>
+        <span class="n">fiber_bounding_boxes</span><span class="p">,</span> <span class="n">label_bounding_boxes</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">query_file_body</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">eq</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">Module</span><span class="p">(</span><span class="n">query_file_body</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">eq</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">query_file_body</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">key</span><span class="p">,</span> <span class="n">eq</span><span class="o">.</span><span class="n">evaluated_queries_fibers</span><span class="p">[</span><span class="n">key</span><span class="p">])</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">eq</span><span class="o">.</span><span class="n">queries_to_save</span><span class="p">])</span>
+
+</div>
+<div class="viewcode-block" id="queries_syntax_check"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.queries_syntax_check">[docs]</a><span class="k">def</span> <span class="nf">queries_syntax_check</span><span class="p">(</span><span class="n">query_file_body</span><span class="p">):</span>
+    <span class="n">eval_queries</span><span class="p">(</span><span class="n">query_file_body</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="labels_for_fibers"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.labels_for_fibers">[docs]</a><span class="k">def</span> <span class="nf">labels_for_fibers</span><span class="p">(</span><span class="n">crossing_fibers_labels</span><span class="p">):</span>
+    <span class="n">crossing_labels_fibers</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">crossing_fibers_labels</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">crossing_labels_fibers</span><span class="p">:</span>
+                <span class="n">crossing_labels_fibers</span><span class="p">[</span><span class="n">l</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">crossing_labels_fibers</span><span class="p">[</span><span class="n">l</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">((</span><span class="n">i</span><span class="p">,))</span>
+    <span class="k">return</span> <span class="n">crossing_labels_fibers</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">WMQL</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Demian Wassermann (BSD License).
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

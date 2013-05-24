@@ -1,146 +1,145 @@
 import numpy as np
 
-try:
-    from . import fiber_reparametrization as fr
-except:
-    pass
+__all__ = ['Tractography']
 
 
 class Tractography:
+    r"""
+    Class to represent a tractography dataset
 
-    _original_tracts = []
-    _original_lines = []
-    _original_data = {}
-    _tract_data = {}
-    _tracts = []
-    _tract_map = []
-    _subsampled_tracts = []
-    _quantity_of_points_per_tract = None
-    _interpolated = False
+    Parameters
+    ----------
+    tracts : list of float array :math:`N_i\times 3`
+        Each element of the list is a tract represented as point array,
+        the length of the i-th tract is :math:`N_i`
+    tracts_data : dict of <data name>= list of float array of :math:`N_i\times M`
+        Each element in the list corresponds to a tract,
+        :math:`N_i` is the length of the i-th tract and M is the
+        number of components of that data type.
+    validate : bool
+        Check that tracts and tracts_data are valid
+    """
 
-    def __init__(self, **args):
-        self._original_tracts = []
-        self._tract_data = {}
-        self._original_lines = []
-        self._original_data = {}
+    def __init__(self, tracts=None, tracts_data=None, validate=True):
+        if tracts is not None and tracts_data is None:
+            tracts_data = {}
         self._tracts = []
-        self._tract_map = []
         self._quantity_of_points_per_tract = None
 
-        self._interpolated = False
-        self._fiber_keep_ratio = None
+        self._tract_map = None
+        self._subsampled_tracts = None
+        self._subsampled_data = None
 
-        self._subsampled_tracts = []
-        self._subsampled_lines = []
-        self._subsampled_data = []
+        if tracts is not None:
+            self.append(tracts, tracts_data, validate=validate)
 
-        if len(args) == 0:
-            return
+    def append(self, tracts, tracts_data=None, validate=True):
+        r"""
+        Append tracts and corresponding data to the current set
 
-        if isinstance(args[0], dict):
-            self.from_dictionary(args[0])
-        elif hasattr('len', args[0]) and hasattr('__setitem__', args[0]):
-            self._tracts = args[0]
+        Parameters
+        ----------
+        tracts : list of float array :math:`N_i\times 3`
+            Each element of the list is a tract represented as point array,
+            the length of the i-th tract is :math:`N_i`
+        tracts_data : dict of <data name>= list of float array of :math:`N_i\times M`
+            Each element in the list corresponds to a tract,
+            :math:`N_i` is the length of the i-th tract and M is the
+            number of components of that data type.
+        validate : bool
+            Check that tracts and tracts_data are valid
+        """
+        if tracts_data is None:
+            tracts_data = dict()
+
+        if len(self._tracts) == 0:
+            self._tracts = tracts
+            self._tracts_data = tracts_data
+            appending = False
+        else:
+            appending = True
+
+        if validate:
+            if tracts is not None:
+                try:
+                    if any(
+                        not (
+                            t.ndim == 2 and
+                            t.shape[1] == 3
+                        ) for t in tracts
+                    ):
+                        raise ValueError(
+                            'First argument is not a list of tracts')
+                except AttributeError:
+                    raise ValueError('First argument is not a list of tracts')
+
+                if tracts_data is not None and hasattr(tracts_data, 'iteritems'):
+                    for k, v in tracts_data.iteritems():
+                        if len(v) != len(tracts):
+                            raise ValueError(
+                                'Number of elements in attribute %s must '
+                                'be the same as the number of tracts' % k
+                            )
+                        _, M = v[0].shape
+                        for i, tract_v in enumerate(v):
+                            N, tract_M = tract_v.shape
+                            if (
+                                (N != len(tracts[i])) or
+                                (tract_M != M)
+                            ):
+                                raise ValueError(
+                                    "Data for tract %s: %d is inconsistent" % (
+                                        k, i)
+                                )
+        if appending:
+            if tracts_data.keys() != self._tracts_data.keys():
+                raise ValueError("Tract data to append not compatible")
             if any(
-                not (
-                    hasattr('shape', t) and
-                    len(t.shape != 2) and
-                    t.shape[1] != 3
-                ) for t in self._tracts
+                self._tracts_data[k][0].shape[1] != v[0].shape[1]
+                for k, v in tracts_data.iteritems()
             ):
-                raise ValueError('First argument is not a list of tracts')
+                raise ValueError("Tract data to append not compatible")
 
-    def from_dictionary(self, dictionary, append=False):
-        dictionary_keys = set(('lines', 'points', 'numberOfLines'))
-        if not dictionary_keys.issubset(dictionary.keys()):
-            raise ValueError("Dictionary must have the keys lines and points" + repr(dictionary.keys()))
+            for k, v in tracts_data.iteritems():
+                self._tracts_data[k] += v
 
-        #Tracts and Lines are the same thing
-        if not append:
-            self._original_tracts = []
-            self._tract_data = {}
-            self._original_lines = []
-            self._original_data = {}
-            self._tracts = []
-            self._tract_map = []
-            self._quantity_of_points_per_tract = None
+            self._tracts += tracts
 
-        self._interpolated = False
-        self._fiber_keep_ratio = 1
-
-        self._subsampled_tracts = []
-        self._subsampled_lines = []
-        self._subsampled_data = []
-
-        lines = np.asarray(dictionary['lines']).squeeze()
-        points = dictionary['points']
-
-        actual_line_index = 0
-        number_of_tracts = dictionary['numberOfLines']
-        for l in xrange(number_of_tracts):
-            self._tracts.append(
-                points[
-                    lines[
-                        actual_line_index + 1:
-                        actual_line_index + lines[actual_line_index] + 1
-                    ]
-                ]
-            )
-            self._original_lines.append(
-                np.array(
-                    lines[
-                        actual_line_index + 1:
-                        actual_line_index + lines[actual_line_index] + 1],
-                    copy=True
-                ))
-            actual_line_index += lines[actual_line_index] + 1
-
-        if 'pointData' in dictionary:
-            point_data_keys = [
-                it[0] for it in dictionary['pointData'].items()
-                if isinstance(it[1], np.ndarray)
-            ]
-            if (
-                len(self._original_data.keys()) > 0 and
-                (self._original_data.keys() != point_data_keys)
-            ):
-                raise ValueError('PointData not compatible')
-
-            for k in point_data_keys:
-                array_data = dictionary['pointData'][k]
-                if not k in self._original_data:
-                    self._original_data[k] = array_data
-                    self._tract_data[k] = [
-                        array_data[f]
-                        for f in self._original_lines
-                    ]
-                else:
-                    np.vstack(self._original_data[k])
-                    self._tract_data[k].extend(
-                        [
-                            array_data[f]
-                            for f in self._original_lines[-number_of_tracts:]
-                        ]
-                    )
-
-        self._original_tracts = list(self._tracts)
-
-        if self._quantity_of_points_per_tract is not None:
-            self.subsample_tracts(self._quantity_of_points_per_tract)
+            if self.are_tracts_subsampled():
+                self.subsample_tracts(self._quantity_of_points_per_tract)
+            if self.are_tracts_filtered():
+                self.filter_tracts(self._criterium)
 
     def unsubsample_tracts(self):
+        r"""
+        Reset any subsampling applied to the tracts
+        """
         self._subsampled_tracts = []
+        self._subsampled_data = []
 
     def unfilter_tracts(self):
+        r"""
+        Reset any filtering applied to the tracts
+        """
+
         self._tract_map = []
 
-    def subsample_tracts(self, quality_of_points_per_tract):
-        self._quantity_of_points_per_tract = quality_of_points_per_tract
+    def subsample_tracts(self, points_per_tract):
+        r"""
+        Subsample the tracts in the dataset to a maximum number of
+        points per tract
+
+        Parameters
+        ----------
+        points_per_tract: int
+            Maximum number of points per tract after the operation
+            is executed
+        """
+        self._quantity_of_points_per_tract = points_per_tract
         self._subsampled_tracts = []
-        self._subsampled_lines = []
         self._subsampled_data = {}
 
-        for k in self._tract_data:
+        for k in self._tracts_data:
             self._subsampled_data[k] = []
 
         for i in xrange(len(self._tracts)):
@@ -152,97 +151,121 @@ class Tractography:
             ).round().astype(int)
 
             self._subsampled_tracts.append(f[s, :])
-            self._subsampled_lines.append(s)
 
-            for k in self._tract_data:
-                self._subsampled_data[k].append(self._tract_data[k][i][s])
-
-        self._interpolated = False
-
-    def subsample_tracts_equal_step(self, step_ratio):
-        self._step_ratio = step_ratio
-        self._subsampled_tracts = []
-        self._subsampled_lines = []
-        self._subsampled_data = {}
-
-        for k in self._tract_data:
-            self._subsampled_data[k] = []
-
-        for i in xrange(len(self._tracts)):
-            f = self._tracts[i]
-            s = np.arange(0, len(f), step_ratio)
-            self._subsampled_tracts.append(f[s, :])
-            self._subsampled_lines.append(s)
-            for k in self._tract_data:
-                self._subsampled_data[k].append(self._tract_data[k][i][s])
+            for k in self._tracts_data:
+                self._subsampled_data[k].append(self._tracts_data[k][i][s])
 
         self._interpolated = False
 
-    def subsample_interpolated_tracts(self, step):
-        self._quantity_of_points_per_tract = step
-        self._subsampled_tracts = []
-        for i, f in enumerate(self._tracts):
-            reparametrized_fiber = fr.arc_length_fiber_parametrization(
-                f, step=step
-            )
-            if f is not None:
-                self._subsampled_tracts.append(reparametrized_fiber[1:].T)
-        self._interpolated = True
+    def filter_tracts(self, criterium):
+        r"""
+        Filter the tracts in the set according to a criterium function
 
-    def filter_tracts(self, min_num_of_samples):
-        if len(self._original_tracts) == 0:
-            self._original_tracts = self._tracts
+        Parameters
+        ----------
 
-        self._tracts = filter(
-            lambda f: f.shape[0] >= min_num_of_samples,
-            self._original_tracts
-        )
+        criterium : function of array :math:`N\times 3` -> Bool
+            A function taking a tract as an array of
+            3D points and returning True or False with
+            specifying if it should be included
+        """
+        if len(self._subsampled_tracts) > 0:
+            tracts = self._subsampled_tracts
+            data = self._subsampled_data
+        else:
+            tracts = self._tracts
+            data = self._data
+
         self._tract_map = filter(
-            lambda i: self._original_tracts[i].shape[0] >= min_num_of_samples,
-            xrange(len(self._original_tracts))
+            lambda i: criterium(tracts),
+            xrange(len(tracts))
         )
 
-        if self._quantity_of_points_per_tract is not None:
-            if self._interpolated:
-                self.subsample_interpolated_tracts(
-                    self._quantity_of_points_per_tract
-                )
-            else:
-                self.subsample_tracts(self._quantity_of_points_per_tract)
+        self._filtered_tracts = [tracts[i] for i in self._tract_map]
+        self._filtered_data = {}
+        for k, v in data.iteritems():
+            self._filtered_data[k] = [
+                v[i] for i in self._tract_map
+            ]
+
+        self._criterium = criterium
 
     def are_tracts_filtered(self):
-        return self._tract_map != []
+        return self._tract_map is not None
 
     def are_tracts_subsampled(self):
-        return self._subsampled_tracts != []
-
-    def are_subsampled_tracts_interpolated(self):
-        return self._interpolated
-
-    def original_tracts_data(self):
-        return self._tract_data
+        return self._subsampled_tracts is not None
 
     def original_tracts(self):
-        return self._original_tracts
+        r"""
+        Tract set used to original construct this
+        tractography object, no subsampling or filtering
+        applied
 
-    def original_lines(self):
-        return self._original_lines
+        Returns
+        -------
+        tracts : list of float array :math:`N_i\times3`
+            Each element of the list is a tract represented as point array,
+            the length of the i-th tract is :math:`N_i`
+        """
+        return self._tracts
 
-    def original_data(self):
-        return self._original_data
+    def original_tracts_data(self):
+        r"""
+        Tract data contained of the original dataset of this tractography object
+
+        Returns
+        -------
+        tract data : dict of <data name>= list of float array of :math:`N_i\times M`
+                     Each element in the list corresponds to a tract,
+                     :math:`N_i` is the length of the i-th tract and M is the
+                     number of components of that data type.
+        """
+        return self._tracts_data
 
     def filtered_tracts_map(self):
+        r"""
+        Tract indices included after the filtering
+
+        Returns
+        -------
+        List of tract indices included after the filtering
+        """
         return self._tract_map
 
-    def tracts_to_process(self):
-        if self._subsampled_tracts != []:
+    def tracts(self):
+        r"""
+        Tracts contained in this tractography object after filtering and
+        subsampling if these operations have been applied
+
+        Returns
+        -------
+        tracts : list of float array :math:`N_i\times 3`
+            Each element of the list is a tract represented as point array,
+            the length of the i-th tract is :math:`N_i`
+        """
+        if self._tract_map is not None:
+            return self._filtered_tracts
+        elif self._subsampled_tracts is not None:
             return self._subsampled_tracts
-        elif self._tracts != []:
+        else:
             return self._tracts
 
-    def tracts_data_to_process(self):
-        if self._subsampled_data != []:
+    def tracts_data(self):
+        r"""
+        Tract data contained in this tractography object after filtering and
+        subsampling if these operations have been applied
+
+        Returns
+        -------
+        tract data : dict of <data name>= list of float array of :math:`N_i\times M`
+                     Each element in the list corresponds to a tract,
+                     :math:`N_i` is the length of the i-th tract and M is the
+                     number of components of that data type.
+        """
+        if self._tract_map is not None:
+            return self._filtered_data
+        elif self._subsampled_data is not None:
             return self._subsampled_data
-        elif self._tract_data != []:
-            return self._tract_data
-            return self._tract_data
+        else:
+            return self._tracts_data

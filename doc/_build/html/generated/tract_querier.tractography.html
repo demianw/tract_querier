@@ -1,0 +1,428 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>tract_querier.tractography &mdash; WMQL 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="WMQL 0.1 documentation" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">WMQL</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/generated/tract_querier.tractography.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="tract-querier-tractography">
+<h1>tract_querier.tractography<a class="headerlink" href="#tract-querier-tractography" title="Permalink to this headline">¶</a></h1>
+<p class="rubric">Classes</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#tract_querier.tractography.Tractography" title="tract_querier.tractography.Tractography"><tt class="xref py py-obj docutils literal"><span class="pre">tract_querier.tractography.Tractography</span></tt></a>([...])</td>
+<td>Class to represent a tractography dataset</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Functions</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#tract_querier.tractography.tractography_from_vtk_files" title="tract_querier.tractography.tractography_from_vtk_files"><tt class="xref py py-obj docutils literal"><span class="pre">tract_querier.tractography.tractography_from_vtk_files</span></tt></a>(...)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">tract_querier.tractography.tractography_to_vtkPolyData</span></tt></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<span class="target" id="module-tract_querier.tractography"></span><dl class="function">
+<dt id="tract_querier.tractography.tractography_from_vtk_files">
+<tt class="descclassname">tract_querier.tractography.</tt><tt class="descname">tractography_from_vtk_files</tt><big>(</big><em>vtk_file_names</em><big>)</big><a class="reference internal" href="../_modules/tract_querier/tractography.html#tractography_from_vtk_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tract_querier.tractography.tractography_from_vtk_files" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="tract_querier.tractography.tractography_to_vtk_file">
+<tt class="descclassname">tract_querier.tractography.</tt><tt class="descname">tractography_to_vtk_file</tt><big>(</big><em>vtk_file_name</em>, <em>tractography</em><big>)</big><a class="reference internal" href="../_modules/tract_querier/tractography.html#tractography_to_vtk_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tract_querier.tractography.tractography_to_vtk_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="tract_querier.tractography.Tractography">
+<em class="property">class </em><tt class="descclassname">tract_querier.tractography.</tt><tt class="descname">Tractography</tt><big>(</big><em>tracts=None</em>, <em>tracts_data=None</em>, <em>validate=True</em><big>)</big><a class="headerlink" href="#tract_querier.tractography.Tractography" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class to represent a tractography dataset</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>tracts</strong> : list of float array <img class="math" src="../_images/math/8076df1ddb1549df656f24f4494dea91a5e887dd.png" alt="N_i\times 3"/></p>
+<blockquote>
+<div><p>Each element of the list is a tract represented as point array,
+the length of the i-th tract is <img class="math" src="../_images/math/9f09d622cd7ebd49e20b2e20717869bf2ee2aa5a.png" alt="N_i"/></p>
+</div></blockquote>
+<p><strong>tracts_data</strong> : dict of &lt;data name&gt;= list of float array of <img class="math" src="../_images/math/7929f3207abffdfcbf7d5bba3af26f733596cf09.png" alt="N_i\times M"/></p>
+<blockquote>
+<div><p>Each element in the list corresponds to a tract,
+<img class="math" src="../_images/math/9f09d622cd7ebd49e20b2e20717869bf2ee2aa5a.png" alt="N_i"/> is the length of the i-th tract and M is the
+number of components of that data type.</p>
+</div></blockquote>
+<p><strong>validate</strong> : bool</p>
+<blockquote class="last">
+<div><p>Check that tracts and tracts_data are valid</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#tract_querier.tractography.Tractography.add_tract_data_from_array" title="tract_querier.tractography.Tractography.add_tract_data_from_array"><tt class="xref py py-obj docutils literal"><span class="pre">add_tract_data_from_array</span></tt></a>(name,&nbsp;array)</td>
+<td>Add a new data element reproducing a constant data</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#tract_querier.tractography.Tractography.append" title="tract_querier.tractography.Tractography.append"><tt class="xref py py-obj docutils literal"><span class="pre">append</span></tt></a>(tracts[,&nbsp;tracts_data,&nbsp;validate])</td>
+<td>Append tracts and corresponding data to the current set</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#tract_querier.tractography.Tractography.are_tracts_filtered" title="tract_querier.tractography.Tractography.are_tracts_filtered"><tt class="xref py py-obj docutils literal"><span class="pre">are_tracts_filtered</span></tt></a>()</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#tract_querier.tractography.Tractography.are_tracts_subsampled" title="tract_querier.tractography.Tractography.are_tracts_subsampled"><tt class="xref py py-obj docutils literal"><span class="pre">are_tracts_subsampled</span></tt></a>()</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#tract_querier.tractography.Tractography.filter_tracts" title="tract_querier.tractography.Tractography.filter_tracts"><tt class="xref py py-obj docutils literal"><span class="pre">filter_tracts</span></tt></a>(criterium)</td>
+<td>Filter the tracts in the set according to a criterium function</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#tract_querier.tractography.Tractography.filtered_tracts_map" title="tract_querier.tractography.Tractography.filtered_tracts_map"><tt class="xref py py-obj docutils literal"><span class="pre">filtered_tracts_map</span></tt></a>()</td>
+<td>Tract indices included after the filtering</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#tract_querier.tractography.Tractography.original_tracts" title="tract_querier.tractography.Tractography.original_tracts"><tt class="xref py py-obj docutils literal"><span class="pre">original_tracts</span></tt></a>()</td>
+<td>Tract set used to original construct this</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#tract_querier.tractography.Tractography.original_tracts_data" title="tract_querier.tractography.Tractography.original_tracts_data"><tt class="xref py py-obj docutils literal"><span class="pre">original_tracts_data</span></tt></a>()</td>
+<td>Tract data contained of the original dataset of this tractography object</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#tract_querier.tractography.Tractography.subsample_tracts" title="tract_querier.tractography.Tractography.subsample_tracts"><tt class="xref py py-obj docutils literal"><span class="pre">subsample_tracts</span></tt></a>(points_per_tract)</td>
+<td>Subsample the tracts in the dataset to a maximum number of</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#tract_querier.tractography.Tractography.tracts" title="tract_querier.tractography.Tractography.tracts"><tt class="xref py py-obj docutils literal"><span class="pre">tracts</span></tt></a>()</td>
+<td>Tracts contained in this tractography object after filtering and</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#tract_querier.tractography.Tractography.tracts_data" title="tract_querier.tractography.Tractography.tracts_data"><tt class="xref py py-obj docutils literal"><span class="pre">tracts_data</span></tt></a>()</td>
+<td>Tract data contained in this tractography object after filtering and</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#tract_querier.tractography.Tractography.unfilter_tracts" title="tract_querier.tractography.Tractography.unfilter_tracts"><tt class="xref py py-obj docutils literal"><span class="pre">unfilter_tracts</span></tt></a>()</td>
+<td>Reset any filtering applied to the tracts</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#tract_querier.tractography.Tractography.unsubsample_tracts" title="tract_querier.tractography.Tractography.unsubsample_tracts"><tt class="xref py py-obj docutils literal"><span class="pre">unsubsample_tracts</span></tt></a>()</td>
+<td>Reset any subsampling applied to the tracts</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="tract_querier.tractography.Tractography.add_tract_data_from_array">
+<tt class="descname">add_tract_data_from_array</tt><big>(</big><em>name</em>, <em>array</em><big>)</big><a class="headerlink" href="#tract_querier.tractography.Tractography.add_tract_data_from_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a new data element reproducing a constant data
+value for each of the <img class="math" src="../_images/math/16bf864fc7c809145f653d7994612cd5f78f4138.png" alt="$M$"/> tracts.</p>
+<p>After execution, the tract data will have a new set
+original_tracts_data()[name][i][:] == array[i]</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>name</strong> : str</p>
+<blockquote>
+<div><p>Name of the new data element</p>
+</div></blockquote>
+<p><strong>array</strong> : array of length <img class="math" src="../_images/math/16bf864fc7c809145f653d7994612cd5f78f4138.png" alt="$M$"/></p>
+<blockquote class="last">
+<div><p>Data value for each tract</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tract_querier.tractography.Tractography.append">
+<tt class="descname">append</tt><big>(</big><em>tracts</em>, <em>tracts_data=None</em>, <em>validate=True</em><big>)</big><a class="headerlink" href="#tract_querier.tractography.Tractography.append" title="Permalink to this definition">¶</a></dt>
+<dd><p>Append tracts and corresponding data to the current set</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>tracts</strong> : list of float array <img class="math" src="../_images/math/8076df1ddb1549df656f24f4494dea91a5e887dd.png" alt="N_i\times 3"/></p>
+<blockquote>
+<div><p>Each element of the list is a tract represented as point array,
+the length of the i-th tract is <img class="math" src="../_images/math/9f09d622cd7ebd49e20b2e20717869bf2ee2aa5a.png" alt="N_i"/></p>
+</div></blockquote>
+<p><strong>tracts_data</strong> : dict of &lt;data name&gt;= list of float array of <img class="math" src="../_images/math/7929f3207abffdfcbf7d5bba3af26f733596cf09.png" alt="N_i\times M"/></p>
+<blockquote>
+<div><p>Each element in the list corresponds to a tract,
+<img class="math" src="../_images/math/9f09d622cd7ebd49e20b2e20717869bf2ee2aa5a.png" alt="N_i"/> is the length of the i-th tract and M is the
+number of components of that data type.</p>
+</div></blockquote>
+<p><strong>validate</strong> : bool</p>
+<blockquote class="last">
+<div><p>Check that tracts and tracts_data are valid</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tract_querier.tractography.Tractography.are_tracts_filtered">
+<tt class="descname">are_tracts_filtered</tt><big>(</big><big>)</big><a class="headerlink" href="#tract_querier.tractography.Tractography.are_tracts_filtered" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tract_querier.tractography.Tractography.are_tracts_subsampled">
+<tt class="descname">are_tracts_subsampled</tt><big>(</big><big>)</big><a class="headerlink" href="#tract_querier.tractography.Tractography.are_tracts_subsampled" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tract_querier.tractography.Tractography.filter_tracts">
+<tt class="descname">filter_tracts</tt><big>(</big><em>criterium</em><big>)</big><a class="headerlink" href="#tract_querier.tractography.Tractography.filter_tracts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Filter the tracts in the set according to a criterium function</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>criterium</strong> : function of array <img class="math" src="../_images/math/e3d0a10adfe90cae52d5ce05ab07b13978d7ebac.png" alt="N\times 3"/> -&gt; Bool</p>
+<blockquote class="last">
+<div><p>A function taking a tract as an array of
+3D points and returning True or False with
+specifying if it should be included</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tract_querier.tractography.Tractography.filtered_tracts_map">
+<tt class="descname">filtered_tracts_map</tt><big>(</big><big>)</big><a class="headerlink" href="#tract_querier.tractography.Tractography.filtered_tracts_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tract indices included after the filtering</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns :</th><td class="field-body"><strong>List of tract indices included after the filtering</strong> :</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tract_querier.tractography.Tractography.original_tracts">
+<tt class="descname">original_tracts</tt><big>(</big><big>)</big><a class="headerlink" href="#tract_querier.tractography.Tractography.original_tracts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tract set used to original construct this
+tractography object, no subsampling or filtering
+applied</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>tracts</strong> : list of float array <img class="math" src="../_images/math/43b165d2f3c1738fe6b67a2bf4dedab077c663b9.png" alt="N_i\times3"/></p>
+<blockquote class="last">
+<div><p>Each element of the list is a tract represented as point array,
+the length of the i-th tract is <img class="math" src="../_images/math/9f09d622cd7ebd49e20b2e20717869bf2ee2aa5a.png" alt="N_i"/></p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tract_querier.tractography.Tractography.original_tracts_data">
+<tt class="descname">original_tracts_data</tt><big>(</big><big>)</big><a class="headerlink" href="#tract_querier.tractography.Tractography.original_tracts_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tract data contained of the original dataset of this tractography object</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>tract data</strong> : dict of &lt;data name&gt;= list of float array of <img class="math" src="../_images/math/7929f3207abffdfcbf7d5bba3af26f733596cf09.png" alt="N_i\times M"/></p>
+<blockquote class="last">
+<div><p>Each element in the list corresponds to a tract,
+<img class="math" src="../_images/math/9f09d622cd7ebd49e20b2e20717869bf2ee2aa5a.png" alt="N_i"/> is the length of the i-th tract and M is the
+number of components of that data type.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tract_querier.tractography.Tractography.subsample_tracts">
+<tt class="descname">subsample_tracts</tt><big>(</big><em>points_per_tract</em><big>)</big><a class="headerlink" href="#tract_querier.tractography.Tractography.subsample_tracts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subsample the tracts in the dataset to a maximum number of
+points per tract</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>points_per_tract: int</strong> :</p>
+<blockquote class="last">
+<div><p>Maximum number of points per tract after the operation
+is executed</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tract_querier.tractography.Tractography.tracts">
+<tt class="descname">tracts</tt><big>(</big><big>)</big><a class="headerlink" href="#tract_querier.tractography.Tractography.tracts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tracts contained in this tractography object after filtering and
+subsampling if these operations have been applied</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>tracts</strong> : list of float array <img class="math" src="../_images/math/8076df1ddb1549df656f24f4494dea91a5e887dd.png" alt="N_i\times 3"/></p>
+<blockquote class="last">
+<div><p>Each element of the list is a tract represented as point array,
+the length of the i-th tract is <img class="math" src="../_images/math/9f09d622cd7ebd49e20b2e20717869bf2ee2aa5a.png" alt="N_i"/></p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tract_querier.tractography.Tractography.tracts_data">
+<tt class="descname">tracts_data</tt><big>(</big><big>)</big><a class="headerlink" href="#tract_querier.tractography.Tractography.tracts_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tract data contained in this tractography object after filtering and
+subsampling if these operations have been applied</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>tract data</strong> : dict of &lt;data name&gt;= list of float array of <img class="math" src="../_images/math/7929f3207abffdfcbf7d5bba3af26f733596cf09.png" alt="N_i\times M"/></p>
+<blockquote class="last">
+<div><p>Each element in the list corresponds to a tract,
+<img class="math" src="../_images/math/9f09d622cd7ebd49e20b2e20717869bf2ee2aa5a.png" alt="N_i"/> is the length of the i-th tract and M is the
+number of components of that data type.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tract_querier.tractography.Tractography.unfilter_tracts">
+<tt class="descname">unfilter_tracts</tt><big>(</big><big>)</big><a class="headerlink" href="#tract_querier.tractography.Tractography.unfilter_tracts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reset any filtering applied to the tracts</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tract_querier.tractography.Tractography.unsubsample_tracts">
+<tt class="descname">unsubsample_tracts</tt><big>(</big><big>)</big><a class="headerlink" href="#tract_querier.tractography.Tractography.unsubsample_tracts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reset any subsampling applied to the tracts</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">WMQL</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Demian Wassermann (BSD License).
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>
