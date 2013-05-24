@@ -50,7 +50,7 @@ class Tractography:
             Check that tracts and tracts_data are valid
         """
         if tracts_data is None:
-            tracts_data = dict()
+            tracts_data = {}
 
         if len(self._tracts) == 0:
             self._tracts = tracts
@@ -114,15 +114,15 @@ class Tractography:
         r"""
         Reset any subsampling applied to the tracts
         """
-        self._subsampled_tracts = []
-        self._subsampled_data = []
+        self._subsampled_tracts = None
+        self._subsampled_data = None
 
     def unfilter_tracts(self):
         r"""
         Reset any filtering applied to the tracts
         """
 
-        self._tract_map = []
+        self._tract_map = None
 
     def subsample_tracts(self, points_per_tract):
         r"""
@@ -269,3 +269,28 @@ class Tractography:
             return self._subsampled_data
         else:
             return self._tracts_data
+
+    def add_tract_data_from_array(self, name, array):
+        r"""
+        Add a new data element reproducing a constant data
+        value for each of the :math:`$M$` tracts.
+
+        After execution, the tract data will have a new set
+        original_tracts_data()[name][i][:] == array[i]
+
+        Parameters
+        ----------
+        name : str
+            Name of the new data element
+        array : array of length :math:`$M$`
+            Data value for each tract
+       """
+        data = [
+            np.ones((len(self.original_tracts()[i]), 1)) * array[i]
+            for i in xrange(len(self.tracts()))
+        ]
+
+        self.original_tracts_data()[name] = data
+
+        if self._subsampled_tracts is not None:
+            self.subsample_tracts(self._quantity_of_points_per_tract)
