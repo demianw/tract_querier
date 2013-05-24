@@ -10,7 +10,8 @@ while (another_set):
     another_set = 0 not in labels_fibers.keys() or 1 not in labels_fibers.keys()
 
 
-fibers_in_all_but_0 = set().union(*[labels_fibers[label] for label in labels_fibers if label!=0])
+fibers_in_0 = set().union(*[labels_fibers[label] for label in labels_fibers if label == 0])
+fibers_in_all_but_0 = set().union(*[labels_fibers[label] for label in labels_fibers if label != 0])
 fiber_in_label_0_uniquely = labels_fibers[0].difference(fibers_in_all_but_0)
 
 
@@ -22,6 +23,7 @@ def test_assign():
         query_evaluator.evaluated_queries_fibers['A'] == labels_fibers[0] and
         query_evaluator.evaluated_queries_labels['A'] == set((0,))
     ))
+
 
 def test_assign_attr():
     query_evaluator = query_processor.EvaluateQueries(fibers_labels, labels_fibers)
@@ -54,7 +56,7 @@ def test_assign_side():
         'c.right': set([])
     }
 
-    query =  r"""
+    query = r"""
 b.left=3 ;
 b.right = 4;
 c.left = 5;
@@ -87,7 +89,7 @@ def test_assign_str():
         'h': set([])
     }
 
-    query =  """
+    query = """
 b.left=3
 b.right = 4
 c.left = 5
@@ -117,7 +119,7 @@ def test_for_list():
         'e.right': set([])
     }
 
-    query ="""
+    query = """
 a.left= 0
 b.left= 1
 c.left= 2
@@ -129,6 +131,7 @@ for i in [a,b,c,d,e]: i.right = i.left
     query_evaluator.visit(ast.parse(query))
 
     assert(query_evaluator.evaluated_queries_fibers == queries_fibers)
+
 
 def test_for_str():
     query_evaluator = query_processor.EvaluateQueries({}, {})
@@ -146,7 +149,7 @@ def test_for_str():
         'e.left.right': set([])
     }
 
-    query ="""
+    query = """
 a.left= 0
 b.left= 1
 c.left= 2
@@ -169,6 +172,7 @@ def test_add():
         query_evaluator.evaluated_queries_labels['A'] == set((0, 1))
     ))
 
+
 def test_mult():
     query_evaluator = query_processor.EvaluateQueries(fibers_labels, labels_fibers)
     query_evaluator.visit(ast.parse("A=0 * 1"))
@@ -177,6 +181,7 @@ def test_mult():
         query_evaluator.evaluated_queries_fibers['A'] == labels_fibers[0].intersection(labels_fibers[1]) and
         query_evaluator.evaluated_queries_labels['A'] == set((0, 1))
     ))
+
 
 def test_sub():
     query_evaluator = query_processor.EvaluateQueries(fibers_labels, labels_fibers)
@@ -187,6 +192,7 @@ def test_sub():
         query_evaluator.evaluated_queries_labels['A'] == set((0,))
     ))
 
+
 def test_or():
     query_evaluator = query_processor.EvaluateQueries(fibers_labels, labels_fibers)
     query_evaluator.visit(ast.parse("A=0 or 1"))
@@ -195,6 +201,7 @@ def test_or():
         query_evaluator.evaluated_queries_fibers['A'] == labels_fibers[0].union(labels_fibers[1]) and
         query_evaluator.evaluated_queries_labels['A'] == set((0, 1))
     ))
+
 
 def test_and():
     query_evaluator = query_processor.EvaluateQueries(fibers_labels, labels_fibers)
@@ -205,6 +212,7 @@ def test_and():
         query_evaluator.evaluated_queries_labels['A'] == set((0, 1))
     ))
 
+
 def test_not_in():
     query_evaluator = query_processor.EvaluateQueries(fibers_labels, labels_fibers)
     query_evaluator.visit(ast.parse("A=0 or 1 not in 1"))
@@ -214,6 +222,7 @@ def test_not_in():
         query_evaluator.evaluated_queries_labels['A'] == set((0,))
     ))
 
+
 def test_only_sign():
     query_evaluator = query_processor.EvaluateQueries(fibers_labels, labels_fibers)
     query_evaluator.visit(ast.parse("A=~0"))
@@ -222,6 +231,7 @@ def test_only_sign():
         query_evaluator.evaluated_queries_fibers['A'] == fiber_in_label_0_uniquely and
         query_evaluator.evaluated_queries_labels['A'] == set((0,))
     ))
+
 
 def test_only():
     query_evaluator = query_processor.EvaluateQueries(fibers_labels, labels_fibers)
@@ -242,6 +252,7 @@ def test_unsaved_query():
         query_evaluator.evaluated_queries_labels['A'] == set((0,))
     ))
 
+
 def test_symbolic_assignment():
     query_evaluator = query_processor.EvaluateQueries(fibers_labels, labels_fibers)
     query_evaluator.visit(ast.parse("A=0; B=A"))
@@ -251,6 +262,7 @@ def test_symbolic_assignment():
         query_evaluator.evaluated_queries_labels['B'] == set((0,))
     ))
 
+
 def test_unarySub():
     query_evaluator = query_processor.EvaluateQueries(fibers_labels, labels_fibers)
     query_evaluator.visit(ast.parse("B=0; A=-B"))
@@ -259,6 +271,7 @@ def test_unarySub():
         query_evaluator.evaluated_queries_fibers['A'] == fibers_in_all_but_0 and
         query_evaluator.evaluated_queries_labels['A'] == set(labels_fibers.keys()).difference((0,))
     ))
+
 
 def test_not():
     query_evaluator = query_processor.EvaluateQueries(fibers_labels, labels_fibers)
