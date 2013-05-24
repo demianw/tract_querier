@@ -3,5 +3,6 @@ from bundle_outlier_treatment import *
 from fiber_label_indices import *
 from shell import *
 import tractography
+#import tract_metrics
 
 __version__ = 0.1

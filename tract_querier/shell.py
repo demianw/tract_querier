@@ -34,7 +34,7 @@ class SaveQueries(ast.NodeVisitor):
                 query_name = target.id.lower()
                 self.save_query_callback(
                     query_name,
-                    self.querier.evaluated_queries_fibers[query_name]
+                    self.querier.evaluated_queries_info[query_name].fibers
                 )
             elif (
                 isinstance(target, ast.Attribute) and
@@ -49,7 +49,7 @@ class SaveQueries(ast.NodeVisitor):
             query_name = node.value.id.lower()
             self.save_query_callback(
                 query_name,
-                self.querier.evaluated_queries_fibers[query_name]
+                self.querier.evaluated_queries_info[query_name].fibers
             )
         elif (
             isinstance(value, ast.Attribute) and
@@ -67,7 +67,7 @@ class SaveQueries(ast.NodeVisitor):
                 query_name = query_prefix + '.' + suffix
                 self.save_query_callback(
                     query_name,
-                    self.querier.evaluated_queries_fibers[
+                    self.querier.evaluated_queries_info[
                         query_name
                     ]
                 )
@@ -75,7 +75,7 @@ class SaveQueries(ast.NodeVisitor):
             query_name = query_prefix + '.' + query_suffix
             self.save_query_callback(
                 query_name,
-                self.querier.evaluated_queries_fibers[
+                self.querier.evaluated_queries_info[
                     query_name
                 ]
             )
@@ -90,24 +90,19 @@ class SaveQueries(ast.NodeVisitor):
 
 
 class TractQuerierCmd(cmd.Cmd):
-    def __init__(self,
-                 crossing_fibers_labels,
-                 crossing_labels_fibers,
-                 ending_fibers_labels, ending_labels_fibers,
-                 fiber_bounding_boxes, label_bounding_boxes,
-                 initial_body=None, tractography=None,
-                 save_query_callback=None,
-                 include_folders=['.']
-                ):
+    def __init__(
+            self,
+            tractography_spatial_indexing,
+            initial_body=None, tractography=None,
+            save_query_callback=None,
+            include_folders=['.']
+    ):
         cmd.Cmd.__init__(self, 'Tab')
         self.prompt = '[wmql] '
         self.include_folders = include_folders
         self.tractography = tractography
-        self.querier = EvaluateQueries(
-            crossing_fibers_labels, crossing_labels_fibers,
-            ending_fibers_labels, ending_labels_fibers,
-            fiber_bounding_boxes, label_bounding_boxes,
-        )
+        self.querier = EvaluateQueries(tractography_spatial_indexing)
+
         self.save_query_callback = save_query_callback
         self.save_query_visitor = SaveQueries(
             self.save_query_callback, self.querier
@@ -169,11 +164,11 @@ class TractQuerierCmd(cmd.Cmd):
     @safe_method
     def names(self):
         names = []
-        for query in self.querier.evaluated_queries_fibers.keys():
+        for query in self.querier.evaluated_queries_info.keys():
             if query.endswith('_left'):
                 names += [
-                        query.replace('_left', '.left'),
-                        query.replace('_left', '.right'),
+                    query.replace('_left', '.left'),
+                    query.replace('_left', '.right'),
                 ]
             elif query.endswith('_right'):
                 pass

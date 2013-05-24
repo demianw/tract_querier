@@ -1,18 +1,77 @@
-import sys
+import warnings
 import numpy as np
-from collections import namedtuple
 
 from .aabb import BoundingBox
 
-TractLabelIndices = namedtuple(
-    'TractLabelIndices',
-    [
-        'crossing_tracts_labels',
-        'crossing_labels_tracts',
-        'ending_tracts_labels',
-        'ending_labels_tracts'
-    ]
-)
+__all__ = ['TractographySpatialIndexing']
+
+
+class TractographySpatialIndexing:
+    r"""
+    This class implements a mutual spatial indexing of
+    an labeled image and a tractography
+
+    Parameters
+    ----------
+    tractography : :class:`~tract_querier.tractography.Tractography`
+                Tractography object
+    image : array_like, 3-dimensional
+        a piecewise constant 3D image or image of labels
+    affine_ijk_2_ras : array_like, :math:`4 \times 4`
+        the affine transform of each IJK coordinate on the image to RAS space
+    length_threshold : float
+        minimum length in mm of a tract to be considered in the indexing
+    crossing_threshold : float
+        the ratio of a tract that needs to be inside a label to be considered that it crosses it
+
+    Attributes
+    ----------
+    tractography : :class:`~tract_querier.tractography.Tractography`
+                Tractography object
+    image : array_like, 3-dimensional
+        a piecewise constant 3D image or image of labels
+    affine_ijk_2_ras : array_like, :math:`4 \times 4`
+        the affine transform of each IJK coordinate on the image to RAS space
+    length_threshold : float
+        minimum length in mm of a tract to be considered in the indexing
+    crossing_threshold : float
+        the ratio of a tract that needs to be inside a label to be considered that it crosses it
+    crossing_tracts_labels : dict of sets
+        Dictionary indexed by tract number of the labels traversed by the tract
+    crossing_labels_tracts : dict of sets
+        Dictionary indexed by label number of the tracts traversing the labels
+    ending_tracts_labels : (dict of int, dict of int)
+        Dictionary of each endpoint of the tracts indexed by tract number and
+        containing the label at which the endpoint is
+    ending_labels_tracts : (dict of sets, dict of sets)
+        Dictionary of each endpoint of the tracts indexed by label number and
+        containing the tracts at which the endpoint in the label is
+    tract_endpoints_pos : array_like of :math:`N\times 2 \times 3` where :math:`N` is the number of tracts
+        Contains the position of both endpoints of each tract
+    """
+
+    def __init__(self, tractography, image, affine_ijk_2_ras,  length_threshold, crossing_threshold):
+        self.tractography = tractography
+        self.image = image
+        self.affine_ijk_2_ras = affine_ijk_2_ras
+        self.affine_ras_2_ijk = np.linalg.inv(affine_ijk_2_ras)
+        self.length_threshold = length_threshold
+        self.crossing_threshold = crossing_threshold
+
+        self.crossing_tracts_labels, self.crossing_labels_tracts, \
+            self.ending_tracts_labels, self.ending_labels_tracts = compute_tract_label_indices(
+                self.affine_ras_2_ijk, self.image,
+                self.tractography, self.length_threshold, self.crossing_threshold
+            )
+
+        self.label_bounding_boxes = compute_label_bounding_boxes(self.image, self.affine_ijk_2_ras)
+        self.tract_bounding_boxes = compute_tract_bounding_boxes(self.tractography)
+
+        self.tract_endpoints_pos = np.empty((len(self.tractography), 2, 3))
+
+        for i, t in enumerate(self.tractography):
+            self.tract_endpoints_pos[i, 0] = t[0]
+            self.tract_endpoints_pos[i, 1] = t[-1]
 
 
 def compute_label_bounding_boxes(image, affine_ijk_2_ras):
@@ -36,16 +95,21 @@ def compute_label_bounding_boxes(image, affine_ijk_2_ras):
     return label_bounding_boxes
 
 
-def compute_tract_bounding_boxes(tracts, affine_transform):
+def compute_tract_bounding_boxes(tracts, affine_transform=None):
     bounding_boxes = np.empty((len(tracts), 6), dtype=float)
-    linear_component = affine_transform[:3, :3]
-    translation = affine_transform[:-1, -1]
+
+    if affine_transform is not None:
+        linear_component = affine_transform[:3, :3]
+        translation = affine_transform[:-1, -1]
 
     for i, tract in enumerate(tracts):
-        ras_coords = (
-            (linear_component.dot(tract.T).T +
-             translation)
-        )
+        if affine_transform is not None:
+            ras_coords = (
+                linear_component.dot(tract.T).T +
+                translation
+            )
+        else:
+            ras_coords = tract
 
         bounding_boxes[i] = BoundingBox(ras_coords)
 
@@ -100,6 +164,30 @@ def compute_label_endings(tract_cumulative_lengths, point_labels):
     return tracts_labels, labels_tracts
 
 
+def compute_label_endings_start_end(tract_cumulative_lengths, point_labels):
+    tracts_labels_start = {}
+    tracts_labels_end = {}
+    for i in xrange(len(tract_cumulative_lengths) - 1):
+        start = tract_cumulative_lengths[i]
+        end = tract_cumulative_lengths[i + 1]
+        tracts_labels_start[i] = int(point_labels[start])
+        tracts_labels_end[i] = int(point_labels[end - 1])
+
+    labels_tracts_start = {}
+    labels_tracts_end = {}
+
+    for tracts_labels, labels_tracts in (
+        (tracts_labels_start, labels_tracts_start),
+        (tracts_labels_end, labels_tracts_end)
+    ):
+        for i, l in tracts_labels.items():
+            if l in labels_tracts:
+                labels_tracts[l].add(i)
+            else:
+                labels_tracts[l] = set((i,))
+    return (tracts_labels_start, tracts_labels_end), (labels_tracts_start, labels_tracts_end)
+
+
 def compute_tract_label_indices(
     affine_ras_2_ijk, img,
     tracts, length_threshold, crossing_threshold
@@ -114,12 +202,17 @@ def compute_tract_label_indices(
                       affine_ras_2_ijk[:-1, -1])
     all_points_ijk_rounded = np.round(all_points_ijk).astype(int)
 
-    if any(((all_points_ijk_rounded[:, i] >= img.shape[i]).any() for i in xrange(3))) or (all_points_ijk_rounded < 0).any():
-        print >>sys.stderr, "Warning tract points fall outside the image"
+    if (
+        any(((all_points_ijk_rounded[:, i] >= img.shape[i]).any() for i in xrange(3))) or
+        (all_points_ijk_rounded < 0).any()
+    ):
+        print warnings.warn("Warning tract points fall outside the image")
 
     for i in xrange(3):
         all_points_ijk_rounded[:, i] = all_points_ijk_rounded[
-            :, i].clip(0, img.shape[i] - 1)
+            :,
+            i
+        ].clip(0, img.shape[i] - 1)
 
     point_labels = img[tuple(all_points_ijk_rounded.T)]
     tract_cumulative_lengths = np.cumsum([0] + [len(f) for f in tracts])
@@ -128,11 +221,11 @@ def compute_tract_label_indices(
         tract_cumulative_lengths, point_labels, crossing_threshold
     )
 
-    ending_tracts_labels, ending_labels_tracts = compute_label_endings(
+    ending_tracts_labels, ending_labels_tracts = compute_label_endings_start_end(
         tract_cumulative_lengths, point_labels
     )
 
-    return TractLabelIndices(
+    return (
         crossing_tracts_labels,
         crossing_labels_tracts,
         ending_tracts_labels,

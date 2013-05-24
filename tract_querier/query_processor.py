@@ -1,10 +1,13 @@
 import ast
 from os import path
 from copy import deepcopy
+from operator import lt, gt
 from itertools import takewhile
 import fnmatch
 
 from .code_util import DocStringInheritor
+
+__all__ = ['keywords', 'EvaluateQueries', 'eval_queries', 'queries_syntax_check', 'queries_preprocess']
 
 keywords = [
     'and',
@@ -20,6 +23,133 @@ keywords = [
     'inferior_of',
     'superior_of',
 ]
+
+
+class FiberQueryInfo(object):
+    r"""
+    Information about a processed query
+
+    Attribute
+    ---------
+        fibers : set
+            set of fiber indices resulting from the query
+        labels : set
+            set of labels resulting by the query
+        tracts_endpoints : (set, set)
+            sets of labels of where the tract endpoints are
+    """
+    def __init__(self, fibers=set(), labels=set(), tracts_endpoints=(set(), set())):
+        self.fibers = fibers
+        self.labels = labels
+        self.tracts_endpoints = tracts_endpoints
+
+    def __getattribute__(self, name):
+        if name in (
+            'update', 'intersection_update', 'union', 'intersection',
+            'difference', 'difference_update'
+        ):
+            return self.set_operation(name)
+        else:
+            return object.__getattribute__(self, name)
+
+    def copy(self):
+        return FiberQueryInfo(
+            self.fibers.copy(), self.labels.copy(),
+            (self.tracts_endpoints[0].copy(), self.tracts_endpoints[1].copy()),
+#            (self.labels_endpoints[0].copy(), self.labels_endpoints[1].copy()),
+        )
+
+    def set_operation(self, name):
+        def operation(fiber_query_info):
+            fibers_op = getattr(self.fibers, name)
+            if name == 'intersection':
+                name_labels = 'union'
+            elif name == 'intersection_update':
+                name_labels = 'update'
+            else:
+                name_labels = name
+            labels_op = getattr(self.labels, name_labels)
+
+            new_fibers = fibers_op(fiber_query_info.fibers)
+            new_labels = labels_op(fiber_query_info.labels)
+
+            new_tracts_endpoints = (
+                getattr(self.tracts_endpoints[0], name)(fiber_query_info.tracts_endpoints[0]),
+                getattr(self.tracts_endpoints[1], name)(fiber_query_info.tracts_endpoints[1])
+            )
+
+#            new_labels_endpoints = (
+#                getattr(self.labels_endpoints[0], name_labels)(fiber_query_info.labels_endpoints[0]),
+#                getattr(self.labels_endpoints[1], name_labels)(fiber_query_info.labels_endpoints[1])
+#            )
+
+            if name.endswith('update'):
+                return self
+            else:
+                return FiberQueryInfo(
+                    new_fibers, new_labels,
+                    new_tracts_endpoints,
+                )
+
+        return operation
+
+
+class EndpointQueryInfo:
+    def __init__(
+        self,
+        endpoint_fibers=(set(), set()),
+        endpoint_labels=(set(), set()),
+        endpoint_points=(set(), set())
+    ):
+        self.endpoint_fibers = endpoint_fibers
+        self.endpoint_labels = endpoint_labels
+        self.endpoint_points = endpoint_points
+
+    def __getattribute__(self, name):
+        if name in (
+            'update', 'intersection_update', 'union', 'intersection',
+            'difference', 'difference_update'
+        ):
+            return self.set_operation(name)
+        else:
+            return object.__getattribute__(self, name)
+
+    def set_operation(self, name):
+        def operation(endpoint_query_info):
+
+            fibers_op = (
+                getattr(self.endpoint_fibers[0], name),
+                getattr(self.endpoint_fibers[1], name)
+            )
+            labels_op = (
+                getattr(self.endpoint_labels[0], name),
+                getattr(self.endpoint_labels[1], name)
+            )
+            points_op = (
+                getattr(self.endpoint_points[0], name),
+                getattr(self.endpoint_points[1], name)
+            )
+
+            new_fibers = (
+                fibers_op[0](endpoint_query_info.endpoint_fibers[0]),
+                fibers_op[1](endpoint_query_info.endpoint_fibers[1])
+            )
+
+            new_labels = (
+                labels_op[0](endpoint_query_info.endpoint_labels[0]),
+                labels_op[1](endpoint_query_info.endpoint_labels[1])
+            )
+
+            new_points = (
+                points_op[0](endpoint_query_info.endpoint_points[0]),
+                points_op[1](endpoint_query_info.endpoint_points[1])
+            )
+
+            if name.endswith('update'):
+                return self
+            else:
+                return EndpointQueryInfo(new_fibers, new_labels, new_points)
+        return operation
 
 
 class EvaluateQueries(ast.NodeVisitor):
@@ -59,24 +189,14 @@ class EvaluateQueries(ast.NodeVisitor):
 
     def __init__(
         self,
-        crossing_fibers_labels, crossing_labels_fibers,
-        ending_fibers_labels={}, ending_labels_fibers={},
-        fiber_bounding_boxes={}, label_bounding_boxes={},
+        tractography_spatial_indexing,
     ):
-        self.crossing_fibers_labels = crossing_fibers_labels
-        self.crossing_labels_fibers = crossing_labels_fibers
+        self.tractography_spatial_indexing = tractography_spatial_indexing
 
-        self.ending_fibers_labels = ending_fibers_labels
-        self.ending_labels_fibers = ending_labels_fibers
-
-        self.fiber_bounding_boxes = fiber_bounding_boxes
-        self.label_bounding_boxes = label_bounding_boxes
-
-        self.evaluated_queries_fibers = {}
-        self.evaluated_queries_labels = {}
-        self.evaluated_queries_labels_bounding_boxes = {}
-        self.evaluated_queries_fibers_bounding_boxes = {}
+        self.evaluated_queries_info = {}
         self.queries_to_save = set()
+
+        self.evaluating_endpoints = False
 
     def visit_Module(self, node):
         for line in node.body:
@@ -88,78 +208,77 @@ class EvaluateQueries(ast.NodeVisitor):
                 "Invalid syntax in query line %d" % node.lineno
             )
 
-        fibers, labels = self.visit(node.left)
-        fibers = fibers.copy()
-        labels = labels.copy()
+        query_info = self.visit(node.left).copy()
         for value in node.comparators:
-            fibers_, labels_ = self.visit(value)
-            fibers.difference_update(fibers_)
-            labels.difference_update(labels_)
+            query_info_ = self.visit(value)
+            query_info.difference_update(query_info_)
 
-        return fibers, labels
+        return query_info
 
     def visit_BoolOp(self, node):
-        fibers, labels = self.visit(node.values[0])
-        fibers = fibers.copy()
-        labels = labels.copy()
+        query_info = self.visit(node.values[0])
+        query_info = query_info.copy()
 
         if isinstance(node.op, ast.Or):
             for value in node.values[1:]:
-                fibers_, labels_ = self.visit(value)
-                fibers.update(fibers_)
-                labels.update(labels_)
+                query_info_ = self.visit(value)
+                query_info.update(query_info_)
 
         elif isinstance(node.op, ast.And):
             for value in node.values[1:]:
-                fibers_, labels_ = self.visit(value)
-                fibers.intersection_update(fibers_)
-                labels.update(labels_)
+                query_info_ = self.visit(value)
+                query_info.intersection_update(query_info_)
 
         else:
             return self.generic_visit(node)
 
-        return fibers, labels
+        return query_info
 
     def visit_BinOp(self, node):
-        fibers_left, label_left = self.visit(node.left)
-        fibers_right, label_right = self.visit(node.right)
+        info_left = self.visit(node.left)
+        info_right = self.visit(node.right)
         if isinstance(node.op, ast.Add):
-            return fibers_left | fibers_right, label_left | label_right
+            return info_left.union(info_right)
         if isinstance(node.op, ast.Mult):
-            return fibers_left & fibers_right, label_left | label_right
+            return info_left.intersection(info_right)
         if isinstance(node.op, ast.Sub):
             return (
-                fibers_left.difference(fibers_right),
-                label_left.difference(label_right)
+                info_left.difference(info_right)
             )
         else:
             return self.generic_visit(node)
 
     def visit_UnaryOp(self, node):
-        fibers, labels = self.visit(node.operand)
+        query_info = self.visit(node.operand)
         if isinstance(node.op, ast.Invert):
-            return set(fiber for fiber in fibers if self.crossing_fibers_labels[fiber].issubset(labels)), labels
+            return FiberQueryInfo(
+                set(
+                    fiber for fiber in query_info.fibers
+                    if self.tractography_spatial_indexing.crossing_tracts_labels[fiber].issubset(query_info.labels)
+                ),
+                query_info.labels
+            )
         elif isinstance(node.op, ast.UAdd):
-            return fibers, labels
+            return query_info
         elif isinstance(node.op, ast.USub) or isinstance(node.op, ast.Not):
-            new_labels = set(self.crossing_labels_fibers.keys())
-            new_labels.difference_update(labels)
-            new_fibers = set().union(*self.crossing_labels_fibers.values())
-            new_fibers.difference_update(fibers)
+            all_labels = set(self.tractography_spatial_indexing.crossing_labels_tracts.keys())
+            all_labels.difference_update(query_info.labels)
+            all_fibers = set().union(*tuple(
+                (self.tractography_spatial_indexing.crossing_labels_tracts[label] for label in all_labels)
+            ))
 
-            return new_fibers, new_labels
+            new_info = FiberQueryInfo(all_fibers, all_labels)
+            return new_info
         else:
             raise TractQuerierSyntaxError(
                 "Syntax error in query line %d" % node.lineno)
 
     def visit_Str(self, node):
-        matching_fibers = set()
-        matching_labels = set()
-        for name in fnmatch.filter(self.evaluated_queries_fibers.keys(), node.s):
-            matching_fibers.update(self.evaluated_queries_fibers[name])
-            matching_labels.update(self.evaluated_queries_labels[name])
+        query_info = FiberQueryInfo()
+        for name in fnmatch.filter(self.evaluated_queries_info.keys(), node.s):
+            query_info.update(self.evaluated_queries_info[name])
 
-        return matching_fibers, matching_labels
+        return query_info
 
     def visit_Call(self, node):
         # Single string argument function
@@ -172,23 +291,40 @@ class EvaluateQueries(ast.NodeVisitor):
             node.kwargs is None
         ):
             if (node.func.id.lower() == 'only'):
-                fibers, labels = self.visit(node.args[0])
-                return (
+                query_info = self.visit(node.args[0])
+
+                only_fibers = set(
+                    fiber for fiber in query_info.fibers
+                    if self.tractography_spatial_indexing.crossing_tracts_labels[fiber].issubset(query_info.labels)
+                )
+                only_endpoints = tuple((
                     set(
-                        fiber for fiber in fibers
-                        if self.crossing_fibers_labels[fiber].issubset(labels)
-                    ), labels
+                        fiber for fiber in query_info.tracts_endpoints[i]
+                        if self.tractography_spatial_indexing.ending_tracts_labels[i][fiber] in query_info.labels
+                    )
+                    for i in (0, 1)
+                ))
+                return FiberQueryInfo(
+                    only_fibers,
+                    query_info.labels,
+                    only_endpoints
                 )
             elif (node.func.id.lower() == 'endpoints_in'):
-                fibers, labels = self.visit(node.args[0])
-                fibers = set(
-                    fiber for fiber in fibers
-                    if (self.ending_fibers_labels[fiber].intersection(labels))
-                )
-                labels = set().union(
-                    *tuple((self.crossing_fibers_labels[fiber] for fiber in fibers))
-                )
-                return fibers, labels
+                query_info = self.visit(node.args[0])
+                new_fibers = query_info.tracts_endpoints[0].union(query_info.tracts_endpoints[1])
+
+                #fibers = set().union(set(
+                #    fiber for fiber in query_info.fibers
+                #    if (
+                #        self.tractography_spatial_indexing.ending_tracts_labels[i][fiber] in query_info.labels
+                #    )
+                #))
+
+                #labels = set().union(
+                #    *tuple((self.tractography_spatial_indexing.crossing_tracts_labels[fiber] for fiber in fibers))
+                #)
+                return FiberQueryInfo(new_fibers, query_info.labels, query_info.tracts_endpoints)
+
             elif (node.func.id.lower() == 'save' and isinstance(node.args, ast.Str)):
                 self.queries_to_save.add(node.args[0].s)
                 return
@@ -227,59 +363,76 @@ class EvaluateQueries(ast.NodeVisitor):
             Numbers of the labels that are traversed by
             the fibers resulting from this query
         """
-        if len(self.label_bounding_boxes) == 0:
-            return set(), set()
+        if len(self.tractography_spatial_indexing.label_bounding_boxes) == 0:
+            return FiberQueryInfo()
 
         arg = node.args[0]
         if isinstance(arg, ast.Name):
-            _, labels = self.visit(arg)
+            query_info = self.visit(arg)
         elif isinstance(arg, ast.Attribute):
             if arg.attr.lower() in ('left', 'right'):
                 side = arg.attr.lower()
-                _, labels = self.visit(arg)
+                query_info = self.visit(arg)
         else:
             raise TractQuerierSyntaxError(
                 "Attribute not recognized for relative specification."
                 "Line %d" % node.lineno
             )
 
+        labels = query_info.labels
+
         labels_generator = (l for l in labels)
-        bounding_box = self.label_bounding_boxes[labels_generator.next()]
+        bounding_box = self.tractography_spatial_indexing.label_bounding_boxes[labels_generator.next()]
         for label in labels_generator:
-            bounding_box = bounding_box.union(self.label_bounding_boxes[label])
+            bounding_box = bounding_box.union(self.tractography_spatial_indexing.label_bounding_boxes[label])
 
         function_name = node.func.id.lower()
 
-        if function_name == 'anterior_of':
-            fibers = self.fiber_bounding_boxes[
-                'anterior'] > bounding_box.anterior
-        elif function_name == 'posterior_of':
-            fibers = self.fiber_bounding_boxes[
-                'posterior'] < bounding_box.posterior
-        elif function_name == 'superior_of':
-            fibers = self.fiber_bounding_boxes[
-                'superior'] > bounding_box.superior
-        elif function_name == 'inferior_of':
-            fibers = self.fiber_bounding_boxes[
-                'inferior'] < bounding_box.inferior
-        elif function_name == 'medial_of':
-            if side == 'left':
-                fibers = self.fiber_bounding_boxes[
-                    'right'] > bounding_box.right
-            else:
-                fibers = self.fiber_bounding_boxes['left'] < bounding_box.left
-        elif function_name == 'lateral_of':
-            if side == 'right':
-                fibers = self.fiber_bounding_boxes[
-                    'right'] > bounding_box.right
-            else:
-                fibers = self.fiber_bounding_boxes['left'] < bounding_box.left
+        name = function_name.replace('_of', '')
 
-        fibers = set(fibers.nonzero()[0])
+        tract_bounding_box_coordinate =\
+            self.tractography_spatial_indexing.tract_bounding_boxes[name]
+
+        tract_endpoints_pos = self.tractography_spatial_indexing.tract_endpoints_pos
+
+        bounding_box_coordinate = getattr(bounding_box, name)
+
+        if (
+            name in ('anterior', 'inferior') or
+            name == 'medial' and side == 'left' or
+            name == 'lateral' and side == 'right'
+        ):
+            operator = gt
+        else:
+            operator = lt
+
+        if name in ('left', 'right'):
+            column = 0
+        elif name in ('anterior', 'posterior'):
+            column = 1
+        elif name in ('superior', 'inferior'):
+            column = 2
+
+        fibers = set(
+            operator(tract_bounding_box_coordinate, bounding_box_coordinate).nonzero()[0]
+        )
+
+        endpoints = tuple((
+            set(
+                operator(
+                    tract_endpoints_pos[:, i, column],
+                    bounding_box_coordinate
+                ).nonzero()[0]
+            )
+            for i in (0, 1)
+        ))
+
         labels = set().union(*tuple((
-            self.crossing_fibers_labels[fiber] for fiber in fibers)))
+            self.tractography_spatial_indexing.crossing_tracts_labels[fiber]
+            for fiber in fibers
+        )))
 
-        return fibers, labels
+        return FiberQueryInfo(fibers, labels, endpoints)
 
     def visit_Assign(self, node):
         if len(node.targets) > 1:
@@ -289,10 +442,8 @@ class EvaluateQueries(ast.NodeVisitor):
         queries_to_evaluate = self.process_assignment(node)
 
         for query_name, value_node in queries_to_evaluate.items():
-            fibers, labels = self.visit(value_node)
             self.queries_to_save.add(query_name)
-            self.evaluated_queries_fibers[query_name] = fibers
-            self.evaluated_queries_labels[query_name] = labels
+            self.evaluated_queries_info[query_name] = self.visit(value_node)
 
     def visit_AugAssign(self, node):
         if not isinstance(node.op, ast.BitOr):
@@ -302,9 +453,8 @@ class EvaluateQueries(ast.NodeVisitor):
         queries_to_evaluate = self.process_assignment(node)
 
         for query_name, value_node in queries_to_evaluate.items():
-            fibers, labels = self.visit(value_node)
-            self.evaluated_queries_fibers[query_name] = fibers
-            self.evaluated_queries_labels[query_name] = labels
+            query_info = self.visit(value_node)
+            self.evaluated_queries_info[query_name] = query_info
 
     def process_assignment(self, node):
         r"""
@@ -387,8 +537,8 @@ class EvaluateQueries(ast.NodeVisitor):
         return node_left, node_right
 
     def visit_Name(self, node):
-        if node.id in self.evaluated_queries_fibers:
-            return self.evaluated_queries_fibers[node.id], self.evaluated_queries_labels[node.id]
+        if node.id in self.evaluated_queries_info:
+            return self.evaluated_queries_info[node.id]
         else:
             raise TractQuerierSyntaxError(
                 "Invalid query name in line %d: %s" % (node.lineno, node.id))
@@ -399,22 +549,35 @@ class EvaluateQueries(ast.NodeVisitor):
                 "Invalid query in line %d: %s" % node.lineno)
 
         query_name = node.value.id + '.' + node.attr
-        if query_name in self.evaluated_queries_fibers:
-            return self.evaluated_queries_fibers[query_name], self.evaluated_queries_labels[query_name]
+        if query_name in self.evaluated_queries_info:
+            return self.evaluated_queries_info[query_name]
         else:
             raise TractQuerierSyntaxError(
                 "Invalid query name in line %d: %s" % (node.lineno, query_name))
 
     def visit_Num(self, node):
-        if node.n in self.crossing_labels_fibers:
-            fibers = self.crossing_labels_fibers[node.n]
+        if node.n in self.tractography_spatial_indexing.crossing_labels_tracts:
+            fibers = self.tractography_spatial_indexing.crossing_labels_tracts[node.n]
         else:
             fibers = set()
-        return fibers, set((node.n,))
+
+        endpoints = (set(), set())
+        for i in (0, 1):
+            elt = self.tractography_spatial_indexing.ending_labels_tracts[i]
+            if node.n in elt:
+                endpoints[i].update(elt[node.n])
+
+        labelset = set((node.n,))
+        fiber_info = FiberQueryInfo(
+            fibers, labelset,
+            endpoints
+        )
+
+        return fiber_info
 
     def visit_Expr(self, node):
         if isinstance(node.value, ast.Name):
-            if node.value.id in self.evaluated_queries_fibers.keys():
+            if node.value.id in self.evaluated_queries_info.keys():
                 self.queries_to_save.add(node.value.id)
             else:
                 raise TractQuerierSyntaxError(
@@ -435,7 +598,7 @@ class EvaluateQueries(ast.NodeVisitor):
         iter_ = node.iter
         if isinstance(iter_, ast.Str):
             list_items = fnmatch.filter(
-                self.evaluated_queries_fibers.keys(), iter_.s.lower())
+                self.evaluated_queries_info.keys(), iter_.s.lower())
         elif isinstance(iter_, ast.List):
             list_items = []
             for item in iter_.elts:
@@ -623,25 +786,29 @@ def queries_preprocess(query_file, filename='<unknown>', include_folders=[]):
 
 def eval_queries(
     query_file_body,
-    crossing_labels_fibers={}, crossing_fibers_labels={},
-    ending_labels_fibers={}, ending_fibers_labels={},
-    fiber_bounding_boxes={}, label_bounding_boxes={}
+    tractography_spatial_indexing
 ):
-    eq = EvaluateQueries(
-        crossing_fibers_labels, crossing_labels_fibers,
-        ending_fibers_labels, ending_labels_fibers,
-        fiber_bounding_boxes, label_bounding_boxes,
-    )
+    eq = EvaluateQueries(tractography_spatial_indexing)
+
     if isinstance(query_file_body, list):
         eq.visit(ast.Module(query_file_body))
     else:
         eq.visit(query_file_body)
 
-    return dict([(key, eq.evaluated_queries_fibers[key]) for key in eq.queries_to_save])
+    return dict([(key, eq.evaluated_queries_info[key].fibers) for key in eq.queries_to_save])
 
 
 def queries_syntax_check(query_file_body):
-    eval_queries(query_file_body)
+    class DummySpatialIndexing:
+        def __init__(self):
+            self.crossing_tracts_labels = {}
+            self.crossing_labels_tracts = {}
+            self.ending_tracts_labels = ({}, {})
+            self.ending_labels_tracts = ({}, {})
+            self.label_bounding_boxes = {}
+            self.tract_bounding_boxes = {}
+
+    eval_queries(query_file_body, DummySpatialIndexing())
 
 
 def labels_for_fibers(crossing_fibers_labels):

@@ -121,31 +121,17 @@ def main():
 
     print "Calculating labels and crossings"
     affine_ijk_2_ras = labels_nii.get_affine()
-    affine_ras_2_ijk = np.linalg.inv(affine_ijk_2_ras)
     tracts = tr.tracts()
 
-    tract_label_indices = tract_querier.compute_tract_label_indices(
-        affine_ras_2_ijk, img, tracts,
-        options.length_threshold, options.threshold
-    )
-
-    tract_bounding_boxes = tract_querier.compute_tract_bounding_boxes(
-        tracts, bounding_box_affine_transform
-    )
-    label_bounding_boxes = tract_querier.compute_label_bounding_boxes(
-        img, np.dot(bounding_box_affine_transform, affine_ijk_2_ras)
+    tractography_spatial_indexing = tract_querier.TractographySpatialIndexing(
+        tracts, img, affine_ijk_2_ras, options.length_threshold, options.threshold
     )
 
     if not options.interactive:
         print "Computing queries"
         evaluated_queries = tract_querier.eval_queries(
             query_file_body,
-            tract_label_indices.crossing_labels_tracts,
-            tract_label_indices.crossing_tracts_labels,
-            tract_label_indices.ending_labels_tracts,
-            tract_label_indices.ending_tracts_labels,
-            tract_bounding_boxes,
-            label_bounding_boxes,
+            tractography_spatial_indexing,
         )
 
         query_names = evaluated_queries.keys()
@@ -164,11 +150,7 @@ def main():
         )
 
         interactive_shell = tract_querier.TractQuerierCmd(
-            tract_label_indices.crossing_tracts_labels,
-            tract_label_indices.crossing_labels_tracts,
-            tract_label_indices.ending_tracts_labels,
-            tract_label_indices.ending_labels_tracts,
-            tract_bounding_boxes, label_bounding_boxes,
+            tractography_spatial_indexing,
             initial_body=query_script,
             save_query_callback=query_save,
             include_folders=folders

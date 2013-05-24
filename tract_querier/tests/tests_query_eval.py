@@ -15,28 +15,37 @@ fibers_in_all_but_0 = set().union(*[labels_fibers[label] for label in labels_fib
 fiber_in_label_0_uniquely = labels_fibers[0].difference(fibers_in_all_but_0)
 
 
+class DummySpatialIndexing:
+    def __init__(self, crossing_tracts_labels, crossing_labels_tracts):
+        self.crossing_tracts_labels = crossing_tracts_labels
+        self.crossing_labels_tracts = crossing_labels_tracts
+
+dummy_spatial_indexing = DummySpatialIndexing(fibers_labels, labels_fibers)
+empty_spatial_indexing = DummySpatialIndexing({}, {})
+
+
 def test_assign():
-    query_evaluator = query_processor.EvaluateQueries(fibers_labels, labels_fibers)
+    query_evaluator = query_processor.EvaluateQueries(dummy_spatial_indexing)
     query_evaluator.visit(ast.parse("A=0"))
     assert((
         'A' in query_evaluator.queries_to_save and
-        query_evaluator.evaluated_queries_fibers['A'] == labels_fibers[0] and
-        query_evaluator.evaluated_queries_labels['A'] == set((0,))
+        query_evaluator.evaluated_queries_info['A'].fibers == labels_fibers[0] and
+        query_evaluator.evaluated_queries_info['A'].labels == set((0,))
     ))
 
 
 def test_assign_attr():
-    query_evaluator = query_processor.EvaluateQueries(fibers_labels, labels_fibers)
+    query_evaluator = query_processor.EvaluateQueries(dummy_spatial_indexing)
     query_evaluator.visit(ast.parse("a.left=0"))
     assert((
         'a.left' in query_evaluator.queries_to_save and
-        query_evaluator.evaluated_queries_fibers['a.left'] == labels_fibers[0] and
-        query_evaluator.evaluated_queries_labels['a.left'] == set((0,))
+        query_evaluator.evaluated_queries_info['a.left'].fibers == labels_fibers[0] and
+        query_evaluator.evaluated_queries_info['a.left'].labels == set((0,))
     ))
 
 
 def test_assign_side():
-    query_evaluator = query_processor.EvaluateQueries({}, {})
+    query_evaluator = query_processor.EvaluateQueries(empty_spatial_indexing)
 
     queries_labels = {
         'a.left': set([3, 6]),
@@ -66,12 +75,12 @@ a.side = b.side or c.opposite
 
     query_evaluator.visit(ast.parse(query))
 
-    assert(query_evaluator.evaluated_queries_labels == queries_labels)
-    assert(query_evaluator.evaluated_queries_fibers == queries_fibers)
+    assert({k: v.labels for k, v in query_evaluator.evaluated_queries_info.iteritems()} == queries_labels)
+    assert({k: v.fibers for k, v in query_evaluator.evaluated_queries_info.iteritems()} == queries_fibers)
 
 
 def test_assign_str():
-    query_evaluator = query_processor.EvaluateQueries({}, {})
+    query_evaluator = query_processor.EvaluateQueries(empty_spatial_indexing)
 
     queries_labels = {
         'b.left': set([3]),
@@ -99,12 +108,12 @@ h = '*left'
 
     query_evaluator.visit(ast.parse(query))
 
-    assert(query_evaluator.evaluated_queries_labels == queries_labels)
-    assert(query_evaluator.evaluated_queries_fibers == queries_fibers)
+    assert({k: v.labels for k, v in query_evaluator.evaluated_queries_info.iteritems()} == queries_labels)
+    assert({k: v.fibers for k, v in query_evaluator.evaluated_queries_info.iteritems()} == queries_fibers)
 
 
 def test_for_list():
-    query_evaluator = query_processor.EvaluateQueries({}, {})
+    query_evaluator = query_processor.EvaluateQueries(empty_spatial_indexing)
 
     queries_fibers = {
         'a.left': set([]),
@@ -130,11 +139,11 @@ for i in [a,b,c,d,e]: i.right = i.left
 
     query_evaluator.visit(ast.parse(query))
 
-    assert(query_evaluator.evaluated_queries_fibers == queries_fibers)
+    assert({k: v.fibers for k, v in query_evaluator.evaluated_queries_info.iteritems()} == queries_fibers)
 
 
 def test_for_str():
-    query_evaluator = query_processor.EvaluateQueries({}, {})
+    query_evaluator = query_processor.EvaluateQueries(empty_spatial_indexing)
 
     queries_fibers = {
         'a.left': set([]),
@@ -160,124 +169,124 @@ for i in '*left': i.right = i
 
     query_evaluator.visit(ast.parse(query))
 
-    assert(query_evaluator.evaluated_queries_fibers == queries_fibers)
+    assert({k: v.fibers for k, v in query_evaluator.evaluated_queries_info.iteritems()} == queries_fibers)
 
 
 def test_add():
-    query_evaluator = query_processor.EvaluateQueries(fibers_labels, labels_fibers)
+    query_evaluator = query_processor.EvaluateQueries(dummy_spatial_indexing)
     query_evaluator.visit(ast.parse("A=0+1"))
     assert((
         'A' in query_evaluator.queries_to_save and
-        query_evaluator.evaluated_queries_fibers['A'] == labels_fibers[0].union(labels_fibers[1]) and
-        query_evaluator.evaluated_queries_labels['A'] == set((0, 1))
+        query_evaluator.evaluated_queries_info['A'].fibers == labels_fibers[0].union(labels_fibers[1]) and
+        query_evaluator.evaluated_queries_info['A'].labels == set((0, 1))
     ))
 
 
 def test_mult():
-    query_evaluator = query_processor.EvaluateQueries(fibers_labels, labels_fibers)
+    query_evaluator = query_processor.EvaluateQueries(dummy_spatial_indexing)
     query_evaluator.visit(ast.parse("A=0 * 1"))
     assert((
         'A' in query_evaluator.queries_to_save and
-        query_evaluator.evaluated_queries_fibers['A'] == labels_fibers[0].intersection(labels_fibers[1]) and
-        query_evaluator.evaluated_queries_labels['A'] == set((0, 1))
+        query_evaluator.evaluated_queries_info['A'].fibers == labels_fibers[0].intersection(labels_fibers[1]) and
+        query_evaluator.evaluated_queries_info['A'].labels == set((0, 1))
     ))
 
 
 def test_sub():
-    query_evaluator = query_processor.EvaluateQueries(fibers_labels, labels_fibers)
+    query_evaluator = query_processor.EvaluateQueries(dummy_spatial_indexing)
     query_evaluator.visit(ast.parse("A=(0 + 1) - 1"))
     assert((
         'A' in query_evaluator.queries_to_save and
-        query_evaluator.evaluated_queries_fibers['A'] == labels_fibers[0].difference(labels_fibers[1]) and
-        query_evaluator.evaluated_queries_labels['A'] == set((0,))
+        query_evaluator.evaluated_queries_info['A'].fibers == labels_fibers[0].difference(labels_fibers[1]) and
+        query_evaluator.evaluated_queries_info['A'].labels == set((0,))
     ))
 
 
 def test_or():
-    query_evaluator = query_processor.EvaluateQueries(fibers_labels, labels_fibers)
+    query_evaluator = query_processor.EvaluateQueries(dummy_spatial_indexing)
     query_evaluator.visit(ast.parse("A=0 or 1"))
     assert((
         'A' in query_evaluator.queries_to_save and
-        query_evaluator.evaluated_queries_fibers['A'] == labels_fibers[0].union(labels_fibers[1]) and
-        query_evaluator.evaluated_queries_labels['A'] == set((0, 1))
+        query_evaluator.evaluated_queries_info['A'].fibers == labels_fibers[0].union(labels_fibers[1]) and
+        query_evaluator.evaluated_queries_info['A'].labels == set((0, 1))
     ))
 
 
 def test_and():
-    query_evaluator = query_processor.EvaluateQueries(fibers_labels, labels_fibers)
+    query_evaluator = query_processor.EvaluateQueries(dummy_spatial_indexing)
     query_evaluator.visit(ast.parse("A=0 and 1"))
     assert((
         'A' in query_evaluator.queries_to_save and
-        query_evaluator.evaluated_queries_fibers['A'] == labels_fibers[0].intersection(labels_fibers[1]) and
-        query_evaluator.evaluated_queries_labels['A'] == set((0, 1))
+        query_evaluator.evaluated_queries_info['A'].fibers == labels_fibers[0].intersection(labels_fibers[1]) and
+        query_evaluator.evaluated_queries_info['A'].labels == set((0, 1))
     ))
 
 
 def test_not_in():
-    query_evaluator = query_processor.EvaluateQueries(fibers_labels, labels_fibers)
+    query_evaluator = query_processor.EvaluateQueries(dummy_spatial_indexing)
     query_evaluator.visit(ast.parse("A=0 or 1 not in 1"))
     assert((
         'A' in query_evaluator.queries_to_save and
-        query_evaluator.evaluated_queries_fibers['A'] == labels_fibers[0].difference(labels_fibers[1]) and
-        query_evaluator.evaluated_queries_labels['A'] == set((0,))
+        query_evaluator.evaluated_queries_info['A'].fibers == labels_fibers[0].difference(labels_fibers[1]) and
+        query_evaluator.evaluated_queries_info['A'].labels == set((0,))
     ))
 
 
 def test_only_sign():
-    query_evaluator = query_processor.EvaluateQueries(fibers_labels, labels_fibers)
+    query_evaluator = query_processor.EvaluateQueries(dummy_spatial_indexing)
     query_evaluator.visit(ast.parse("A=~0"))
     assert((
         'A' in query_evaluator.queries_to_save and
-        query_evaluator.evaluated_queries_fibers['A'] == fiber_in_label_0_uniquely and
-        query_evaluator.evaluated_queries_labels['A'] == set((0,))
+        query_evaluator.evaluated_queries_info['A'].fibers == fiber_in_label_0_uniquely and
+        query_evaluator.evaluated_queries_info['A'].labels == set((0,))
     ))
 
 
 def test_only():
-    query_evaluator = query_processor.EvaluateQueries(fibers_labels, labels_fibers)
+    query_evaluator = query_processor.EvaluateQueries(dummy_spatial_indexing)
     query_evaluator.visit(ast.parse("A=only(0)"))
     assert((
         'A' in query_evaluator.queries_to_save and
-        query_evaluator.evaluated_queries_fibers['A'] == fiber_in_label_0_uniquely and
-        query_evaluator.evaluated_queries_labels['A'] == set((0,))
+        query_evaluator.evaluated_queries_info['A'].fibers == fiber_in_label_0_uniquely and
+        query_evaluator.evaluated_queries_info['A'].labels == set((0,))
     ))
 
 
 def test_unsaved_query():
-    query_evaluator = query_processor.EvaluateQueries(fibers_labels, labels_fibers)
+    query_evaluator = query_processor.EvaluateQueries(dummy_spatial_indexing)
     query_evaluator.visit(ast.parse("A|=0"))
     assert((
         'A' not in query_evaluator.queries_to_save and
-        query_evaluator.evaluated_queries_fibers['A'] == labels_fibers[0] and
-        query_evaluator.evaluated_queries_labels['A'] == set((0,))
+        query_evaluator.evaluated_queries_info['A'].fibers == labels_fibers[0] and
+        query_evaluator.evaluated_queries_info['A'].labels == set((0,))
     ))
 
 
 def test_symbolic_assignment():
-    query_evaluator = query_processor.EvaluateQueries(fibers_labels, labels_fibers)
+    query_evaluator = query_processor.EvaluateQueries(dummy_spatial_indexing)
     query_evaluator.visit(ast.parse("A=0; B=A"))
     assert((
         'B' in query_evaluator.queries_to_save and
-        query_evaluator.evaluated_queries_fibers['B'] == labels_fibers[0] and
-        query_evaluator.evaluated_queries_labels['B'] == set((0,))
+        query_evaluator.evaluated_queries_info['B'].fibers == labels_fibers[0] and
+        query_evaluator.evaluated_queries_info['B'].labels == set((0,))
     ))
 
 
 def test_unarySub():
-    query_evaluator = query_processor.EvaluateQueries(fibers_labels, labels_fibers)
+    query_evaluator = query_processor.EvaluateQueries(dummy_spatial_indexing)
     query_evaluator.visit(ast.parse("B=0; A=-B"))
     assert((
         'A' in query_evaluator.queries_to_save and
-        query_evaluator.evaluated_queries_fibers['A'] == fibers_in_all_but_0 and
-        query_evaluator.evaluated_queries_labels['A'] == set(labels_fibers.keys()).difference((0,))
+        query_evaluator.evaluated_queries_info['A'].fibers == fibers_in_all_but_0 and
+        query_evaluator.evaluated_queries_info['A'].labels == set(labels_fibers.keys()).difference((0,))
     ))
 
 
 def test_not():
-    query_evaluator = query_processor.EvaluateQueries(fibers_labels, labels_fibers)
+    query_evaluator = query_processor.EvaluateQueries(dummy_spatial_indexing)
     query_evaluator.visit(ast.parse("A= not 0"))
     assert((
         'A' in query_evaluator.queries_to_save and
-        query_evaluator.evaluated_queries_fibers['A'] == fibers_in_all_but_0 and
-        query_evaluator.evaluated_queries_labels['A'] == set(labels_fibers.keys()).difference((0,))
+        query_evaluator.evaluated_queries_info['A'].fibers == fibers_in_all_but_0 and
+        query_evaluator.evaluated_queries_info['A'].labels == set(labels_fibers.keys()).difference((0,))
     ))
