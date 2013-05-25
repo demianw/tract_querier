@@ -70,10 +70,13 @@
 <span class="kn">import</span> <span class="nn">ast</span>
 <span class="kn">from</span> <span class="nn">os</span> <span class="kn">import</span> <span class="n">path</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">lt</span><span class="p">,</span> <span class="n">gt</span>
 <span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">takewhile</span>
 <span class="kn">import</span> <span class="nn">fnmatch</span>
 
 <span class="kn">from</span> <span class="nn">.code_util</span> <span class="kn">import</span> <span class="n">DocStringInheritor</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;keywords&#39;</span><span class="p">,</span> <span class="s">&#39;EvaluateQueries&#39;</span><span class="p">,</span> <span class="s">&#39;eval_queries&#39;</span><span class="p">,</span> <span class="s">&#39;queries_syntax_check&#39;</span><span class="p">,</span> <span class="s">&#39;queries_preprocess&#39;</span><span class="p">]</span>
 
 <span class="n">keywords</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s">&#39;and&#39;</span><span class="p">,</span>
@@ -91,10 +94,23 @@
 <span class="p">]</span>
 
 
-<div class="viewcode-block" id="FiberQueryInfo"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.FiberQueryInfo">[docs]</a><span class="k">class</span> <span class="nc">FiberQueryInfo</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fibers</span><span class="o">=</span><span class="nb">set</span><span class="p">(),</span> <span class="n">labels</span><span class="o">=</span><span class="nb">set</span><span class="p">()):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">fibers</span> <span class="o">=</span> <span class="n">fibers</span>
+<span class="k">class</span> <span class="nc">FiberQueryInfo</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Information about a processed query</span>
+
+<span class="sd">    Attribute</span>
+<span class="sd">    ---------</span>
+<span class="sd">        tracts : set</span>
+<span class="sd">            set of tract indices resulting from the query</span>
+<span class="sd">        labels : set</span>
+<span class="sd">            set of labels resulting by the query</span>
+<span class="sd">        tracts_endpoints : (set, set)</span>
+<span class="sd">            sets of labels of where the tract endpoints are</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tracts</span><span class="o">=</span><span class="nb">set</span><span class="p">(),</span> <span class="n">labels</span><span class="o">=</span><span class="nb">set</span><span class="p">(),</span> <span class="n">tracts_endpoints</span><span class="o">=</span><span class="p">(</span><span class="nb">set</span><span class="p">(),</span> <span class="nb">set</span><span class="p">())):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tracts</span> <span class="o">=</span> <span class="n">tracts</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tracts_endpoints</span> <span class="o">=</span> <span class="n">tracts_endpoints</span>
 
     <span class="k">def</span> <span class="nf">__getattribute__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span>
@@ -105,12 +121,16 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">object</span><span class="o">.</span><span class="n">__getattribute__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
 
-<div class="viewcode-block" id="FiberQueryInfo.copy"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.FiberQueryInfo.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">FiberQueryInfo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fibers</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
-</div>
-<div class="viewcode-block" id="FiberQueryInfo.set_operation"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.FiberQueryInfo.set_operation">[docs]</a>    <span class="k">def</span> <span class="nf">set_operation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
-        <span class="k">def</span> <span class="nf">operation</span><span class="p">(</span><span class="n">fiber_query_info</span><span class="p">):</span>
-            <span class="n">fibers_op</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fibers</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">FiberQueryInfo</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tracts</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tracts_endpoints</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">tracts_endpoints</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()),</span>
+<span class="c">#            (self.labels_endpoints[0].copy(), self.labels_endpoints[1].copy()),</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">set_operation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">operation</span><span class="p">(</span><span class="n">tract_query_info</span><span class="p">):</span>
+            <span class="n">tracts_op</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tracts</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s">&#39;intersection&#39;</span><span class="p">:</span>
                 <span class="n">name_labels</span> <span class="o">=</span> <span class="s">&#39;union&#39;</span>
             <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s">&#39;intersection_update&#39;</span><span class="p">:</span>
@@ -119,25 +139,38 @@
                 <span class="n">name_labels</span> <span class="o">=</span> <span class="n">name</span>
             <span class="n">labels_op</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span> <span class="n">name_labels</span><span class="p">)</span>
 
-            <span class="n">new_fibers</span> <span class="o">=</span> <span class="n">fibers_op</span><span class="p">(</span><span class="n">fiber_query_info</span><span class="o">.</span><span class="n">fibers</span><span class="p">)</span>
-            <span class="n">new_labels</span> <span class="o">=</span> <span class="n">labels_op</span><span class="p">(</span><span class="n">fiber_query_info</span><span class="o">.</span><span class="n">labels</span><span class="p">)</span>
+            <span class="n">new_tracts</span> <span class="o">=</span> <span class="n">tracts_op</span><span class="p">(</span><span class="n">tract_query_info</span><span class="o">.</span><span class="n">tracts</span><span class="p">)</span>
+            <span class="n">new_labels</span> <span class="o">=</span> <span class="n">labels_op</span><span class="p">(</span><span class="n">tract_query_info</span><span class="o">.</span><span class="n">labels</span><span class="p">)</span>
+
+            <span class="n">new_tracts_endpoints</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tracts_endpoints</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">name</span><span class="p">)(</span><span class="n">tract_query_info</span><span class="o">.</span><span class="n">tracts_endpoints</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tracts_endpoints</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">name</span><span class="p">)(</span><span class="n">tract_query_info</span><span class="o">.</span><span class="n">tracts_endpoints</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="p">)</span>
+
+<span class="c">#            new_labels_endpoints = (</span>
+<span class="c">#                getattr(self.labels_endpoints[0], name_labels)(tract_query_info.labels_endpoints[0]),</span>
+<span class="c">#                getattr(self.labels_endpoints[1], name_labels)(tract_query_info.labels_endpoints[1])</span>
+<span class="c">#            )</span>
 
             <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;update&#39;</span><span class="p">):</span>
                 <span class="k">return</span> <span class="bp">self</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">FiberQueryInfo</span><span class="p">(</span><span class="n">new_fibers</span><span class="p">,</span> <span class="n">new_labels</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">FiberQueryInfo</span><span class="p">(</span>
+                    <span class="n">new_tracts</span><span class="p">,</span> <span class="n">new_labels</span><span class="p">,</span>
+                    <span class="n">new_tracts_endpoints</span><span class="p">,</span>
+                <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">operation</span>
 
-</div></div>
-<div class="viewcode-block" id="EndpointQueryInfo"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.EndpointQueryInfo">[docs]</a><span class="k">class</span> <span class="nc">EndpointQueryInfo</span><span class="p">:</span>
+
+<span class="k">class</span> <span class="nc">EndpointQueryInfo</span><span class="p">:</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">endpoint_fibers</span><span class="o">=</span><span class="p">(</span><span class="nb">set</span><span class="p">(),</span> <span class="nb">set</span><span class="p">()),</span>
+        <span class="n">endpoint_tracts</span><span class="o">=</span><span class="p">(</span><span class="nb">set</span><span class="p">(),</span> <span class="nb">set</span><span class="p">()),</span>
         <span class="n">endpoint_labels</span><span class="o">=</span><span class="p">(</span><span class="nb">set</span><span class="p">(),</span> <span class="nb">set</span><span class="p">()),</span>
         <span class="n">endpoint_points</span><span class="o">=</span><span class="p">(</span><span class="nb">set</span><span class="p">(),</span> <span class="nb">set</span><span class="p">())</span>
     <span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">endpoint_fibers</span> <span class="o">=</span> <span class="n">endpoint_fibers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">endpoint_tracts</span> <span class="o">=</span> <span class="n">endpoint_tracts</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">endpoint_labels</span> <span class="o">=</span> <span class="n">endpoint_labels</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">endpoint_points</span> <span class="o">=</span> <span class="n">endpoint_points</span>
 
@@ -150,12 +183,12 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">object</span><span class="o">.</span><span class="n">__getattribute__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
 
-<div class="viewcode-block" id="EndpointQueryInfo.set_operation"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.EndpointQueryInfo.set_operation">[docs]</a>    <span class="k">def</span> <span class="nf">set_operation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">set_operation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
         <span class="k">def</span> <span class="nf">operation</span><span class="p">(</span><span class="n">endpoint_query_info</span><span class="p">):</span>
 
-            <span class="n">fibers_op</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">endpoint_fibers</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">name</span><span class="p">),</span>
-                <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">endpoint_fibers</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">name</span><span class="p">)</span>
+            <span class="n">tracts_op</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">endpoint_tracts</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">name</span><span class="p">),</span>
+                <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">endpoint_tracts</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">name</span><span class="p">)</span>
             <span class="p">)</span>
             <span class="n">labels_op</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">endpoint_labels</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">name</span><span class="p">),</span>
@@ -166,9 +199,9 @@
                 <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">endpoint_points</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">name</span><span class="p">)</span>
             <span class="p">)</span>
 
-            <span class="n">new_fibers</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">fibers_op</span><span class="p">[</span><span class="mi">0</span><span class="p">](</span><span class="n">endpoint_query_info</span><span class="o">.</span><span class="n">endpoint_fibers</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
-                <span class="n">fibers_op</span><span class="p">[</span><span class="mi">1</span><span class="p">](</span><span class="n">endpoint_query_info</span><span class="o">.</span><span class="n">endpoint_fibers</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">new_tracts</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">tracts_op</span><span class="p">[</span><span class="mi">0</span><span class="p">](</span><span class="n">endpoint_query_info</span><span class="o">.</span><span class="n">endpoint_tracts</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                <span class="n">tracts_op</span><span class="p">[</span><span class="mi">1</span><span class="p">](</span><span class="n">endpoint_query_info</span><span class="o">.</span><span class="n">endpoint_tracts</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
             <span class="p">)</span>
 
             <span class="n">new_labels</span> <span class="o">=</span> <span class="p">(</span>
@@ -184,10 +217,10 @@
             <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;update&#39;</span><span class="p">):</span>
                 <span class="k">return</span> <span class="bp">self</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">EndpointQueryInfo</span><span class="p">(</span><span class="n">new_fibers</span><span class="p">,</span> <span class="n">new_labels</span><span class="p">,</span> <span class="n">new_points</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">EndpointQueryInfo</span><span class="p">(</span><span class="n">new_tracts</span><span class="p">,</span> <span class="n">new_labels</span><span class="p">,</span> <span class="n">new_points</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">operation</span>
 
-</div></div>
+
 <div class="viewcode-block" id="EvaluateQueries"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.EvaluateQueries">[docs]</a><span class="k">class</span> <span class="nc">EvaluateQueries</span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">NodeVisitor</span><span class="p">):</span>
     <span class="sd">r&quot;&quot;&quot;</span>
 <span class="sd">    This class implements the parser to process</span>
@@ -203,13 +236,13 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    fibers : set</span>
-<span class="sd">        numbers of the fibers that result of this</span>
+<span class="sd">    tracts : set</span>
+<span class="sd">        numbers of the tracts that result of this</span>
 <span class="sd">        query</span>
 
 <span class="sd">    labels : set</span>
 <span class="sd">        numbers of the labels that are traversed by</span>
-<span class="sd">        the fibers resulting from this query</span>
+<span class="sd">        the tracts resulting from this query</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">__metaclass__</span> <span class="o">=</span> <span class="n">DocStringInheritor</span>
@@ -226,11 +259,8 @@
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">tractography_spatial_indexing</span><span class="p">,</span>
-        <span class="n">fibers_endpoints_pos</span><span class="o">=</span><span class="p">([],</span> <span class="p">[]),</span>
     <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tractography_spatial_indexing</span> <span class="o">=</span> <span class="n">tractography_spatial_indexing</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">fibers_endpoints_pos</span> <span class="o">=</span> <span class="n">fibers_endpoints_pos</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">evaluated_queries_info</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">queries_to_save</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
@@ -292,8 +322,8 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Invert</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">FiberQueryInfo</span><span class="p">(</span>
                 <span class="nb">set</span><span class="p">(</span>
-                    <span class="n">fiber</span> <span class="k">for</span> <span class="n">fiber</span> <span class="ow">in</span> <span class="n">query_info</span><span class="o">.</span><span class="n">fibers</span>
-                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tractography_spatial_indexing</span><span class="o">.</span><span class="n">crossing_tracts_labels</span><span class="p">[</span><span class="n">fiber</span><span class="p">]</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">query_info</span><span class="o">.</span><span class="n">labels</span><span class="p">)</span>
+                    <span class="n">tract</span> <span class="k">for</span> <span class="n">tract</span> <span class="ow">in</span> <span class="n">query_info</span><span class="o">.</span><span class="n">tracts</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tractography_spatial_indexing</span><span class="o">.</span><span class="n">crossing_tracts_labels</span><span class="p">[</span><span class="n">tract</span><span class="p">]</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">query_info</span><span class="o">.</span><span class="n">labels</span><span class="p">)</span>
                 <span class="p">),</span>
                 <span class="n">query_info</span><span class="o">.</span><span class="n">labels</span>
             <span class="p">)</span>
@@ -302,11 +332,11 @@
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">USub</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Not</span><span class="p">):</span>
             <span class="n">all_labels</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tractography_spatial_indexing</span><span class="o">.</span><span class="n">crossing_labels_tracts</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
             <span class="n">all_labels</span><span class="o">.</span><span class="n">difference_update</span><span class="p">(</span><span class="n">query_info</span><span class="o">.</span><span class="n">labels</span><span class="p">)</span>
-            <span class="n">all_fibers</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">all_tracts</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="nb">tuple</span><span class="p">(</span>
                 <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tractography_spatial_indexing</span><span class="o">.</span><span class="n">crossing_labels_tracts</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">all_labels</span><span class="p">)</span>
             <span class="p">))</span>
 
-            <span class="n">new_info</span> <span class="o">=</span> <span class="n">FiberQueryInfo</span><span class="p">(</span><span class="n">all_fibers</span><span class="p">,</span> <span class="n">all_labels</span><span class="p">)</span>
+            <span class="n">new_info</span> <span class="o">=</span> <span class="n">FiberQueryInfo</span><span class="p">(</span><span class="n">all_tracts</span><span class="p">,</span> <span class="n">all_labels</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">new_info</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">TractQuerierSyntaxError</span><span class="p">(</span>
@@ -331,30 +361,39 @@
         <span class="p">):</span>
             <span class="k">if</span> <span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;only&#39;</span><span class="p">):</span>
                 <span class="n">query_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-                <span class="k">return</span> <span class="n">FiberQueryInfo</span><span class="p">(</span>
+
+                <span class="n">only_tracts</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span>
+                    <span class="n">tract</span> <span class="k">for</span> <span class="n">tract</span> <span class="ow">in</span> <span class="n">query_info</span><span class="o">.</span><span class="n">tracts</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tractography_spatial_indexing</span><span class="o">.</span><span class="n">crossing_tracts_labels</span><span class="p">[</span><span class="n">tract</span><span class="p">]</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">query_info</span><span class="o">.</span><span class="n">labels</span><span class="p">)</span>
+                <span class="p">)</span>
+                <span class="n">only_endpoints</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">((</span>
                     <span class="nb">set</span><span class="p">(</span>
-                        <span class="n">fiber</span> <span class="k">for</span> <span class="n">fiber</span> <span class="ow">in</span> <span class="n">query_info</span><span class="o">.</span><span class="n">fibers</span>
-                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tractography_spatial_indexing</span><span class="o">.</span><span class="n">crossing_tracts_labels</span><span class="p">[</span><span class="n">fiber</span><span class="p">]</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">query_info</span><span class="o">.</span><span class="n">labels</span><span class="p">)</span>
-                    <span class="p">),</span> <span class="n">query_info</span><span class="o">.</span><span class="n">labels</span>
+                        <span class="n">tract</span> <span class="k">for</span> <span class="n">tract</span> <span class="ow">in</span> <span class="n">query_info</span><span class="o">.</span><span class="n">tracts_endpoints</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tractography_spatial_indexing</span><span class="o">.</span><span class="n">ending_tracts_labels</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">tract</span><span class="p">]</span> <span class="ow">in</span> <span class="n">query_info</span><span class="o">.</span><span class="n">labels</span>
+                    <span class="p">)</span>
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="p">))</span>
+                <span class="k">return</span> <span class="n">FiberQueryInfo</span><span class="p">(</span>
+                    <span class="n">only_tracts</span><span class="p">,</span>
+                    <span class="n">query_info</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span>
+                    <span class="n">only_endpoints</span>
                 <span class="p">)</span>
             <span class="k">elif</span> <span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;endpoints_in&#39;</span><span class="p">):</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">evaluating_endpoints</span> <span class="o">=</span> <span class="bp">True</span>
-                <span class="n">fibers</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">evaluating_endpoints_index</span> <span class="o">=</span> <span class="n">i</span>
-                    <span class="n">query_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-                    <span class="n">fibers</span> <span class="o">=</span> <span class="n">fibers</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span>
-                        <span class="n">fiber</span> <span class="k">for</span> <span class="n">fiber</span> <span class="ow">in</span> <span class="n">query_info</span><span class="o">.</span><span class="n">fibers</span>
-                        <span class="k">if</span> <span class="p">(</span>
-                            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tractography_spatial_indexing</span><span class="o">.</span><span class="n">ending_tract_labels</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">fiber</span><span class="p">]</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">query_info</span><span class="o">.</span><span class="n">labels</span><span class="p">))</span>
-                        <span class="p">)</span>
-                    <span class="p">))</span>
+                <span class="n">query_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">new_tracts</span> <span class="o">=</span> <span class="n">query_info</span><span class="o">.</span><span class="n">tracts_endpoints</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">query_info</span><span class="o">.</span><span class="n">tracts_endpoints</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
 
-                <span class="bp">self</span><span class="o">.</span><span class="n">evaluating_endpoints</span> <span class="o">=</span> <span class="bp">False</span>
-                <span class="n">labels</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span><span class="o">.</span><span class="n">union</span><span class="p">(</span>
-                    <span class="o">*</span><span class="nb">tuple</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">tractography_spatial_indexing</span><span class="o">.</span><span class="n">crossing_tracts_labels</span><span class="p">[</span><span class="n">fiber</span><span class="p">]</span> <span class="k">for</span> <span class="n">fiber</span> <span class="ow">in</span> <span class="n">fibers</span><span class="p">))</span>
-                <span class="p">)</span>
-                <span class="k">return</span> <span class="n">FiberQueryInfo</span><span class="p">(</span><span class="n">fibers</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+                <span class="c">#tracts = set().union(set(</span>
+                <span class="c">#    tract for tract in query_info.tracts</span>
+                <span class="c">#    if (</span>
+                <span class="c">#        self.tractography_spatial_indexing.ending_tracts_labels[i][tract] in query_info.labels</span>
+                <span class="c">#    )</span>
+                <span class="c">#))</span>
+
+                <span class="c">#labels = set().union(</span>
+                <span class="c">#    *tuple((self.tractography_spatial_indexing.crossing_tracts_labels[tract] for tract in tracts))</span>
+                <span class="c">#)</span>
+                <span class="k">return</span> <span class="n">FiberQueryInfo</span><span class="p">(</span><span class="n">new_tracts</span><span class="p">,</span> <span class="n">query_info</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span> <span class="n">query_info</span><span class="o">.</span><span class="n">tracts_endpoints</span><span class="p">)</span>
+
             <span class="k">elif</span> <span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s">&#39;save&#39;</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Str</span><span class="p">)):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">queries_to_save</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">s</span><span class="p">)</span>
                 <span class="k">return</span>
@@ -383,18 +422,18 @@
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 
-<span class="sd">        fibers, labels</span>
+<span class="sd">        tracts, labels</span>
 
-<span class="sd">        fibers :  set</span>
-<span class="sd">            Numbers of the fibers that result of this</span>
+<span class="sd">        tracts :  set</span>
+<span class="sd">            Numbers of the tracts that result of this</span>
 <span class="sd">            query</span>
 
 <span class="sd">        labels :  set</span>
 <span class="sd">            Numbers of the labels that are traversed by</span>
-<span class="sd">            the fibers resulting from this query</span>
+<span class="sd">            the tracts resulting from this query</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tractography_spatial_indexing</span><span class="o">.</span><span class="n">label_bounding_boxes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">FiberQueryInfo</span><span class="p">(</span><span class="nb">set</span><span class="p">(),</span> <span class="nb">set</span><span class="p">())</span>
+            <span class="k">return</span> <span class="n">FiberQueryInfo</span><span class="p">()</span>
 
         <span class="n">arg</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">):</span>
@@ -418,58 +457,51 @@
 
         <span class="n">function_name</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluating_endpoints</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">function_name</span> <span class="o">==</span> <span class="s">&#39;anterior_of&#39;</span><span class="p">:</span>
-                <span class="n">fibers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tractography_spatial_indexing</span><span class="o">.</span><span class="n">tract_bounding_boxes</span><span class="p">[</span>
-                    <span class="s">&#39;anterior&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">bounding_box</span><span class="o">.</span><span class="n">anterior</span>
-            <span class="k">elif</span> <span class="n">function_name</span> <span class="o">==</span> <span class="s">&#39;posterior_of&#39;</span><span class="p">:</span>
-                <span class="n">fibers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tractography_spatial_indexing</span><span class="o">.</span><span class="n">tract_bounding_boxes</span><span class="p">[</span>
-                    <span class="s">&#39;posterior&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">bounding_box</span><span class="o">.</span><span class="n">posterior</span>
-            <span class="k">elif</span> <span class="n">function_name</span> <span class="o">==</span> <span class="s">&#39;superior_of&#39;</span><span class="p">:</span>
-                <span class="n">fibers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tractography_spatial_indexing</span><span class="o">.</span><span class="n">tract_bounding_boxes</span><span class="p">[</span>
-                    <span class="s">&#39;superior&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">bounding_box</span><span class="o">.</span><span class="n">superior</span>
-            <span class="k">elif</span> <span class="n">function_name</span> <span class="o">==</span> <span class="s">&#39;inferior_of&#39;</span><span class="p">:</span>
-                <span class="n">fibers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tractography_spatial_indexing</span><span class="o">.</span><span class="n">tract_bounding_boxes</span><span class="p">[</span>
-                    <span class="s">&#39;inferior&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">bounding_box</span><span class="o">.</span><span class="n">inferior</span>
-            <span class="k">elif</span> <span class="n">function_name</span> <span class="o">==</span> <span class="s">&#39;medial_of&#39;</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">side</span> <span class="o">==</span> <span class="s">&#39;left&#39;</span><span class="p">:</span>
-                    <span class="n">fibers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tractography_spatial_indexing</span><span class="o">.</span><span class="n">tract_bounding_boxes</span><span class="p">[</span>
-                        <span class="s">&#39;right&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">bounding_box</span><span class="o">.</span><span class="n">right</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">fibers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tractography_spatial_indexing</span><span class="o">.</span><span class="n">tract_bounding_boxes</span><span class="p">[</span><span class="s">&#39;left&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">bounding_box</span><span class="o">.</span><span class="n">left</span>
-            <span class="k">elif</span> <span class="n">function_name</span> <span class="o">==</span> <span class="s">&#39;lateral_of&#39;</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">side</span> <span class="o">==</span> <span class="s">&#39;right&#39;</span><span class="p">:</span>
-                    <span class="n">fibers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tractography_spatial_indexing</span><span class="o">.</span><span class="n">tract_bounding_boxes</span><span class="p">[</span>
-                        <span class="s">&#39;right&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">bounding_box</span><span class="o">.</span><span class="n">right</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">fibers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tractography_spatial_indexing</span><span class="o">.</span><span class="n">tract_bounding_boxes</span><span class="p">[</span><span class="s">&#39;left&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">bounding_box</span><span class="o">.</span><span class="n">left</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">endpoints</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fibers_endpoints_pos</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">evaluating_endpoints_index</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">function_name</span> <span class="o">==</span> <span class="s">&#39;anterior_of&#39;</span><span class="p">:</span>
-                <span class="n">fibers</span> <span class="o">=</span> <span class="n">endpoints</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">bounding_box</span><span class="o">.</span><span class="n">anterior</span>
-            <span class="k">elif</span> <span class="n">function_name</span> <span class="o">==</span> <span class="s">&#39;posterior_of&#39;</span><span class="p">:</span>
-                <span class="n">fibers</span> <span class="o">=</span> <span class="n">endpoints</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">bounding_box</span><span class="o">.</span><span class="n">posterior</span>
-            <span class="k">elif</span> <span class="n">function_name</span> <span class="o">==</span> <span class="s">&#39;superior_of&#39;</span><span class="p">:</span>
-                <span class="n">fibers</span> <span class="o">=</span> <span class="n">endpoints</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">bounding_box</span><span class="o">.</span><span class="n">superior</span>
-            <span class="k">elif</span> <span class="n">function_name</span> <span class="o">==</span> <span class="s">&#39;inferior_of&#39;</span><span class="p">:</span>
-                <span class="n">fibers</span> <span class="o">=</span> <span class="n">endpoints</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">bounding_box</span><span class="o">.</span><span class="n">inferior</span>
-            <span class="k">elif</span> <span class="n">function_name</span> <span class="o">==</span> <span class="s">&#39;medial_of&#39;</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">side</span> <span class="o">==</span> <span class="s">&#39;left&#39;</span><span class="p">:</span>
-                    <span class="n">fibers</span> <span class="o">=</span> <span class="n">endpoints</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">bounding_box</span><span class="o">.</span><span class="n">right</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">fibers</span> <span class="o">=</span> <span class="n">endpoints</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">bounding_box</span><span class="o">.</span><span class="n">left</span>
-            <span class="k">elif</span> <span class="n">function_name</span> <span class="o">==</span> <span class="s">&#39;lateral_of&#39;</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">side</span> <span class="o">==</span> <span class="s">&#39;left&#39;</span><span class="p">:</span>
-                    <span class="n">fibers</span> <span class="o">=</span> <span class="n">endpoints</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">bounding_box</span><span class="o">.</span><span class="n">right</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">fibers</span> <span class="o">=</span> <span class="n">endpoints</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">bounding_box</span><span class="o">.</span><span class="n">left</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">function_name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;_of&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
 
-            <span class="n">fibers</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">fibers</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">tract_bounding_box_coordinate</span> <span class="o">=</span>\
+            <span class="bp">self</span><span class="o">.</span><span class="n">tractography_spatial_indexing</span><span class="o">.</span><span class="n">tract_bounding_boxes</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+
+        <span class="n">tract_endpoints_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tractography_spatial_indexing</span><span class="o">.</span><span class="n">tract_endpoints_pos</span>
+
+        <span class="n">bounding_box_coordinate</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">bounding_box</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;anterior&#39;</span><span class="p">,</span> <span class="s">&#39;inferior&#39;</span><span class="p">)</span> <span class="ow">or</span>
+            <span class="n">name</span> <span class="o">==</span> <span class="s">&#39;medial&#39;</span> <span class="ow">and</span> <span class="n">side</span> <span class="o">==</span> <span class="s">&#39;left&#39;</span> <span class="ow">or</span>
+            <span class="n">name</span> <span class="o">==</span> <span class="s">&#39;lateral&#39;</span> <span class="ow">and</span> <span class="n">side</span> <span class="o">==</span> <span class="s">&#39;right&#39;</span>
+        <span class="p">):</span>
+            <span class="n">operator</span> <span class="o">=</span> <span class="n">gt</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">operator</span> <span class="o">=</span> <span class="n">lt</span>
+
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;left&#39;</span><span class="p">,</span> <span class="s">&#39;right&#39;</span><span class="p">):</span>
+            <span class="n">column</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">elif</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;anterior&#39;</span><span class="p">,</span> <span class="s">&#39;posterior&#39;</span><span class="p">):</span>
+            <span class="n">column</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">elif</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;superior&#39;</span><span class="p">,</span> <span class="s">&#39;inferior&#39;</span><span class="p">):</span>
+            <span class="n">column</span> <span class="o">=</span> <span class="mi">2</span>
+
+        <span class="n">tracts</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span>
+            <span class="n">operator</span><span class="p">(</span><span class="n">tract_bounding_box_coordinate</span><span class="p">,</span> <span class="n">bounding_box_coordinate</span><span class="p">)</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="n">endpoints</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">((</span>
+            <span class="nb">set</span><span class="p">(</span>
+                <span class="n">operator</span><span class="p">(</span>
+                    <span class="n">tract_endpoints_pos</span><span class="p">[:,</span> <span class="n">i</span><span class="p">,</span> <span class="n">column</span><span class="p">],</span>
+                    <span class="n">bounding_box_coordinate</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="p">))</span>
 
         <span class="n">labels</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="nb">tuple</span><span class="p">((</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">tractography_spatial_indexing</span><span class="o">.</span><span class="n">crossing_tracts_labels</span><span class="p">[</span><span class="n">fiber</span><span class="p">]</span> <span class="k">for</span> <span class="n">fiber</span> <span class="ow">in</span> <span class="n">fibers</span><span class="p">)))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tractography_spatial_indexing</span><span class="o">.</span><span class="n">crossing_tracts_labels</span><span class="p">[</span><span class="n">tract</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">tract</span> <span class="ow">in</span> <span class="n">tracts</span>
+        <span class="p">)))</span>
 
-        <span class="k">return</span> <span class="n">FiberQueryInfo</span><span class="p">(</span><span class="n">fibers</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">FiberQueryInfo</span><span class="p">(</span><span class="n">tracts</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">endpoints</span><span class="p">)</span>
 </div>
 <div class="viewcode-block" id="EvaluateQueries.visit_Assign"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.EvaluateQueries.visit_Assign">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Assign</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">targets</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
@@ -594,19 +626,23 @@
 </div>
 <div class="viewcode-block" id="EvaluateQueries.visit_Num"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.EvaluateQueries.visit_Num">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Num</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tractography_spatial_indexing</span><span class="o">.</span><span class="n">crossing_labels_tracts</span><span class="p">:</span>
-            <span class="n">fibers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tractography_spatial_indexing</span><span class="o">.</span><span class="n">crossing_labels_tracts</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">n</span><span class="p">]</span>
-            <span class="c">#endpoints = (</span>
-            <span class="c">#    self.ending_labels_fibers[node.n],</span>
-            <span class="c">#    self.ending_labels_fibers[node.n]</span>
-            <span class="c">#)</span>
+            <span class="n">tracts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tractography_spatial_indexing</span><span class="o">.</span><span class="n">crossing_labels_tracts</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">n</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">fibers</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-            <span class="c">#endpoints = (set(), set())</span>
+            <span class="n">tracts</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 
-        <span class="n">fiber_info</span> <span class="o">=</span> <span class="n">FiberQueryInfo</span><span class="p">(</span><span class="n">fibers</span><span class="p">,</span> <span class="nb">set</span><span class="p">((</span><span class="n">node</span><span class="o">.</span><span class="n">n</span><span class="p">,)))</span>
-        <span class="c">#endpoint_info = EndpointQueryInfo(endpoints, (set((node.n)), set((node.n))))</span>
+        <span class="n">endpoints</span> <span class="o">=</span> <span class="p">(</span><span class="nb">set</span><span class="p">(),</span> <span class="nb">set</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">elt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tractography_spatial_indexing</span><span class="o">.</span><span class="n">ending_labels_tracts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">n</span> <span class="ow">in</span> <span class="n">elt</span><span class="p">:</span>
+                <span class="n">endpoints</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">elt</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">n</span><span class="p">])</span>
 
-        <span class="k">return</span> <span class="n">fiber_info</span>  <span class="c"># , endpoint_info</span>
+        <span class="n">labelset</span> <span class="o">=</span> <span class="nb">set</span><span class="p">((</span><span class="n">node</span><span class="o">.</span><span class="n">n</span><span class="p">,))</span>
+        <span class="n">tract_info</span> <span class="o">=</span> <span class="n">FiberQueryInfo</span><span class="p">(</span>
+            <span class="n">tracts</span><span class="p">,</span> <span class="n">labelset</span><span class="p">,</span>
+            <span class="n">endpoints</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">tract_info</span>
 </div>
 <div class="viewcode-block" id="EvaluateQueries.visit_Expr"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.EvaluateQueries.visit_Expr">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Expr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">):</span>
@@ -652,16 +688,16 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">aux_body</span><span class="p">)</span>
 
 </div></div>
-<div class="viewcode-block" id="TractQuerierSyntaxError"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.TractQuerierSyntaxError">[docs]</a><span class="k">class</span> <span class="nc">TractQuerierSyntaxError</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">TractQuerierSyntaxError</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
 
     <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
 
-</div>
-<div class="viewcode-block" id="RewriteChangeNotInPrescedence"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.RewriteChangeNotInPrescedence">[docs]</a><span class="k">class</span> <span class="nc">RewriteChangeNotInPrescedence</span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">NodeTransformer</span><span class="p">):</span>
-<div class="viewcode-block" id="RewriteChangeNotInPrescedence.visit_BoolOp"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.RewriteChangeNotInPrescedence.visit_BoolOp">[docs]</a>    <span class="k">def</span> <span class="nf">visit_BoolOp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+
+<span class="k">class</span> <span class="nc">RewriteChangeNotInPrescedence</span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">NodeTransformer</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">visit_BoolOp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
         <span class="n">predicate</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">value</span><span class="p">:</span> <span class="ow">not</span> <span class="p">(</span>
             <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Compare</span><span class="p">)</span> <span class="ow">and</span>
             <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">ops</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ast</span><span class="o">.</span><span class="n">NotIn</span><span class="p">)</span>
@@ -713,8 +749,8 @@
                 <span class="n">node</span>
             <span class="p">))</span>
 
-</div></div>
-<div class="viewcode-block" id="RewritePreprocess"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.RewritePreprocess">[docs]</a><span class="k">class</span> <span class="nc">RewritePreprocess</span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">NodeTransformer</span><span class="p">):</span>
+
+<span class="k">class</span> <span class="nc">RewritePreprocess</span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">NodeTransformer</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">if</span> <span class="s">&#39;include_folders&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">include_folders</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;include_folders&#39;</span><span class="p">]</span>
@@ -724,7 +760,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">include_folders</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;.&#39;</span><span class="p">]</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">RewritePreprocess</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-<div class="viewcode-block" id="RewritePreprocess.visit_Attribute"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.RewritePreprocess.visit_Attribute">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">visit_Attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">ast</span><span class="o">.</span><span class="n">copy_location</span><span class="p">(</span>
             <span class="n">ast</span><span class="o">.</span><span class="n">Attribute</span><span class="p">(</span>
                 <span class="n">value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">),</span>
@@ -732,20 +768,20 @@
             <span class="p">),</span>
             <span class="n">node</span>
         <span class="p">)</span>
-</div>
-<div class="viewcode-block" id="RewritePreprocess.visit_Name"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.RewritePreprocess.visit_Name">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">visit_Name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">ast</span><span class="o">.</span><span class="n">copy_location</span><span class="p">(</span>
             <span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">lower</span><span class="p">()),</span>
             <span class="n">node</span>
         <span class="p">)</span>
-</div>
-<div class="viewcode-block" id="RewritePreprocess.visit_Str"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.RewritePreprocess.visit_Str">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Str</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">visit_Str</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">ast</span><span class="o">.</span><span class="n">copy_location</span><span class="p">(</span>
             <span class="n">ast</span><span class="o">.</span><span class="n">Str</span><span class="p">(</span><span class="n">s</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">s</span><span class="o">.</span><span class="n">lower</span><span class="p">()),</span>
             <span class="n">node</span>
         <span class="p">)</span>
-</div>
-<div class="viewcode-block" id="RewritePreprocess.visit_Import"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.RewritePreprocess.visit_Import">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Import</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">visit_Import</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">module_names</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">for</span> <span class="n">module_name</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
@@ -787,7 +823,7 @@
             <span class="n">node</span>
         <span class="p">)</span>
 
-</div></div>
+
 <div class="viewcode-block" id="queries_preprocess"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.queries_preprocess">[docs]</a><span class="k">def</span> <span class="nf">queries_preprocess</span><span class="p">(</span><span class="n">query_file</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="s">&#39;&lt;unknown&gt;&#39;</span><span class="p">,</span> <span class="n">include_folders</span><span class="o">=</span><span class="p">[]):</span>
 
     <span class="k">try</span><span class="p">:</span>
@@ -819,19 +855,16 @@
 </div>
 <div class="viewcode-block" id="eval_queries"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.eval_queries">[docs]</a><span class="k">def</span> <span class="nf">eval_queries</span><span class="p">(</span>
     <span class="n">query_file_body</span><span class="p">,</span>
-    <span class="n">tractography_spatial_indexing</span><span class="p">,</span>
-    <span class="n">fibers_endpoints_pos</span><span class="o">=</span><span class="p">([],</span> <span class="p">[]),</span>
+    <span class="n">tractography_spatial_indexing</span>
 <span class="p">):</span>
-    <span class="n">eq</span> <span class="o">=</span> <span class="n">EvaluateQueries</span><span class="p">(</span>
-        <span class="n">tractography_spatial_indexing</span><span class="p">,</span>
-        <span class="n">fibers_endpoints_pos</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="n">eq</span> <span class="o">=</span> <span class="n">EvaluateQueries</span><span class="p">(</span><span class="n">tractography_spatial_indexing</span><span class="p">)</span>
+
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">query_file_body</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
         <span class="n">eq</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">Module</span><span class="p">(</span><span class="n">query_file_body</span><span class="p">))</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">eq</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">query_file_body</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">key</span><span class="p">,</span> <span class="n">eq</span><span class="o">.</span><span class="n">evaluated_queries_info</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">fibers</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">eq</span><span class="o">.</span><span class="n">queries_to_save</span><span class="p">])</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">key</span><span class="p">,</span> <span class="n">eq</span><span class="o">.</span><span class="n">evaluated_queries_info</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">tracts</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">eq</span><span class="o">.</span><span class="n">queries_to_save</span><span class="p">])</span>
 
 </div>
 <div class="viewcode-block" id="queries_syntax_check"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.queries_syntax_check">[docs]</a><span class="k">def</span> <span class="nf">queries_syntax_check</span><span class="p">(</span><span class="n">query_file_body</span><span class="p">):</span>
@@ -839,23 +872,23 @@
         <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">crossing_tracts_labels</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">crossing_labels_tracts</span> <span class="o">=</span> <span class="p">{}</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">ending_tract_labels</span> <span class="o">=</span> <span class="p">{}</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">ending_labels_tracts</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ending_tracts_labels</span> <span class="o">=</span> <span class="p">({},</span> <span class="p">{})</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ending_labels_tracts</span> <span class="o">=</span> <span class="p">({},</span> <span class="p">{})</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">label_bounding_boxes</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">tract_bounding_boxes</span> <span class="o">=</span> <span class="p">{}</span>
 
     <span class="n">eval_queries</span><span class="p">(</span><span class="n">query_file_body</span><span class="p">,</span> <span class="n">DummySpatialIndexing</span><span class="p">())</span>
 
 </div>
-<div class="viewcode-block" id="labels_for_fibers"><a class="viewcode-back" href="../../generated/tract_querier.query_processor.html#tract_querier.query_processor.labels_for_fibers">[docs]</a><span class="k">def</span> <span class="nf">labels_for_fibers</span><span class="p">(</span><span class="n">crossing_fibers_labels</span><span class="p">):</span>
-    <span class="n">crossing_labels_fibers</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">crossing_fibers_labels</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+<span class="k">def</span> <span class="nf">labels_for_tracts</span><span class="p">(</span><span class="n">crossing_tracts_labels</span><span class="p">):</span>
+    <span class="n">crossing_labels_tracts</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">crossing_tracts_labels</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">crossing_labels_fibers</span><span class="p">:</span>
-                <span class="n">crossing_labels_fibers</span><span class="p">[</span><span class="n">l</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">crossing_labels_tracts</span><span class="p">:</span>
+                <span class="n">crossing_labels_tracts</span><span class="p">[</span><span class="n">l</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">crossing_labels_fibers</span><span class="p">[</span><span class="n">l</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">((</span><span class="n">i</span><span class="p">,))</span>
-    <span class="k">return</span> <span class="n">crossing_labels_fibers</span></div>
+                <span class="n">crossing_labels_tracts</span><span class="p">[</span><span class="n">l</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">((</span><span class="n">i</span><span class="p">,))</span>
+    <span class="k">return</span> <span class="n">crossing_labels_tracts</span>
 </pre></div>
 
           </div>

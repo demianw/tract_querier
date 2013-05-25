@@ -142,12 +142,11 @@
 <span class="n">middle_frontal_gyrus</span><span class="o">.</span><span class="n">side</span> <span class="o">|=</span> <span class="n">caudalmiddlefrontal</span><span class="o">.</span><span class="n">side</span> <span class="ow">or</span> <span class="n">rostralmiddlefrontal</span><span class="o">.</span><span class="n">side</span> 
 
 
-
 <span class="c">#Define bi-laterally the uncinate-fasciculus</span>
 <span class="n">uncinate</span><span class="o">.</span><span class="n">side</span> <span class="o">=</span>  <span class="p">(</span>
   <span class="kp">endpoints_in</span><span class="p">(</span><span class="n">temporal_anterior_section</span><span class="o">.</span><span class="n">side</span><span class="p">)</span> <span class="ow">and</span> 
   <span class="n">insula</span><span class="o">.</span><span class="n">side</span> <span class="ow">and</span>
-  <span class="kp">endpoints_in</span><span class="p">(</span>
+  <span class="p">(</span>
     <span class="n">inferior_frontal_gyrus</span><span class="o">.</span><span class="n">side</span> <span class="ow">or</span>
     <span class="n">middle_frontal_gyrus</span><span class="o">.</span><span class="n">side</span> <span class="ow">or</span>
     <span class="n">orbito_frontal_gyrus</span><span class="o">.</span><span class="n">side</span>

@@ -81,8 +81,14 @@
 <tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">tract_querier.query_processor.DocStringInheritor</span></tt></td>
 <td>A variation on</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="#tract_querier.query_processor.EvaluateQueries" title="tract_querier.query_processor.EvaluateQueries"><tt class="xref py py-obj docutils literal"><span class="pre">tract_querier.query_processor.EvaluateQueries</span></tt></a></td>
+<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">tract_querier.query_processor.EndpointQueryInfo</span></tt>([...])</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#tract_querier.query_processor.EvaluateQueries" title="tract_querier.query_processor.EvaluateQueries"><tt class="xref py py-obj docutils literal"><span class="pre">tract_querier.query_processor.EvaluateQueries</span></tt></a></td>
 <td>This class implements the parser to process</td>
+</tr>
+<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">tract_querier.query_processor.FiberQueryInfo</span></tt>([...])</td>
+<td>Information about a processed query   ..</td>
 </tr>
 <tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">tract_querier.query_processor.RewriteChangeNotInPrescedence</span></tt></td>
 <td></td>
@@ -108,8 +114,14 @@
 <tr class="row-even"><td><a class="reference internal" href="#tract_querier.query_processor.eval_queries" title="tract_querier.query_processor.eval_queries"><tt class="xref py py-obj docutils literal"><span class="pre">tract_querier.query_processor.eval_queries</span></tt></a>(...)</td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">tract_querier.query_processor.labels_for_fibers</span></tt>(...)</td>
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">tract_querier.query_processor.gt</span></tt></td>
+<td>gt(a, b) &#8211; Same as a&gt;b.</td>
+</tr>
+<tr class="row-even"><td><tt class="xref py py-obj docutils literal"><span class="pre">tract_querier.query_processor.labels_for_tracts</span></tt>(...)</td>
 <td></td>
+</tr>
+<tr class="row-odd"><td><tt class="xref py py-obj docutils literal"><span class="pre">tract_querier.query_processor.lt</span></tt></td>
+<td>lt(a, b) &#8211; Same as a&lt;b.</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#tract_querier.query_processor.queries_preprocess" title="tract_querier.query_processor.queries_preprocess"><tt class="xref py py-obj docutils literal"><span class="pre">tract_querier.query_processor.queries_preprocess</span></tt></a>(...)</td>
 <td></td>
@@ -147,15 +159,15 @@ python language.</p>
 <tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>node</strong> : ast.Node</p>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>fibers</strong> : set</p>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>tracts</strong> : set</p>
 <blockquote>
-<div><p>numbers of the fibers that result of this
+<div><p>numbers of the tracts that result of this
 query</p>
 </div></blockquote>
 <p><strong>labels</strong> : set</p>
 <blockquote class="last">
 <div><p>numbers of the labels that are traversed by
-the fibers resulting from this query</p>
+the tracts resulting from this query</p>
 </div></blockquote>
 </td>
 </tr>
@@ -289,16 +301,16 @@ the fibers resulting from this query</p>
 </div></blockquote>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>fibers, labels</strong> :</p>
-<p><strong>fibers</strong> :  set</p>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>tracts, labels</strong> :</p>
+<p><strong>tracts</strong> :  set</p>
 <blockquote>
-<div><p>Numbers of the fibers that result of this
+<div><p>Numbers of the tracts that result of this
 query</p>
 </div></blockquote>
 <p><strong>labels</strong> :  set</p>
 <blockquote class="last">
 <div><p>Numbers of the labels that are traversed by
-the fibers resulting from this query</p>
+the tracts resulting from this query</p>
 </div></blockquote>
 </td>
 </tr>

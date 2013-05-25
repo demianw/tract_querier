@@ -9,7 +9,9 @@ tract_querier.query_processor
   :template: class.rst
   
     tract_querier.query_processor.DocStringInheritor
+    tract_querier.query_processor.EndpointQueryInfo
     tract_querier.query_processor.EvaluateQueries
+    tract_querier.query_processor.FiberQueryInfo
     tract_querier.query_processor.RewriteChangeNotInPrescedence
     tract_querier.query_processor.RewritePreprocess
     tract_querier.query_processor.takewhile
@@ -24,7 +26,9 @@ tract_querier.query_processor
   
     tract_querier.query_processor.deepcopy
     tract_querier.query_processor.eval_queries
-    tract_querier.query_processor.labels_for_fibers
+    tract_querier.query_processor.gt
+    tract_querier.query_processor.labels_for_tracts
+    tract_querier.query_processor.lt
     tract_querier.query_processor.queries_preprocess
     tract_querier.query_processor.queries_syntax_check
 

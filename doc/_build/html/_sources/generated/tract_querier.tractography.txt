@@ -19,7 +19,7 @@ tract_querier.tractography
 .. autosummary::
   
     tract_querier.tractography.tractography_from_vtk_files
-    tract_querier.tractography.tractography_to_vtkPolyData
+    tract_querier.tractography.tractography_to_vtk_file
 
 
 

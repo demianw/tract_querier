@@ -19,4 +19,4 @@ tract_querier Package
 
   query_processor
   tractography
-  fiber_label_indices
+  tract_label_indices
