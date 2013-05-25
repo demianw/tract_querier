@@ -16,12 +16,21 @@ fiber_in_label_0_uniquely = labels_fibers[0].difference(fibers_in_all_but_0)
 
 
 class DummySpatialIndexing:
-    def __init__(self, crossing_tracts_labels, crossing_labels_tracts):
+    def __init__(
+        self,
+        crossing_tracts_labels, crossing_labels_tracts,
+        ending_tracts_labels, ending_labels_tracts,
+        label_bounding_boxes, tract_bounding_boxes
+    ):
         self.crossing_tracts_labels = crossing_tracts_labels
         self.crossing_labels_tracts = crossing_labels_tracts
+        self.ending_tracts_labels = ending_tracts_labels
+        self.ending_labels_tracts = ending_labels_tracts
+        self.label_bounding_boxes = label_bounding_boxes
+        self.tract_bounding_boxes = tract_bounding_boxes
 
-dummy_spatial_indexing = DummySpatialIndexing(fibers_labels, labels_fibers)
-empty_spatial_indexing = DummySpatialIndexing({}, {})
+dummy_spatial_indexing = DummySpatialIndexing(fibers_labels, labels_fibers, ({}, {}), ({}, {}), {}, {})
+empty_spatial_indexing = DummySpatialIndexing({}, {}, ({}, {}), ({}, {}), {}, {})
 
 
 def test_assign():
