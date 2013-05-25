@@ -46,7 +46,6 @@
   <h3><a href="#">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Welcome to WMQL&#8217;s documentation!</a><ul>
-<li><a class="reference internal" href="#wmql-language-definition">WMQL Language Definition</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
@@ -86,39 +85,6 @@
 <div class="toctree-wrapper compound">
 <ul class="simple">
 </ul>
-</div>
-<div class="section" id="wmql-language-definition">
-<h2>WMQL Language Definition<a class="headerlink" href="#wmql-language-definition" title="Permalink to this headline">¶</a></h2>
-<p>Backus–Naur Form of WMQL</p>
-<div class="highlight-python"><pre>      &lt;WMQL Query&gt; ::= &lt;module import&gt; | &lt;assignment&gt;
-   &lt;module import&gt; ::= "import" &lt;string&gt;
-      &lt;assignment&gt; ::= &lt;identifier&gt; "=" &lt;expression&gt;
-      &lt;expression&gt; ::= &lt;literal&gt;
-                    |  &lt;expression&gt; &lt;binary operator&gt; &lt;expression&gt;
-                    |  &lt;unary_operator&gt; &lt;expression&gt;
-                    |  "("&lt;expression")"
-                    |  &lt;function name&gt;"("&lt;expression")"
-&lt;binary operator&gt; ::= "or"
-                    |  "and"
-                    |  "not in"
-  &lt;unary operator&gt; ::= "not"
-   &lt;function name&gt; ::= "anterior_of"
-                    |  "posterior_of"
-                    |  "superior_of"
-                    |  "inferior_of"
-                    |  "lateral_of"
-                    |  "medial_of"
-                    |  "endpoints_in"
-         &lt;literal&gt; ::= &lt;identifier&gt; | &lt;number&gt;
-      &lt;identifier&gt; ::= &lt;string&gt;
-                    |  &lt;string&gt;"."&lt;hemisphere&gt;
-      &lt;hemisphere&gt; ::= "left"
-                    |  "right"
-                    |  "side"
-                    |  "opposite"
-          &lt;string&gt; ::= [a-zA-Z][a-zA-Z0-9_]*
-         &lt;number&gt;  ::= [0-9]+</pre>
-</div>
 </div>
 </div>
 <div class="section" id="indices-and-tables">

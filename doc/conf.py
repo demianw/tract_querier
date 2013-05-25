@@ -33,12 +33,13 @@ sys.path.insert(1, sourcepath)
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = [#'gen_rst',
-              'sphinx.ext.autodoc', 'sphinx.ext.autosummary',
-              'sphinx.ext.pngmath', 'numpydoc',
-              'sphinx.ext.todo', 'sphinx.ext.viewcode',
-              'sphinx.ext.inheritance_diagram'
-              ]
+extensions = [
+    #'gen_rst',
+    'sphinx.ext.autodoc', 'sphinx.ext.autosummary',
+    'sphinx.ext.pngmath', 'numpydoc',
+    'sphinx.ext.todo', 'sphinx.ext.viewcode',
+    'sphinx.ext.inheritance_diagram'
+]
 
 autosummary_generate = True
 
