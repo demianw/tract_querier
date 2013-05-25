@@ -101,7 +101,7 @@ def scalars(tractography):
         print k, ' '
 
 
-@tract_math_operation(': calculates mean and std of fiber length')
+@tract_math_operation(': calculates mean and std of tract length')
 def length_mean_std(tractography):
     lengths = numpy.empty(len(tractography.tracts()))
 
@@ -227,7 +227,7 @@ def tract_subsample(tractography, points_per_tract, tractography_file_output):
 
 
 @tract_math_operation('<mm per tract> <tractography_file_output>: subsamples tracts to a maximum number of points')
-def tract_remove_short_fibers(tractography, min_tract_length, tractography_file_output):
+def tract_remove_short_tracts(tractography, min_tract_length, tractography_file_output):
 
     min_tract_length = float(min_tract_length)
 
@@ -257,19 +257,19 @@ def tract_remove_short_fibers(tractography, min_tract_length, tractography_file_
 
 @tract_math_operation('<thickness> <subsampling> <tractography1.vtk> ... <tractographyN.vtk>: measures the volume overlap of one tract with others')
 def tract_tensor_similarity(tractography, thickness, subsampling, *tracts):
-    from tract_querier.tensor_covariance import fiberSegments
+    from tract_querier.tensor_covariance import tractSegments
     thickness = float(thickness)
     subsampling = int(subsampling)
 
     tractography.subsample_tracts(subsampling)
-    t_gp = [fiberSegments.FiberSegmentGaussianProcess(t, thickness) for t in tractography.tracts() if len(t) > 2]
-    bundle = fiberSegments.FiberBundleSegmentGaussianProcess(t_gp)
+    t_gp = [tractSegments.FiberSegmentGaussianProcess(t, thickness) for t in tractography.tracts() if len(t) > 2]
+    bundle = tractSegments.FiberBundleSegmentGaussianProcess(t_gp)
     bundle_norm = bundle * bundle
     for tract in tracts:
         tract = tractography_from_vtk_files(tract)
         tract.subsample_tracts(subsampling)
-        t_gp1 = [fiberSegments.FiberSegmentGaussianProcess(t, thickness) for t in tract.tracts() if len(t) > 2]
-        bundle1 = fiberSegments.FiberBundleSegmentGaussianProcess(t_gp1)
+        t_gp1 = [tractSegments.FiberSegmentGaussianProcess(t, thickness) for t in tract.tracts() if len(t) > 2]
+        bundle1 = tractSegments.FiberBundleSegmentGaussianProcess(t_gp1)
         print (bundle * bundle1) / numpy.sqrt(bundle_norm * (bundle1 * bundle1))
 
 

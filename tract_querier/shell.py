@@ -34,7 +34,7 @@ class SaveQueries(ast.NodeVisitor):
                 query_name = target.id.lower()
                 self.save_query_callback(
                     query_name,
-                    self.querier.evaluated_queries_info[query_name].fibers
+                    self.querier.evaluated_queries_info[query_name].tracts
                 )
             elif (
                 isinstance(target, ast.Attribute) and
@@ -49,7 +49,7 @@ class SaveQueries(ast.NodeVisitor):
             query_name = node.value.id.lower()
             self.save_query_callback(
                 query_name,
-                self.querier.evaluated_queries_info[query_name].fibers
+                self.querier.evaluated_queries_info[query_name].tracts
             )
         elif (
             isinstance(value, ast.Attribute) and
@@ -69,7 +69,7 @@ class SaveQueries(ast.NodeVisitor):
                     query_name,
                     self.querier.evaluated_queries_info[
                         query_name
-                    ]
+                    ].tracts
                 )
         else:
             query_name = query_prefix + '.' + query_suffix
@@ -77,7 +77,7 @@ class SaveQueries(ast.NodeVisitor):
                 query_name,
                 self.querier.evaluated_queries_info[
                     query_name
-                ]
+                ].tracts
             )
 
     def visit_Module(self, node):

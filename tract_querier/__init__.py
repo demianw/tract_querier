@@ -1,6 +1,6 @@
 from query_processor import *
 from bundle_outlier_treatment import *
-from fiber_label_indices import *
+from tract_label_indices import *
 from shell import *
 import tractography
 #import tract_metrics

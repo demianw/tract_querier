@@ -422,21 +422,21 @@ def tractography_from_vtkPolyData(polydata):
     tractography = Tractography()
 
     tractography._originalFibers = []
-    tractography._fiberData = {}
+    tractography._tractData = {}
     tractography._originalLines = []
     tractography._originalData = {}
-    tractography._fibers = []
+    tractography._tracts = []
 
     lines, lines_ids, point_data = vtkPolyData_to_lines(polydata)
 
-    tractography._fibers = lines
-    tractography._fiberData = point_data
+    tractography._tracts = lines
+    tractography._tractData = point_data
 
     tractography._originalFibers = np.vstack(lines)
     tractography._originalLines = lines_ids
     tractography._originalData = dict((
         (key, np.vstack(value))
-        for key, value in tractography._fiberData
+        for key, value in tractography._tractData
     ))
 
 __header__ = """

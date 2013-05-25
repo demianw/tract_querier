@@ -31,15 +31,15 @@ class FiberQueryInfo(object):
 
     Attribute
     ---------
-        fibers : set
-            set of fiber indices resulting from the query
+        tracts : set
+            set of tract indices resulting from the query
         labels : set
             set of labels resulting by the query
         tracts_endpoints : (set, set)
             sets of labels of where the tract endpoints are
     """
-    def __init__(self, fibers=set(), labels=set(), tracts_endpoints=(set(), set())):
-        self.fibers = fibers
+    def __init__(self, tracts=set(), labels=set(), tracts_endpoints=(set(), set())):
+        self.tracts = tracts
         self.labels = labels
         self.tracts_endpoints = tracts_endpoints
 
@@ -54,14 +54,14 @@ class FiberQueryInfo(object):
 
     def copy(self):
         return FiberQueryInfo(
-            self.fibers.copy(), self.labels.copy(),
+            self.tracts.copy(), self.labels.copy(),
             (self.tracts_endpoints[0].copy(), self.tracts_endpoints[1].copy()),
 #            (self.labels_endpoints[0].copy(), self.labels_endpoints[1].copy()),
         )
 
     def set_operation(self, name):
-        def operation(fiber_query_info):
-            fibers_op = getattr(self.fibers, name)
+        def operation(tract_query_info):
+            tracts_op = getattr(self.tracts, name)
             if name == 'intersection':
                 name_labels = 'union'
             elif name == 'intersection_update':
@@ -70,24 +70,24 @@ class FiberQueryInfo(object):
                 name_labels = name
             labels_op = getattr(self.labels, name_labels)
 
-            new_fibers = fibers_op(fiber_query_info.fibers)
-            new_labels = labels_op(fiber_query_info.labels)
+            new_tracts = tracts_op(tract_query_info.tracts)
+            new_labels = labels_op(tract_query_info.labels)
 
             new_tracts_endpoints = (
-                getattr(self.tracts_endpoints[0], name)(fiber_query_info.tracts_endpoints[0]),
-                getattr(self.tracts_endpoints[1], name)(fiber_query_info.tracts_endpoints[1])
+                getattr(self.tracts_endpoints[0], name)(tract_query_info.tracts_endpoints[0]),
+                getattr(self.tracts_endpoints[1], name)(tract_query_info.tracts_endpoints[1])
             )
 
 #            new_labels_endpoints = (
-#                getattr(self.labels_endpoints[0], name_labels)(fiber_query_info.labels_endpoints[0]),
-#                getattr(self.labels_endpoints[1], name_labels)(fiber_query_info.labels_endpoints[1])
+#                getattr(self.labels_endpoints[0], name_labels)(tract_query_info.labels_endpoints[0]),
+#                getattr(self.labels_endpoints[1], name_labels)(tract_query_info.labels_endpoints[1])
 #            )
 
             if name.endswith('update'):
                 return self
             else:
                 return FiberQueryInfo(
-                    new_fibers, new_labels,
+                    new_tracts, new_labels,
                     new_tracts_endpoints,
                 )
 
@@ -97,11 +97,11 @@ class FiberQueryInfo(object):
 class EndpointQueryInfo:
     def __init__(
         self,
-        endpoint_fibers=(set(), set()),
+        endpoint_tracts=(set(), set()),
         endpoint_labels=(set(), set()),
         endpoint_points=(set(), set())
     ):
-        self.endpoint_fibers = endpoint_fibers
+        self.endpoint_tracts = endpoint_tracts
         self.endpoint_labels = endpoint_labels
         self.endpoint_points = endpoint_points
 
@@ -117,9 +117,9 @@ class EndpointQueryInfo:
     def set_operation(self, name):
         def operation(endpoint_query_info):
 
-            fibers_op = (
-                getattr(self.endpoint_fibers[0], name),
-                getattr(self.endpoint_fibers[1], name)
+            tracts_op = (
+                getattr(self.endpoint_tracts[0], name),
+                getattr(self.endpoint_tracts[1], name)
             )
             labels_op = (
                 getattr(self.endpoint_labels[0], name),
@@ -130,9 +130,9 @@ class EndpointQueryInfo:
                 getattr(self.endpoint_points[1], name)
             )
 
-            new_fibers = (
-                fibers_op[0](endpoint_query_info.endpoint_fibers[0]),
-                fibers_op[1](endpoint_query_info.endpoint_fibers[1])
+            new_tracts = (
+                tracts_op[0](endpoint_query_info.endpoint_tracts[0]),
+                tracts_op[1](endpoint_query_info.endpoint_tracts[1])
             )
 
             new_labels = (
@@ -148,7 +148,7 @@ class EndpointQueryInfo:
             if name.endswith('update'):
                 return self
             else:
-                return EndpointQueryInfo(new_fibers, new_labels, new_points)
+                return EndpointQueryInfo(new_tracts, new_labels, new_points)
         return operation
 
 
@@ -167,13 +167,13 @@ class EvaluateQueries(ast.NodeVisitor):
 
     Returns
     -------
-    fibers : set
-        numbers of the fibers that result of this
+    tracts : set
+        numbers of the tracts that result of this
         query
 
     labels : set
         numbers of the labels that are traversed by
-        the fibers resulting from this query
+        the tracts resulting from this query
 
     """
     __metaclass__ = DocStringInheritor
@@ -253,8 +253,8 @@ class EvaluateQueries(ast.NodeVisitor):
         if isinstance(node.op, ast.Invert):
             return FiberQueryInfo(
                 set(
-                    fiber for fiber in query_info.fibers
-                    if self.tractography_spatial_indexing.crossing_tracts_labels[fiber].issubset(query_info.labels)
+                    tract for tract in query_info.tracts
+                    if self.tractography_spatial_indexing.crossing_tracts_labels[tract].issubset(query_info.labels)
                 ),
                 query_info.labels
             )
@@ -263,11 +263,11 @@ class EvaluateQueries(ast.NodeVisitor):
         elif isinstance(node.op, ast.USub) or isinstance(node.op, ast.Not):
             all_labels = set(self.tractography_spatial_indexing.crossing_labels_tracts.keys())
             all_labels.difference_update(query_info.labels)
-            all_fibers = set().union(*tuple(
+            all_tracts = set().union(*tuple(
                 (self.tractography_spatial_indexing.crossing_labels_tracts[label] for label in all_labels)
             ))
 
-            new_info = FiberQueryInfo(all_fibers, all_labels)
+            new_info = FiberQueryInfo(all_tracts, all_labels)
             return new_info
         else:
             raise TractQuerierSyntaxError(
@@ -293,37 +293,37 @@ class EvaluateQueries(ast.NodeVisitor):
             if (node.func.id.lower() == 'only'):
                 query_info = self.visit(node.args[0])
 
-                only_fibers = set(
-                    fiber for fiber in query_info.fibers
-                    if self.tractography_spatial_indexing.crossing_tracts_labels[fiber].issubset(query_info.labels)
+                only_tracts = set(
+                    tract for tract in query_info.tracts
+                    if self.tractography_spatial_indexing.crossing_tracts_labels[tract].issubset(query_info.labels)
                 )
                 only_endpoints = tuple((
                     set(
-                        fiber for fiber in query_info.tracts_endpoints[i]
-                        if self.tractography_spatial_indexing.ending_tracts_labels[i][fiber] in query_info.labels
+                        tract for tract in query_info.tracts_endpoints[i]
+                        if self.tractography_spatial_indexing.ending_tracts_labels[i][tract] in query_info.labels
                     )
                     for i in (0, 1)
                 ))
                 return FiberQueryInfo(
-                    only_fibers,
+                    only_tracts,
                     query_info.labels,
                     only_endpoints
                 )
             elif (node.func.id.lower() == 'endpoints_in'):
                 query_info = self.visit(node.args[0])
-                new_fibers = query_info.tracts_endpoints[0].union(query_info.tracts_endpoints[1])
+                new_tracts = query_info.tracts_endpoints[0].union(query_info.tracts_endpoints[1])
 
-                #fibers = set().union(set(
-                #    fiber for fiber in query_info.fibers
+                #tracts = set().union(set(
+                #    tract for tract in query_info.tracts
                 #    if (
-                #        self.tractography_spatial_indexing.ending_tracts_labels[i][fiber] in query_info.labels
+                #        self.tractography_spatial_indexing.ending_tracts_labels[i][tract] in query_info.labels
                 #    )
                 #))
 
                 #labels = set().union(
-                #    *tuple((self.tractography_spatial_indexing.crossing_tracts_labels[fiber] for fiber in fibers))
+                #    *tuple((self.tractography_spatial_indexing.crossing_tracts_labels[tract] for tract in tracts))
                 #)
-                return FiberQueryInfo(new_fibers, query_info.labels, query_info.tracts_endpoints)
+                return FiberQueryInfo(new_tracts, query_info.labels, query_info.tracts_endpoints)
 
             elif (node.func.id.lower() == 'save' and isinstance(node.args, ast.Str)):
                 self.queries_to_save.add(node.args[0].s)
@@ -353,15 +353,15 @@ class EvaluateQueries(ast.NodeVisitor):
         Returns
         -------
 
-        fibers, labels
+        tracts, labels
 
-        fibers :  set
-            Numbers of the fibers that result of this
+        tracts :  set
+            Numbers of the tracts that result of this
             query
 
         labels :  set
             Numbers of the labels that are traversed by
-            the fibers resulting from this query
+            the tracts resulting from this query
         """
         if len(self.tractography_spatial_indexing.label_bounding_boxes) == 0:
             return FiberQueryInfo()
@@ -413,7 +413,7 @@ class EvaluateQueries(ast.NodeVisitor):
         elif name in ('superior', 'inferior'):
             column = 2
 
-        fibers = set(
+        tracts = set(
             operator(tract_bounding_box_coordinate, bounding_box_coordinate).nonzero()[0]
         )
 
@@ -428,11 +428,11 @@ class EvaluateQueries(ast.NodeVisitor):
         ))
 
         labels = set().union(*tuple((
-            self.tractography_spatial_indexing.crossing_tracts_labels[fiber]
-            for fiber in fibers
+            self.tractography_spatial_indexing.crossing_tracts_labels[tract]
+            for tract in tracts
         )))
 
-        return FiberQueryInfo(fibers, labels, endpoints)
+        return FiberQueryInfo(tracts, labels, endpoints)
 
     def visit_Assign(self, node):
         if len(node.targets) > 1:
@@ -557,9 +557,9 @@ class EvaluateQueries(ast.NodeVisitor):
 
     def visit_Num(self, node):
         if node.n in self.tractography_spatial_indexing.crossing_labels_tracts:
-            fibers = self.tractography_spatial_indexing.crossing_labels_tracts[node.n]
+            tracts = self.tractography_spatial_indexing.crossing_labels_tracts[node.n]
         else:
-            fibers = set()
+            tracts = set()
 
         endpoints = (set(), set())
         for i in (0, 1):
@@ -568,12 +568,12 @@ class EvaluateQueries(ast.NodeVisitor):
                 endpoints[i].update(elt[node.n])
 
         labelset = set((node.n,))
-        fiber_info = FiberQueryInfo(
-            fibers, labelset,
+        tract_info = FiberQueryInfo(
+            tracts, labelset,
             endpoints
         )
 
-        return fiber_info
+        return tract_info
 
     def visit_Expr(self, node):
         if isinstance(node.value, ast.Name):
@@ -795,7 +795,7 @@ def eval_queries(
     else:
         eq.visit(query_file_body)
 
-    return dict([(key, eq.evaluated_queries_info[key].fibers) for key in eq.queries_to_save])
+    return dict([(key, eq.evaluated_queries_info[key].tracts) for key in eq.queries_to_save])
 
 
 def queries_syntax_check(query_file_body):
@@ -811,12 +811,12 @@ def queries_syntax_check(query_file_body):
     eval_queries(query_file_body, DummySpatialIndexing())
 
 
-def labels_for_fibers(crossing_fibers_labels):
-    crossing_labels_fibers = {}
-    for i, f in crossing_fibers_labels.items():
+def labels_for_tracts(crossing_tracts_labels):
+    crossing_labels_tracts = {}
+    for i, f in crossing_tracts_labels.items():
         for l in f:
-            if l in crossing_labels_fibers:
-                crossing_labels_fibers[l].add(i)
+            if l in crossing_labels_tracts:
+                crossing_labels_tracts[l].add(i)
             else:
-                crossing_labels_fibers[l] = set((i,))
-    return crossing_labels_fibers
+                crossing_labels_tracts[l] = set((i,))
+    return crossing_labels_tracts
