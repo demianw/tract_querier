@@ -390,13 +390,6 @@ class EvaluateQueries(ast.NodeVisitor):
 
         name = function_name.replace('_of', '')
 
-        tract_bounding_box_coordinate =\
-            self.tractography_spatial_indexing.tract_bounding_boxes[name]
-
-        tract_endpoints_pos = self.tractography_spatial_indexing.tract_endpoints_pos
-
-        bounding_box_coordinate = getattr(bounding_box, name)
-
         if (
             name in ('anterior', 'inferior') or
             name == 'medial' and side == 'left' or
@@ -405,6 +398,24 @@ class EvaluateQueries(ast.NodeVisitor):
             operator = gt
         else:
             operator = lt
+
+        if name == 'medial':
+            if side == 'left':
+                name = 'right'
+            else:
+                name = 'left'
+        elif name == 'lateral':
+            if side == 'left':
+                name = 'left'
+            else:
+                name = 'right'
+
+        tract_bounding_box_coordinate =\
+            self.tractography_spatial_indexing.tract_bounding_boxes[name]
+
+        tract_endpoints_pos = self.tractography_spatial_indexing.tract_endpoints_pos
+
+        bounding_box_coordinate = getattr(bounding_box, name)
 
         if name in ('left', 'right'):
             column = 0
