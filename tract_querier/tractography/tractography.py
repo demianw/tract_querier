@@ -75,6 +75,8 @@ class Tractography:
 
                 if tracts_data is not None and hasattr(tracts_data, 'iteritems'):
                     for k, v in tracts_data.iteritems():
+                        if isinstance(v, str):
+                            continue
                         if len(v) != len(tracts):
                             raise ValueError(
                                 'Number of elements in attribute %s must '
@@ -97,6 +99,7 @@ class Tractography:
             if any(
                 self._tracts_data[k][0].shape[1] != v[0].shape[1]
                 for k, v in tracts_data.iteritems()
+                if not isinstance(v, str)
             ):
                 raise ValueError("Tract data to append not compatible")
 
