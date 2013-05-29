@@ -13,7 +13,7 @@ This is an implementation of the WMQL language presented in "On Describing Human
 
 Click here for :ref:`example_script`
 
-`Source code in GitHub <https://github.com/demianw/tract_querier>`_
+`Source code in GitHub <https://github.com/demianw/tract_querier>`_, and these are the :ref:`installation_instructions`
 
 This software is published under the following :ref:`license`
 
