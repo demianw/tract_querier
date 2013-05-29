@@ -245,24 +245,6 @@ def tract_remove_short_tracts(tractography, min_tract_length, tractography_file_
         tractography_file_output, selected_tracts, selected_data)
 
 
-@tract_math_operation('<thickness> <subsampling> <tractography1.vtk> ... <tractographyN.vtk>: measures the volume overlap of one tract with others')
-def tract_tensor_similarity(tractography, thickness, subsampling, *tracts):
-    from tract_querier.tensor_covariance import fiberSegments
-    thickness = float(thickness)
-    subsampling = int(subsampling)
-
-    tractography.subsample_tracts(subsampling)
-    t_gp = [fiberSegments.FiberSegmentGaussianProcess(t, thickness) for t in tractography.tracts_to_process() if len(t) > 2]
-    bundle = fiberSegments.FiberBundleSegmentGaussianProcess(t_gp)
-    bundle_norm = bundle * bundle
-    for tract in tracts:
-        tract = tractography_from_vtk_files(tract)
-        tract.subsample_tracts(subsampling)
-        t_gp1 = [fiberSegments.FiberSegmentGaussianProcess(t, thickness) for t in tract.tracts_to_process() if len(t) > 2]
-        bundle1 = fiberSegments.FiberBundleSegmentGaussianProcess(t_gp1)
-        print (bundle * bundle1) / numpy.sqrt(bundle_norm * (bundle1 * bundle1))
-
-
 @tract_math_operation('<image> <quantity_name> <tractography_file_output>: maps the values of an image to the tract points')
 def tract_map_image(tractography, image, quantity_name, tractography_file_output):
     from os import path
