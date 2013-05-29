@@ -1,4 +1,7 @@
 from .. import query_processor
+
+from nose.tools import assert_equal, assert_not_equal
+
 import ast
 
 import parser
@@ -42,10 +45,10 @@ def test_rewrite_notin_precedence():
     rw.visit(tree2_rw)
     rw.visit(tree3_rw)
 
-    assert(ast.dump(tree1) != ast.dump(tree2))
-    assert(ast.dump(tree2) == ast.dump(tree2_rw))
-    assert(ast.dump(tree1_rw) == ast.dump(tree2))
+    assert_not_equal(ast.dump(tree1), ast.dump(tree2))
+    assert_equal(ast.dump(tree2), ast.dump(tree2_rw))
+    assert_equal(ast.dump(tree1_rw), ast.dump(tree2))
 
-    assert(ast.dump(tree3) == ast.dump(tree3_rw))
+    assert_equal(ast.dump(tree3), ast.dump(tree3_rw))
 
-    assert(ast.dump(tree1) == ast.dump(tree3_rw))
+    assert_equal(ast.dump(tree1), ast.dump(tree3_rw))

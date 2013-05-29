@@ -1,4 +1,6 @@
 from .. import query_processor
+from nose.tools import assert_true, assert_equal
+
 from numpy import random
 import ast
 
@@ -36,7 +38,7 @@ empty_spatial_indexing = DummySpatialIndexing({}, {}, ({}, {}), ({}, {}), {}, {}
 def test_assign():
     query_evaluator = query_processor.EvaluateQueries(dummy_spatial_indexing)
     query_evaluator.visit(ast.parse("A=0"))
-    assert((
+    assert_true((
         'A' in query_evaluator.queries_to_save and
         query_evaluator.evaluated_queries_info['A'].tracts == labels_tracts[0] and
         query_evaluator.evaluated_queries_info['A'].labels == set((0,))
@@ -46,7 +48,7 @@ def test_assign():
 def test_assign_attr():
     query_evaluator = query_processor.EvaluateQueries(dummy_spatial_indexing)
     query_evaluator.visit(ast.parse("a.left=0"))
-    assert((
+    assert_true((
         'a.left' in query_evaluator.queries_to_save and
         query_evaluator.evaluated_queries_info['a.left'].tracts == labels_tracts[0] and
         query_evaluator.evaluated_queries_info['a.left'].labels == set((0,))
@@ -84,8 +86,8 @@ a.side = b.side or c.opposite
 
     query_evaluator.visit(ast.parse(query))
 
-    assert({k: v.labels for k, v in query_evaluator.evaluated_queries_info.iteritems()} == queries_labels)
-    assert({k: v.tracts for k, v in query_evaluator.evaluated_queries_info.iteritems()} == queries_tracts)
+    assert_equal({k: v.labels for k, v in query_evaluator.evaluated_queries_info.iteritems()}, queries_labels)
+    assert_equal({k: v.tracts for k, v in query_evaluator.evaluated_queries_info.iteritems()}, queries_tracts)
 
 
 def test_assign_str():
@@ -117,8 +119,8 @@ h = '*left'
 
     query_evaluator.visit(ast.parse(query))
 
-    assert({k: v.labels for k, v in query_evaluator.evaluated_queries_info.iteritems()} == queries_labels)
-    assert({k: v.tracts for k, v in query_evaluator.evaluated_queries_info.iteritems()} == queries_tracts)
+    assert_equal({k: v.labels for k, v in query_evaluator.evaluated_queries_info.iteritems()}, queries_labels)
+    assert_equal({k: v.tracts for k, v in query_evaluator.evaluated_queries_info.iteritems()}, queries_tracts)
 
 
 def test_for_list():
@@ -148,7 +150,7 @@ for i in [a,b,c,d,e]: i.right = i.left
 
     query_evaluator.visit(ast.parse(query))
 
-    assert({k: v.tracts for k, v in query_evaluator.evaluated_queries_info.iteritems()} == queries_tracts)
+    assert_equal({k: v.tracts for k, v in query_evaluator.evaluated_queries_info.iteritems()}, queries_tracts)
 
 
 def test_for_str():
@@ -178,13 +180,13 @@ for i in '*left': i.right = i
 
     query_evaluator.visit(ast.parse(query))
 
-    assert({k: v.tracts for k, v in query_evaluator.evaluated_queries_info.iteritems()} == queries_tracts)
+    assert_equal({k: v.tracts for k, v in query_evaluator.evaluated_queries_info.iteritems()}, queries_tracts)
 
 
 def test_add():
     query_evaluator = query_processor.EvaluateQueries(dummy_spatial_indexing)
     query_evaluator.visit(ast.parse("A=0+1"))
-    assert((
+    assert_true((
         'A' in query_evaluator.queries_to_save and
         query_evaluator.evaluated_queries_info['A'].tracts == labels_tracts[0].union(labels_tracts[1]) and
         query_evaluator.evaluated_queries_info['A'].labels == set((0, 1))
@@ -194,7 +196,7 @@ def test_add():
 def test_mult():
     query_evaluator = query_processor.EvaluateQueries(dummy_spatial_indexing)
     query_evaluator.visit(ast.parse("A=0 * 1"))
-    assert((
+    assert_true((
         'A' in query_evaluator.queries_to_save and
         query_evaluator.evaluated_queries_info['A'].tracts == labels_tracts[0].intersection(labels_tracts[1]) and
         query_evaluator.evaluated_queries_info['A'].labels == set((0, 1))
@@ -204,7 +206,7 @@ def test_mult():
 def test_sub():
     query_evaluator = query_processor.EvaluateQueries(dummy_spatial_indexing)
     query_evaluator.visit(ast.parse("A=(0 + 1) - 1"))
-    assert((
+    assert_true((
         'A' in query_evaluator.queries_to_save and
         query_evaluator.evaluated_queries_info['A'].tracts == labels_tracts[0].difference(labels_tracts[1]) and
         query_evaluator.evaluated_queries_info['A'].labels == set((0,))
@@ -214,7 +216,7 @@ def test_sub():
 def test_or():
     query_evaluator = query_processor.EvaluateQueries(dummy_spatial_indexing)
     query_evaluator.visit(ast.parse("A=0 or 1"))
-    assert((
+    assert_true((
         'A' in query_evaluator.queries_to_save and
         query_evaluator.evaluated_queries_info['A'].tracts == labels_tracts[0].union(labels_tracts[1]) and
         query_evaluator.evaluated_queries_info['A'].labels == set((0, 1))
@@ -224,7 +226,7 @@ def test_or():
 def test_and():
     query_evaluator = query_processor.EvaluateQueries(dummy_spatial_indexing)
     query_evaluator.visit(ast.parse("A=0 and 1"))
-    assert((
+    assert_true((
         'A' in query_evaluator.queries_to_save and
         query_evaluator.evaluated_queries_info['A'].tracts == labels_tracts[0].intersection(labels_tracts[1]) and
         query_evaluator.evaluated_queries_info['A'].labels == set((0, 1))
@@ -234,7 +236,7 @@ def test_and():
 def test_not_in():
     query_evaluator = query_processor.EvaluateQueries(dummy_spatial_indexing)
     query_evaluator.visit(ast.parse("A=0 or 1 not in 1"))
-    assert((
+    assert_true((
         'A' in query_evaluator.queries_to_save and
         query_evaluator.evaluated_queries_info['A'].tracts == labels_tracts[0].difference(labels_tracts[1]) and
         query_evaluator.evaluated_queries_info['A'].labels == set((0,))
@@ -244,7 +246,7 @@ def test_not_in():
 def test_only_sign():
     query_evaluator = query_processor.EvaluateQueries(dummy_spatial_indexing)
     query_evaluator.visit(ast.parse("A=~0"))
-    assert((
+    assert_true((
         'A' in query_evaluator.queries_to_save and
         query_evaluator.evaluated_queries_info['A'].tracts == tract_in_label_0_uniquely and
         query_evaluator.evaluated_queries_info['A'].labels == set((0,))
@@ -254,7 +256,7 @@ def test_only_sign():
 def test_only():
     query_evaluator = query_processor.EvaluateQueries(dummy_spatial_indexing)
     query_evaluator.visit(ast.parse("A=only(0)"))
-    assert((
+    assert_true((
         'A' in query_evaluator.queries_to_save and
         query_evaluator.evaluated_queries_info['A'].tracts == tract_in_label_0_uniquely and
         query_evaluator.evaluated_queries_info['A'].labels == set((0,))
@@ -264,7 +266,7 @@ def test_only():
 def test_unsaved_query():
     query_evaluator = query_processor.EvaluateQueries(dummy_spatial_indexing)
     query_evaluator.visit(ast.parse("A|=0"))
-    assert((
+    assert_true((
         'A' not in query_evaluator.queries_to_save and
         query_evaluator.evaluated_queries_info['A'].tracts == labels_tracts[0] and
         query_evaluator.evaluated_queries_info['A'].labels == set((0,))
@@ -274,7 +276,7 @@ def test_unsaved_query():
 def test_symbolic_assignment():
     query_evaluator = query_processor.EvaluateQueries(dummy_spatial_indexing)
     query_evaluator.visit(ast.parse("A=0; B=A"))
-    assert((
+    assert_true((
         'B' in query_evaluator.queries_to_save and
         query_evaluator.evaluated_queries_info['B'].tracts == labels_tracts[0] and
         query_evaluator.evaluated_queries_info['B'].labels == set((0,))
@@ -284,7 +286,7 @@ def test_symbolic_assignment():
 def test_unarySub():
     query_evaluator = query_processor.EvaluateQueries(dummy_spatial_indexing)
     query_evaluator.visit(ast.parse("B=0; A=-B"))
-    assert((
+    assert_true((
         'A' in query_evaluator.queries_to_save and
         query_evaluator.evaluated_queries_info['A'].tracts == tracts_in_all_but_0 and
         query_evaluator.evaluated_queries_info['A'].labels == set(labels_tracts.keys()).difference((0,))
@@ -294,7 +296,7 @@ def test_unarySub():
 def test_not():
     query_evaluator = query_processor.EvaluateQueries(dummy_spatial_indexing)
     query_evaluator.visit(ast.parse("A= not 0"))
-    assert((
+    assert_true((
         'A' in query_evaluator.queries_to_save and
         query_evaluator.evaluated_queries_info['A'].tracts == tracts_in_all_but_0 and
         query_evaluator.evaluated_queries_info['A'].labels == set(labels_tracts.keys()).difference((0,))
