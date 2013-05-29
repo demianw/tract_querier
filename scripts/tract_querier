@@ -29,8 +29,6 @@ def main():
                       help="Minimum length of the tract to be considered (in mm) "
                       "default %default %"
                       )
-    parser.add_option('--zscore_threshold', dest='zscore_threshold', default=0,
-                      help="Outlier rejection threshold default %default %")
     parser.add_option('--query_selection', dest='query_selection', default='',
                       help="Query selection %default %")
     parser.add_option('--interactive', dest='interactive',
@@ -167,34 +165,17 @@ def save_query(query_name, tractography, options, evaluated_queries):
             options.output_file_name + "_" + query_name + '.vtk',
             tractography,
             tract_numbers,
-            zscore_threshold=float(options.zscore_threshold)
         )
 
 
 def save_tractography_file(
     filename, tractography, tract_numbers,
-    zscore_threshold=3
 ):
     from itertools import izip
 
     tract_numbers = list(tract_numbers)
 
     original_tracts = tractography.original_tracts()
-
-    tracts_to_analyze_for_outlier_rejection = [
-        original_tracts[i] for i in tract_numbers
-    ]
-
-    if zscore_threshold > 0:
-        tract_numbers_to_save, zscore_per_tract = (
-            tract_querier.z_score_outlier_rejection(
-                tracts_to_analyze_for_outlier_rejection,
-                z_score_reject=zscore_threshold
-            )
-        )
-        zscore_per_tract.sort()
-        print '\t', len(tract_numbers_to_save)
-        tract_numbers = [tract_numbers[i] for i in tract_numbers_to_save]
 
     tracts_to_save = [original_tracts[i] for i in tract_numbers]
 
@@ -215,13 +196,6 @@ def save_tractography_file(
         'Vectors_' in tracts_data_to_save
     ):
         tracts_data_to_save['ActiveVectors'] = 'Vectors_'
-
-    if zscore_threshold > 0:
-        z_scores_tract_data = [
-            np.repeat(z_score, len(tract))[:, None]
-            for z_score, tract in izip(zscore_per_tract, tracts_to_save)
-        ]
-        tracts_data_to_save['z_score'] = z_scores_tract_data
 
     tract_querier.tractography.tractography_to_vtk_file(
         filename,
