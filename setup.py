@@ -6,11 +6,11 @@ DESCRIPTION = \
         'Complex queries for full '\
         'brain tractographies with '\
         'a registered template on top of them'
-LONG_DESCRIPTION = ''  # open('README.rst').read()
+LONG_DESCRIPTION = open('README.md').read()
 MAINTAINER = 'Demian Wassermann'
 MAINTAINER_EMAIL = 'demian@bwh.harvard.edu'
-URL = ''
-LICENSE = ''
+URL = 'http://http://demianw.github.io/tract_querier'
+LICENSE = open('license.rst').read()
 DOWNLOAD_URL = ''
 VERSION = '0.1'
 
