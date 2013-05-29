@@ -1,5 +1,4 @@
 from query_processor import *
-from bundle_outlier_treatment import *
 from tract_label_indices import *
 from shell import *
 import tractography
