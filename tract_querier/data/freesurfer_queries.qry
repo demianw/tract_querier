@@ -67,111 +67,13 @@ inferior_frontal_gyrus.side |= parsopercularis.side or parstriangularis.side or 
 
 middle_frontal_gyrus.side |= caudalmiddlefrontal.side or rostralmiddlefrontal.side 
 
-
-#Commisural tracts
-#cc_bankssts = endpoints_in(bankssts.left) and endpoints_in(bankssts.right) not in subcortical.left not in subcortical.right not in cerebellum
-#cc_caudalanteriorcingulate = endpoints_in(caudalanteriorcingulate.left) and endpoints_in(caudalanteriorcingulate.right) not in subcortical.left not in subcortical.right not in cerebellum
-#cc_cuneus = endpoints_in(cuneus.left) and endpoints_in(cuneus.right) not in subcortical.left not in subcortical.right not in cerebellum
-#cc_entorhinal = endpoints_in(entorhinal.left) and endpoints_in(entorhinal.right) not in subcortical.left not in subcortical.right not in cerebellum
-#cc_fusiform = endpoints_in(fusiform.left) and endpoints_in(fusiform.right) not in subcortical.left not in subcortical.right not in cerebellum
-#cc_inferiorparietal = endpoints_in(inferiorparietal.left) and endpoints_in(inferiorparietal.right) not in subcortical.left not in subcortical.right not in cerebellum
-#cc_inferiortemporal = endpoints_in(inferiortemporal.left) and endpoints_in(inferiortemporal.right) not in subcortical.left not in subcortical.right not in cerebellum
-#cc_isthmuscingulate = endpoints_in(isthmuscingulate.left) and endpoints_in(isthmuscingulate.right) not in subcortical.left not in subcortical.right not in cerebellum
-#cc_lateraloccipital = endpoints_in(lateraloccipital.left) and endpoints_in(lateraloccipital.right) not in subcortical.left not in subcortical.right not in cerebellum
-
-#cc_lingual = endpoints_in(lingual.left) and endpoints_in(lingual.right) not in subcortical.left not in subcortical.right not in cerebellum
-#cc_parahippocampal = endpoints_in(parahippocampal.left) and endpoints_in(parahippocampal.right) not in subcortical.left not in subcortical.right not in cerebellum
-#cc_paracentral = endpoints_in(paracentral.left) and endpoints_in(paracentral.right) not in subcortical.left not in subcortical.right not in cerebellum
-#cc_parsopercularis = endpoints_in(parsopercularis.left) and endpoints_in(parsopercularis.right) not in subcortical.left not in subcortical.right not in cerebellum
-#cc_parsorbitalis = endpoints_in(parsorbitalis.left) and endpoints_in(parsorbitalis.right) not in subcortical.left not in subcortical.right not in cerebellum
-#cc_parstriangularis = endpoints_in(parstriangularis.left) and endpoints_in(parstriangularis.right) not in subcortical.left not in subcortical.right not in cerebellum
-#cc_pericalcarine = endpoints_in(pericalcarine.left) and endpoints_in(pericalcarine.right) not in subcortical.left not in subcortical.right not in cerebellum
-#cc_postcentral = endpoints_in(postcentral.left) and endpoints_in(postcentral.right) not in subcortical.left not in subcortical.right not in cerebellum
-#cc_posteriorcingulate = endpoints_in(posteriorcingulate.left) and endpoints_in(posteriorcingulate.right) not in subcortical.left not in subcortical.right not in cerebellum
-#cc_precentral = endpoints_in(precentral.left) and endpoints_in(precentral.right) not in subcortical.left not in subcortical.right not in cerebellum
-#cc_precuneus = endpoints_in(precuneus.left) and endpoints_in(precuneus.right) not in subcortical.left not in subcortical.right not in cerebellum
-#cc_rostralanteriorcingulate = endpoints_in(rostralanteriorcingulate.left) and endpoints_in(rostralanteriorcingulate.right) not in subcortical.left not in subcortical.right not in cerebellum
-#cc_superiorparietal = endpoints_in(superiorparietal.left) and endpoints_in(superiorparietal.right) not in subcortical.left not in subcortical.right not in cerebellum
-#cc_supramarginal = endpoints_in(supramarginal.left) and endpoints_in(supramarginal.right) not in subcortical.left not in subcortical.right not in cerebellum
-#cc_insula = endpoints_in(insula.left) and endpoints_in(insula.right) not in subcortical.left not in subcortical.right not in cerebellum
-
-#Temporal Transcallosal
-#cc_middletemporal = middletemporal.left and middletemporal.right not in subcortical.left not in subcortical.right not in cerebellum
-#cc_superiortemporal = superiortemporal.left and superiortemporal.right not in subcortical.left not in subcortical.right not in cerebellum
-#cc_temporalpole = temporalpole.left and temporalpole.right not in subcortical.left not in subcortical.right not in cerebellum
-#cc_transversetemporal = transversetemporal.left and transversetemporal.right not in subcortical.left not in subcortical.right not in cerebellum
-
-#Frontal corpus callosum
-#cc_caudalmiddlefrontal = caudalmiddlefrontal.left and caudalmiddlefrontal.right not in subcortical.left not in subcortical.right not in cerebellum not in temporal.right not in temporal.left not in parietal.right not in parietal.left not in occipital.right not in occipital.left
-#cc_lateralorbitofrontal = lateralorbitofrontal.left and lateralorbitofrontal.right not in subcortical.left not in subcortical.right not in cerebellum not in temporal.right not in temporal.left not in parietal.right not in parietal.left not in occipital.right not in occipital.left
-#cc_medialorbitofrontal = medialorbitofrontal.left and medialorbitofrontal.right not in subcortical.left not in subcortical.right not in cerebellum not in temporal.right not in temporal.left not in parietal.right not in parietal.left not in occipital.right not in occipital.left
-#cc_rostralmiddlefrontal = rostralmiddlefrontal.left and rostralmiddlefrontal.right not in subcortical.left not in subcortical.right not in cerebellum not in temporal.right not in temporal.left not in parietal.right not in parietal.left not in occipital.right not in occipital.left
-#cc_superiorfrontal = superiorfrontal.left and superiorfrontal.right not in subcortical.left not in subcortical.right not in cerebellum not in temporal.right not in temporal.left not in parietal.right not in parietal.left not in occipital.right not in occipital.left
-#cc_frontalpole = frontalpole.left and frontalpole.right not in subcortical.left not in subcortical.right not in cerebellum not in temporal.right not in temporal.left not in parietal.right not in parietal.left not in occipital.right not in occipital.left
-
-##Projection
-#thalamo_bankssts.side = endpoints_in(thalamus_proper.side) and endpoints_in(bankssts.side)
-#thalamo_caudalanteriorcingulate.side = endpoints_in(thalamus_proper.side) and endpoints_in(caudalanteriorcingulate.side)
-#thalamo_cuneus.side = endpoints_in(thalamus_proper.side) and endpoints_in(cuneus.side)
-#thalamo_entorhinal.side = endpoints_in(thalamus_proper.side) and endpoints_in(entorhinal.side)
-#thalamo_fusiform.side = endpoints_in(thalamus_proper.side) and endpoints_in(fusiform.side)
-#thalamo_inferiorparietal.side = endpoints_in(thalamus_proper.side) and endpoints_in(inferiorparietal.side)
-#thalamo_inferiortemporal.side = endpoints_in(thalamus_proper.side) and endpoints_in(inferiortemporal.side)
-#thalamo_isthmuscingulate.side = endpoints_in(thalamus_proper.side) and endpoints_in(isthmuscingulate.side)
-#thalamo_lateraloccipital.side = endpoints_in(thalamus_proper.side) and endpoints_in(lateraloccipital.side)
-
-#thalamo_lingual.side = endpoints_in(thalamus_proper.side) and endpoints_in(lingual.side)
-#thalamo_parahippocampal.side = endpoints_in(thalamus_proper.side) and endpoints_in(parahippocampal.side)
-#thalamo_paracentral.side = endpoints_in(thalamus_proper.side) and endpoints_in(paracentral.side)
-#thalamo_parsopercularis.side = endpoints_in(thalamus_proper.side) and endpoints_in(parsopercularis.side)
-#thalamo_parsorbitalis.side = endpoints_in(thalamus_proper.side) and endpoints_in(parsorbitalis.side)
-#thalamo_parstriangularis.side = endpoints_in(thalamus_proper.side) and endpoints_in(parstriangularis.side)
-#thalamo_pericalcarine.side = endpoints_in(thalamus_proper.side) and endpoints_in(pericalcarine.side)
-#thalamo_postcentral.side = endpoints_in(thalamus_proper.side) and endpoints_in(postcentral.side)
-#thalamo_posteriorcingulate.side = endpoints_in(thalamus_proper.side) and endpoints_in(posteriorcingulate.side)
-#thalamo_precentral.side = endpoints_in(thalamus_proper.side) and endpoints_in(precentral.side)
-#thalamo_precuneus.side = endpoints_in(thalamus_proper.side) and endpoints_in(precuneus.side)
-#thalamo_rostralanteriorcingulate.side = endpoints_in(thalamus_proper.side) and endpoints_in(rostralanteriorcingulate.side)
-#thalamo_superiorparietal.side = endpoints_in(thalamus_proper.side) and endpoints_in(superiorparietal.side)
-#thalamo_supramarginal.side = endpoints_in(thalamus_proper.side) and endpoints_in(supramarginal.side)
-#thalamo_insula.side = endpoints_in(thalamus_proper.side) and endpoints_in(insula.side)
-
-##Temporal thalamical
-#thalamo_middletemporal.side = endpoints_in(thalamus_proper.side) and endpoints_in(middletemporal.side)
-#thalamo_superiortemporal.side = endpoints_in(thalamus_proper.side) and endpoints_in(superiortemporal.side)
-#thalamo_temporalpole.side = endpoints_in(thalamus_proper.side) and endpoints_in(temporalpole.side)
-#thalamo_transversetemporal.side = endpoints_in(thalamus_proper.side) and endpoints_in(transversetemporal.side)
-
-##Frontal thalamical
-#thalamo_caudalmiddlefrontal.side = endpoints_in(thalamus_proper.side) and endpoints_in(caudalmiddlefrontal.side)
-#thalamo_lateralorbitofrontal.side = endpoints_in(thalamus_proper.side) and endpoints_in(lateralorbitofrontal.side)
-#thalamo_medialorbitofrontal.side = endpoints_in(thalamus_proper.side) and endpoints_in(medialorbitofrontal.side)
-#thalamo_rostralmiddlefrontal.side = endpoints_in(thalamus_proper.side) and endpoints_in(rostralmiddlefrontal.side)
-#thalamo_superiorfrontal.side = endpoints_in(thalamus_proper.side) and endpoints_in(superiorfrontal.side)
-#thalamo_frontalpole.side = endpoints_in(thalamus_proper.side) and endpoints_in(frontalpole.side)
-
-#ioff.side |= ((frontal.side and occipital.side)
-#	not in cingular.side
-#	not in precentral.side not in postcentral.side
-#	not in hemisphere.opposite)
-
-
-internal_capsule_new.side = ((frontal.side and thalamus_proper.side and (parietal.side or occipital.side))
+internal_capsule.side = ((frontal.side and thalamus_proper.side and (parietal.side or occipital.side))
 	not in cingular.side
 	not in precentral.side not in postcentral.side
 	not in hemisphere.opposite
 	not in brain_stem
 	)
 
-
-#ioff_dorsal_claustrum.side = ((frontal.side and superiorparietal.side and putamen.side)
-#	not in cingular.side
-#	not in precentral.side not in postcentral.side
-#	not in superiorfrontal.side
-#	not in hemisphere.opposite)
-
-
-#cst_pre_dirty.side = (precentral.side and brain_stem)
 cst_pre.side |= ((precentral.side and brain_stem)
 	not in superiorfrontal.side 
 	not in cerebellum_white_matter.side not in thalamus_proper.side
@@ -184,7 +86,6 @@ cst_post.side |= ((postcentral.side and brain_stem)
 
 cst.side = cst_pre.side or cst_post.side
 
-# cb updated per nikos' suggestion - done
 cb.side = only((cingular.side or cingular_cortex.side) and (middle_frontal_gyrus.side or cuneus.side or entorhinal.side or superiorfrontal.side or inferiorparietal.side or fusiform.side or medialorbitofrontal.side or lateralorbitofrontal.side or unsegmentedwhitematter.side or parahippocampal.side or precuneus.side or lingual.side))
 
 ioff.side = (
@@ -196,28 +97,17 @@ ioff.side = (
 	not in hemisphere.opposite
 )
 
-soff.side = (
-            (lateralorbitofrontal.side and occipital.side)
-	not in temporal.side
-        not in subcortical.side
-	not in cingular.side
-	not in hemisphere.opposite
-)
-
-# updated uf per nikos' suggestions by adding a general definition for the middle_frontal_gyrus.side  and inferior_frontal_gyrus.side and adding them to UF definition, also added IOFF as exclusion
-UF.side = (
+uf.side = (
 	(
-	(medialorbitofrontal.side or lateralorbitofrontal.side or middle_frontal_gyrus.side  or inferior_frontal_gyrus.side)
+	(orbitofrontalgyrus.side or middle_frontal_gyrus.side  or inferior_frontal_gyrus.side)
 	and endpoints_in(temporalpole.side)
+	and insula.side
 	)
 	not in occipital.side not in parietal.side not in cingular.side
         not in posterior_of(putamen.side)
 	not in HEMISPHERE.opposite)
 
 
-#IOFF_section.side = ((medialorbitofrontal.side or lateralorbitofrontal.side or middle_frontal_gyrus.side  or inferior_frontal_gyrus.side) and temporalpole.side and inferiortemporal.side) not in ioff.side not in ec.side not in subcortical.side not in hemisphere.opposite not in cingular.side not in occipital.side not in parietal.side not in superiorfrontal.side not in precentral.side 
-
-# need to make it continuous but otherwise OK
 MDLF.side = only(
 		(
 			temporalpole.side or superiortemporal.side 
@@ -246,10 +136,6 @@ ec.side = (
   not in cingular.side
 )
 
-
-
-
-#SLF_I and SLF_II_III should be extended further back if possible
 SLF_I.side = (
         ((superiorparietal.side and precuneus.side and superiorfrontal.side)
 	or (superiorparietal.side and precuneus.side and superiorfrontal.side 
@@ -280,11 +166,6 @@ extreme_capsule.side = (((superiortemporal.side or temporalpole.side)
         not in HEMISPHERE.opposite
 )
 
-
-
-
-
-
 #Commisural tracts
 CC = (
   (
@@ -296,29 +177,6 @@ CC = (
   (corpuscallosum.left or corpuscallosum.right)
 )
 
-
-#AC = (
-#  (temporalpole.left and temporalpole.right) or
-#  (middletemporal.left and middletemporal.right) or
-#  (inferiortemporal.left and inferiortemporal.right) or
-#  (Amygdala.left and Amygdala.right)
-#  not in (corpuscallosum.left or corpuscallosum.right)
-#  )
-
-#DHC = (
-#  parahippocampal.left and parahippocampal.right
-#  not in (corpuscallosum.left or corpuscallosum.right)
-#  )
-
-internal_capsule.side |= ((rostralmiddlefrontal.side and temporal.side and Putamen.side and UnsegmentedWhiteMatter.side)
-        not in occipital.side not in corpus_callosum not in cerebellum 
-	
-not in HEMISPHERE.opposite
-        not in subcortical.side not in cingular.side)
-
-
-mdlf_probable_sections.side |= only( (precentral.side or paracentral.side or postcentral.side or superiorparietal.side) and unsegmentedwhitematter.side and temporal.side)
-
 af.side = (
   (inferior_frontal_gyrus.side or middle_frontal_gyrus.side or precentral.side) and (superiortemporal.side or middletemporal.side) 
   not in hemisphere.opposite 
@@ -328,28 +186,6 @@ af.side = (
   not in rostralmiddlefrontal.side not in lateralorbitofrontal.side 
   not in parstriangularis.side not in superiorfrontal.side not in parsopercularis.side
 )
-
-#AF.side = ((   (inferior_frontal_gyrus.side or middle_frontal_gyrus.side or precentral.side) 
-#	and (superiortemporal.side or middletemporal.side)) 
-#	not in SLF_II_III.side not in MDLF.side not in IOFF.side not in ILF.side
-#	not in extreme_capsule.side 
-#        not in wm_unknown.side not in UnsegmentedWhiteMatter.side
-#	not in occipital.side not in temporalpole.side not in medialorbitofrontal.side
-#	not in lateralorbitofrontal.side
-#)
-
-
-#Projection fibers
-#Optic_Radiation = (
-#
-#)
-
-#EC.side = (
-#  (caudalanteriorcingulate.side or rostralanteriorcingulate.side) and (superiortemporal.side) 
-#  not in HEMISPHERE.opposite not in temporalpole.side 
-#  not in ventricles 
-#  not in posteriorcingulate.side 
-#)
 
 thalamo_frontal.side = endpoints_in(thalamus_proper.side) and endpoints_in(frontal.side)
 thalamo_parietal.side = endpoints_in(thalamus_proper.side) and endpoints_in(parietal.side)
