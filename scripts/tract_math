@@ -39,11 +39,11 @@ def main():
         usage += '\t%s %s\n' % (f, functions_list[f].help_text)
 
     #The first arguments, except for the last one, might be tractography files
-    n_tracts = itertools.count(
+    n_tracts = len([
         itertools.takewhile(
             lambda x: x not in function_list_names, sys.argv[1:-1]
         )
-    )
+    ])
 
     parser = ArgumentParser(usage=usage)
     parser.add_argument('tractographies', nargs=n_tracts, help='tractography files', type=FileType('r'))
