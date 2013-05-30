@@ -155,8 +155,9 @@ class Tractography:
 
             self._subsampled_tracts.append(f[s, :])
 
-            for k in self._tracts_data:
-                self._subsampled_data[k].append(self._tracts_data[k][i][s])
+            for k, v in self._tracts_data.iteritems():
+                if not isinstance(v, str):
+                    self._subsampled_data[k].append(v[i][s])
 
         self._interpolated = False
 

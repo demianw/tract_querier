@@ -74,7 +74,10 @@ def vtkPolyData_to_tracts(polydata):
 
     for i in xrange(polydata.GetPointData().GetNumberOfArrays()):
         array = polydata.GetPointData().GetArray(i)
-        data[polydata.GetPointData().GetArrayName(i)] = ns.vtk_to_numpy(array)
+        np_array = ns.vtk_to_numpy(array)
+        if np_array.ndim == 1:
+            np_array = np_array.reshape(len(np_array), 1)
+        data[polydata.GetPointData().GetArrayName(i)] = np_array
 
     result['pointData'] = data
 

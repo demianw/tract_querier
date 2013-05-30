@@ -1,10 +1,11 @@
 from .. import Tractography
+from .. import tractography_from_vtk_files, tractography_to_vtk_file
 
 from nose.tools import with_setup
 import copy
 from itertools import izip, chain
 
-from numpy import any, all
+from numpy import all
 from numpy.random import randint, randn
 
 dimensions = None
@@ -28,9 +29,16 @@ def equal_tracts_data(a, b):
         return False
 
     for k in a.keys():
-        for t1, t2 in izip(a[k], b[k]):
-            if not all(t1 == t2):
-                return False
+        v1 = a[k]
+        v2 = b[k]
+        if isinstance(v1, str) and isinstance(v2, str) and v1 == v2:
+            continue
+        elif not isinstance(v1, str) and not isinstance(v2, str):
+            for t1, t2 in izip(a[k], b[k]):
+                if not all(t1 == t2):
+                    return False
+        else:
+            return False
     return True
 
 
@@ -47,6 +55,11 @@ def setup(*args, **kwargs):
     global tracts_data
     global tractography
 
+    if 'test_active_data' in kwargs:
+        test_active_data = kwargs['test_active_data']
+    else:
+        test_active_data = False
+
     dimensions = [(randint(5, max_tract_length), 3) for _ in xrange(n_tracts)]
     tracts = [randn(*d) for d in dimensions]
     tracts_data = {
@@ -54,8 +67,25 @@ def setup(*args, **kwargs):
             randn(d[0], k)
             for d in dimensions
         ]
-        for i, k in zip(xrange(4), randint(1, 5, 4))
+        for i, k in zip(xrange(4), randint(1, 3, 9))
     }
+
+    if test_active_data:
+        mask = 0
+        for  k, v in tracts_data.items():
+            if mask & (1 + 2 + 4):
+                break
+            if v[0].shape[1] == 1 and mask & 1 == 0:
+                tracts_data['ActiveScalars'] = k
+                mask |= 1
+            if v[0].shape[1] == 3 and mask & 2 == 0:
+                tracts_data['ActiveVectors'] = k
+                mask |= 2
+            if v[0].shape[1] == 9 and mask & 4 == 0:
+                tracts_data['ActiveTensors'] = k
+                mask |= 4
+
+
     tractography = Tractography(tracts, tracts_data)
 
 
@@ -103,3 +133,33 @@ def test_append():
 
     assert(equal_tracts(tractography.tracts(), chain(old_tracts, old_tracts)))
     assert(equal_tracts_data(tractography.tracts_data(), new_data))
+
+
+@with_setup(setup)
+def test_saveload_vtk():
+    import tempfile
+    import os
+    fname = tempfile.mkstemp('.vtk')[1]
+    tractography_to_vtk_file(fname, tractography)
+
+    new_tractography = tractography_from_vtk_files(fname)
+
+    assert(equal_tracts(tractography.tracts(), new_tractography.tracts()))
+    assert(equal_tracts_data(tractography.tracts_data(), new_tractography.tracts_data()))
+
+    os.remove(fname)
+
+
+@with_setup(setup)
+def test_saveload_vtp():
+    import tempfile
+    import os
+    fname = tempfile.mkstemp('.vtp')[1]
+    tractography_to_vtk_file(fname, tractography)
+
+    new_tractography = tractography_from_vtk_files(fname)
+
+    assert(equal_tracts(tractography.tracts(), new_tractography.tracts()))
+    assert(equal_tracts_data(tractography.tracts_data(), new_tractography.tracts_data()))
+
+    os.remove(fname)
