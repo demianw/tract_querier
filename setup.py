@@ -3,15 +3,15 @@ from distutils.core import setup
 
 DISTNAME = 'tract_querier'
 DESCRIPTION = \
-        'Complex queries for full '\
-        'brain tractographies with '\
-        'a registered template on top of them'
+    'Complex queries for full '\
+    'brain tractographies with '\
+    'a registered template on top of them'
 LONG_DESCRIPTION = open('README.md').read()
 MAINTAINER = 'Demian Wassermann'
 MAINTAINER_EMAIL = 'demian@bwh.harvard.edu'
-URL = 'http://http://demianw.github.io/tract_querier'
+URL = 'http://demianw.github.io/tract_querier'
 LICENSE = open('license.rst').read()
-DOWNLOAD_URL = ''
+DOWNLOAD_URL = 'https://github.com/demianw/tract_querier'
 VERSION = '0.1'
 
 
@@ -25,30 +25,27 @@ def configuration(parent_package='', top_path=None):
 
 if __name__ == "__main__":
     setup(
-          name=DISTNAME,
-          maintainer=MAINTAINER,
-          maintainer_email=MAINTAINER_EMAIL,
-          description=DESCRIPTION,
-          license=LICENSE,
-          url=URL,
-          version=VERSION,
-          download_url=DOWNLOAD_URL,
-          long_description=LONG_DESCRIPTION,
-          classifiers=[
-              'Intended Audience :: Science/Research',
-              'Programming Language :: Python',
-              'Topic :: Scientific/Engineering',
-              'Operating System :: Microsoft :: Windows',
-              'Operating System :: POSIX',
-              'Operating System :: Unix',
-              'Operating System :: MacOS'
-             ],
-            scripts=[
-                'scripts/tract_querier',
-                'scripts/tract_outlier_rejection',
-                'scripts/tract_to_mask',
-                'scripts/kappa',
-                'scripts/tract_math'
-              ],
-            **(configuration().todict())
+        name=DISTNAME,
+        maintainer=MAINTAINER,
+        maintainer_email=MAINTAINER_EMAIL,
+        description=DESCRIPTION,
+        license=LICENSE,
+        url=URL,
+        version=VERSION,
+        download_url=DOWNLOAD_URL,
+        long_description=LONG_DESCRIPTION,
+        classifiers=[
+            'Intended Audience :: Science/Research',
+            'Programming Language :: Python',
+            'Topic :: Scientific/Engineering',
+            'Operating System :: Microsoft :: Windows',
+            'Operating System :: POSIX',
+            'Operating System :: Unix',
+            'Operating System :: MacOS'
+        ],
+        scripts=[
+            'scripts/tract_querier',
+            'scripts/tract_math'
+        ],
+        **(configuration().todict())
     )
