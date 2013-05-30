@@ -8,5 +8,5 @@ This is an implementation of the WMQL language presented in "On Describing Human
  [WMQL Documentation](http://demianw.github.io/tract_querier "WMQL Documentation")
 
 Automated testing status: 
-.. image:: https://secure.travis-ci.org/demianw/tract_querier.png?branch=master
-    :target: http://travis-ci.org/demianw/tract_querier
+[![travis-ci build status](https://secure.travis-ci.org/demianw/tract_querier.png?branch=master)](http://travis-ci.org/demianw/tract_querier)
+    
