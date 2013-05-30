@@ -35,15 +35,14 @@ test-code: in
 	$(NOSETESTS) -s tract_querier
 test-doc:
 	$(NOSETESTS) -s --with-doctest --doctest-tests --doctest-extension=rst \
-	--doctest-extension=inc --doctest-fixtures=_fixture doc/ doc/modules/ \
-	doc/developers doc/tutorial/basic doc/tutorial/statistical_inference
+	--doctest-extension=inc --doctest-fixtures=_fixture doc/ 
 
 test-coverage:
 	rm -rf coverage .coverage
 	$(NOSETESTS) -s --with-coverage --cover-html --cover-html-dir=coverage \
 	--cover-package=tract_querier tract_querier
 
-test: test-code test-doc
+test: test-code
 
 trailing-spaces:
 	find tract_querier -name "*.py" | xargs perl -pi -e 's/[ \t]*$$//'
