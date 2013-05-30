@@ -3,8 +3,8 @@ from distutils.core import setup
 
 DISTNAME = 'tract_querier'
 DESCRIPTION = \
-    'Complex queries for full '\
-    'brain tractographies with '\
+    'WMQL: Query language for automatic tract extraction from '\
+    'full-brain tractographies with '\
     'a registered template on top of them'
 LONG_DESCRIPTION = open('README.md').read()
 MAINTAINER = 'Demian Wassermann'
@@ -34,6 +34,10 @@ if __name__ == "__main__":
         version=VERSION,
         download_url=DOWNLOAD_URL,
         long_description=LONG_DESCRIPTION,
+        requires=[
+            'numpy(>=1.6)',
+            'nibabel(>=1.3)'
+        ],
         classifiers=[
             'Intended Audience :: Science/Research',
             'Programming Language :: Python',
