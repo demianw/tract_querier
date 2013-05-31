@@ -1,0 +1,74 @@
+#!/usr/bin/env python
+from pylab import *
+import nibabel
+import sys
+
+import argparse
+
+
+def main():
+    parser = argparse.ArgumentParser(description='Superimposed slices viz')
+    parser.add_argument('-s', dest='slices', type=int, nargs='+',
+                        help='Slices to show', required=True)
+    parser.add_argument('-i', dest='base_image', type=str,
+                        help='base image to show', required=True)
+    parser.add_argument('-j', dest='tract_image', type=str,
+                        help='tract image to show', required=True)
+    parser.add_argument('-o', dest='output', type=str,
+                        help='output image', required=True)
+    parser.add_argument('--invert', dest='inverse_order',
+                        action='store_true', help='invert the slice order')
+    parser.add_argument('--step', dest='step',
+                        action='store_true', help='Take the slices as `start end step`')
+    parser.add_argument('-t', dest='threshold', type=float, default=0,
+                        help='lower threshold of the tract image')
+    parser.add_argument('--axis', dest='axis', type=int, default=2,
+                        help='axis of the slices')
+
+    parser.add_argument(
+        '--displacement', dest='displacement', type=float, default=.1,
+        help='displacement between axes between 0. and 1.')
+    parser.add_argument(
+        '--displacement_direction', dest='displacement_direction', type=str,
+        choices=('row', 'col'), default='row',
+        help='displacement direction: "row" or "col"')
+
+    args = parser.parse_args()
+    fig = figure(frameon=False)
+    fa = nibabel.load(args.base_image).get_data()
+    tract = nibabel.load(args.tract_image).get_data()
+    t_colormap = cm.YlOrRd_r
+    t_colormap.set_under(alpha=0)
+    fa_cm = cm.gray
+    fa_cm.set_under(alpha=0)
+    thr = min(tract.max() - 1e-10, args.threshold)
+    if args.step:
+        args.slices = xrange(args.slices[0], args.slices[1], args.slices[2])
+    for i, y in enumerate(args.slices):
+        if args.inverse_order:
+            pos = len(args.slices) - 1 - i
+        else:
+            pos = i
+
+        if args.displacement_direction == 'row':
+            fig.add_axes([pos * args.displacement, 0, .5, .5], frameon=False)
+        else:
+            fig.add_axes([0, pos * args.displacement, .5, .5], frameon=False)
+        ax = gca()
+        ax.hold(True)
+
+        slices = [slice(None)] * 3
+        slices[args.axis] = y
+        slices = tuple(slices)
+
+        imshow(fa[slices].T, cmap=fa_cm, vmin=1e-10, origin=True, interpolation='spline36')
+        imshow(tract[slices].T, cmap=t_colormap,
+               vmin=thr, vmax=tract.max(), origin=True, interpolation='gaussian')
+        xticks([])
+        yticks([])
+        ax.hold(False)
+    savefig(args.output, bbox_inches='tight', transparent=True, pad_inches=0)
+
+
+if __name__ == '__main__':
+    sys.exit(main())
