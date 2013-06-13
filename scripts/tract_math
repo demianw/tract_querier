@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/projects/schiz/software/LabPython/bin/python
 import sys
 import itertools
 from argparse import ArgumentParser, FileType, REMAINDER
@@ -54,8 +54,8 @@ def main():
 
     args = parser.parse_args()
     #Load the global modules after the parsing of parameters
-    global tr, vtkInterface, numpy, nibabel, tractography_from_vtk_files
-    from tract_querier.tractography import tractography_from_vtk_files
+    global tr, vtkInterface, numpy, nibabel, tractography_from_vtk_files, tractography_to_vtk_file, Tractography
+    from tract_querier.tractography import tractography_from_vtk_files, tractography_to_vtk_file, Tractography
     from tract_querier.tractography import tractography as tr
     from tract_querier.tractography import vtkInterface
     import numpy
@@ -213,8 +213,8 @@ def tract_point_distance_min_max(tractography):
 @tract_math_operation('<points per tract> <tractography_file_output>: subsamples tracts to a maximum number of points')
 def tract_subsample(tractography, points_per_tract, tractography_file_output):
     tractography.subsample_tracts(int(points_per_tract))
-    vtkInterface.writeLinesToVtkPolyData(
-        tractography_file_output, tractography.tracts(),  tractography.tracts_data()
+    tractography_to_vtk_file(
+        tractography_file_output, Tractography(tractography.tracts(),  tractography.tracts_data())
     )
 
 
@@ -241,8 +241,8 @@ def tract_remove_short_tracts(tractography, min_tract_length, tractography_file_
         else:
             selected_data[key] = item
 
-    vtkInterface.writeLinesToVtkPolyData(
-        tractography_file_output, selected_tracts, selected_data)
+    tractography_to_vtk_file(
+        tractography_file_output, Tractography(selected_tracts, selected_data))
 
 
 @tract_math_operation('<image> <quantity_name> <tractography_file_output>: maps the values of an image to the tract points')
@@ -263,14 +263,19 @@ def tract_map_image(tractography, image, quantity_name, tractography_file_output
                 image.T, ijk_points.T
             )[:, None]
             tractography.original_tracts_data()[quantity_name] = new_scalar_data
-            vtkInterface.writeLinesToVtkPolyData(output_name % i, tractography.original_tracts(),  tractography.original_tracts_data())
+            tractography_to_vtk_file(output_name % i, Tractography(tractography.original_tracts(),  tractography.original_tracts_data()))
     else:
-        new_scalar_data = ndimage.map_coordinates(
+        new_scalar_data_flat = ndimage.map_coordinates(
             image_data.T, ijk_points.T
         )[:, None]
+	start = 0
+	new_scalar_data = []
+	for tract in tractography.original_tracts():
+		new_scalar_data.append(new_scalar_data_flat[start: start + len(tract)])
+		start += len(tract)
         tractography.original_tracts_data()[quantity_name] = new_scalar_data
-        vtkInterface.writeLinesToVtkPolyData(
-            tractography_file_output, tractography.original_tracts(),  tractography.original_tracts_data()
+        tractography_to_vtk_file(
+            tractography_file_output, Tractography(tractography.original_tracts(),  tractography.original_tracts_data())
         )
 
 
@@ -347,9 +352,9 @@ def tract_merge(tractographies, tractography_file_output):
             else:
                 all_data[k] = data[k]
 
-    vtkInterface.writeLinesToVtkPolyData(
+    tractography_to_vtk_file(
         tractography_file_output,
-        all_tracts, all_data
+        Tractography(all_tracts, all_data)
     )
 
 
@@ -486,9 +491,9 @@ def tract_smooth(tractography, var, tractography_file_output):
         tract[:] = weighted_points
         #tract /= norm_term
 
-    vtkInterface.writeLinesToVtkPolyData(
+    tractography_to_vtk_file(
         tractography_file_output,
-        tractography.original_tracts(),  tractography.original_tracts_data()
+        Tractography(tractography.original_tracts(),  tractography.original_tracts_data())
     )
 
 
