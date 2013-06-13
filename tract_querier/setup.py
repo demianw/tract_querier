@@ -6,7 +6,6 @@ def configuration(parent_package='', top_path=None):
     config = Configuration('tract_querier', parent_package, top_path)
     config.add_subpackage('tractography')
     config.add_subpackage('code_util')
-    config.add_subpackage('code_utilaa')
     config.add_subpackage('nipype')
     config.add_data_files(('queries', [
         'data/FreeSurfer.qry',
