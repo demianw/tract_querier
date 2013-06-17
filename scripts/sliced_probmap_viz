@@ -2,6 +2,7 @@
 from pylab import *
 import nibabel
 import sys
+from itertools import izip
 
 import argparse
 
@@ -9,13 +10,13 @@ import argparse
 def main():
     parser = argparse.ArgumentParser(description='Superimposed slices viz')
     parser.add_argument('-s', dest='slices', type=int, nargs='+',
-                        help='Slices to show', required=True)
+                        help='Slices to show')#, required=True)
     parser.add_argument('-i', dest='base_image', type=str,
-                        help='base image to show', required=True)
-    parser.add_argument('-j', dest='tract_image', type=str,
-                        help='tract image to show', required=True)
+                        help='base image to show')#, required=True)
+    parser.add_argument('-j', dest='tract_image', type=str, nargs='+',
+                        help='tract image to show')#, required=True)
     parser.add_argument('-o', dest='output', type=str,
-                        help='output image', required=True)
+                        help='output image')#, required=True)
     parser.add_argument('--invert', dest='inverse_order',
                         action='store_true', help='invert the slice order')
     parser.add_argument('--step', dest='step',
@@ -24,6 +25,8 @@ def main():
                         help='lower threshold of the tract image')
     parser.add_argument('--axis', dest='axis', type=int, default=2,
                         help='axis of the slices')
+    parser.add_argument('--mip', dest='mip', action='store_true',
+                        help='show maximum intensity projections')
 
     parser.add_argument(
         '--displacement', dest='displacement', type=float, default=.1,
@@ -32,16 +35,54 @@ def main():
         '--displacement_direction', dest='displacement_direction', type=str,
         choices=('row', 'col'), default='row',
         help='displacement direction: "row" or "col"')
+    parser.add_argument('--color', dest='color', type=str, nargs='+',
+                        default='YlOrRd_r', help='Coloring for the tract (default %(default)s)')
+    parser.add_argument('--alpha', dest='alpha', type=float, nargs='+', default=1.,
+                        help='Alpha for the probability maps')
+
+    parser.add_argument('--print-colors', dest='print_colors', action='store_true',
+                        help='Print the list of colormaps')
 
     args = parser.parse_args()
+
+    if args.print_colors:
+        from matplotlib import colors
+        maps = [
+            cm_ for cm_ in dir(cm)
+            if isinstance(getattr(cm, cm_), colors.Colormap)
+        ]
+        max_length = max(len(cm_) for cm_ in maps) + 3
+        str_ = "{:<" + str(max_length) + "}"
+        for i in xrange(0, len(maps), 4):
+            maps_ = maps[i: i + 4]
+            str_line = str_ * len(maps_)
+            print str_line.format(*maps_)
+        parser.exit(0)
+
     fig = figure(frameon=False)
     fa = nibabel.load(args.base_image).get_data()
-    tract = nibabel.load(args.tract_image).get_data()
-    t_colormap = cm.YlOrRd_r
-    t_colormap.set_under(alpha=0)
+
+    if isinstance(args.tract_image, str):
+        args.tract_image = [args.tract_image]
+    tracts = [nibabel.load(tract_image).get_data() for tract_image in args.tract_image]
+
+    if isinstance(args.alpha, float):
+        args.alpha = [args.alpha]
+    if len(args.alpha) == 1:
+        args.alpha *= len(tracts)
+
+    if isinstance(args.color, str):
+        args.color = [args.color]
+    if len(args.color) == 1:
+        args.color *= len(tracts)
+
+    t_colormap = []
+    for colormap in args.color:
+        t_colormap.append(getattr(cm, colormap))
+        t_colormap[-1].set_under(alpha=0)
+
     fa_cm = cm.gray
     fa_cm.set_under(alpha=0)
-    thr = min(tract.max() - 1e-10, args.threshold)
     if args.step:
         args.slices = xrange(args.slices[0], args.slices[1], args.slices[2])
     for i, y in enumerate(args.slices):
@@ -61,9 +102,17 @@ def main():
         slices[args.axis] = y
         slices = tuple(slices)
 
-        imshow(fa[slices].T, cmap=fa_cm, vmin=1e-10, origin=True, interpolation='spline36')
-        imshow(tract[slices].T, cmap=t_colormap,
-               vmin=thr, vmax=tract.max(), origin=True, interpolation='gaussian')
+        imshow(fa[slices].T, cmap=fa_cm, vmin=min(1e-10, fa[slices].min), origin=True, interpolation='spline36')
+        for tract, colormap in izip(tracts, t_colormap):
+            thr = min(tract.max() - 1e-10, args.threshold)
+            if args.mip:
+                tract_slice = tract.max(args.axis).T
+            else:
+                tract_slice = tract[slices].T
+            imshow(
+                tract_slice, cmap=colormap,
+                vmin=thr, vmax=tract.max(), origin=True, interpolation='gaussian'
+            )
         xticks([])
         yticks([])
         ax.hold(False)
