@@ -66,7 +66,6 @@ def main():
             options.bounding_box_affine_transform, sep=','
         ).reshape(4, 4)
         print "RAS transform:"
-        print bounding_box_affine_transform
     else:
         bounding_box_affine_transform = np.eye(4)
 
@@ -113,9 +112,19 @@ def main():
     labels_nii = nibabel.load(options.atlas_file_name)
     img = labels_nii.get_data()
 
-    tr = tract_querier.tractography.tractography_from_vtk_files(
+    tr = tract_querier.tractography.tractography_from_file(
         options.tractography_file_name
     )
+
+    tractography_extension = os.path.splitext(options.tractography_file_name)[-1]
+    if tractography_extension == '.trk':
+        tractography_extra_kwargs = {
+            'affine': tr.affine,
+            'image_dimensions': tr.image_dims
+        }
+
+    else:
+        tractography_extra_kwargs = {}
 
     print "Calculating labels and crossings"
     affine_ijk_2_ras = labels_nii.get_affine()
@@ -140,11 +149,17 @@ def main():
         query_names.sort()
 
         for query_name in query_names:
-            save_query(query_name, tr, options, evaluated_queries)
+            save_query(
+                query_name, tr, options, evaluated_queries,
+                extension=tractography_extension, extra_kwargs=tractography_extra_kwargs
+            )
     else:
         query_save = (
             lambda query_name, query_result:
-            save_query(query_name, tr, options, {query_name: query_result})
+            save_query(
+                query_name, tr, options, {query_name: query_result},
+                extension=tractography_extension, extra_kwargs=tractography_extra_kwargs
+            )
         )
 
         interactive_shell = tract_querier.TractQuerierCmd(
@@ -157,22 +172,21 @@ def main():
         interactive_shell.cmdloop()
 
 
-def save_query(query_name, tractography, options, evaluated_queries):
+def save_query(query_name, tractography, options, evaluated_queries, extension='.vtk', extra_kwargs={}):
     tract_numbers = evaluated_queries[query_name]
     print "\tQuery %s: %.6d" % (query_name, len(tract_numbers))
     if tract_numbers:
         save_tractography_file(
-            options.output_file_name + "_" + query_name + '.vtk',
+            options.output_file_name + "_" + query_name + extension,
             tractography,
             tract_numbers,
+            extra_kwargs=extra_kwargs
         )
 
 
 def save_tractography_file(
-    filename, tractography, tract_numbers,
+    filename, tractography, tract_numbers, extra_kwargs={}
 ):
-    from itertools import izip
-
     tract_numbers = list(tract_numbers)
 
     original_tracts = tractography.original_tracts()
@@ -197,12 +211,13 @@ def save_tractography_file(
     ):
         tracts_data_to_save['ActiveVectors'] = 'Vectors_'
 
-    tract_querier.tractography.tractography_to_vtk_file(
+    tract_querier.tractography.tractography_to_file(
         filename,
         tract_querier.tractography.Tractography(
             tracts_to_save,
             tracts_data_to_save
-        )
+        ),
+        **extra_kwargs
     )
 
 

@@ -6,6 +6,27 @@ import numpy as np
 from tractography import Tractography
 
 
+def tractography_from_vtk_files(vtk_file_names):
+    tr = Tractography()
+
+    if isinstance(vtk_file_names, str):
+        vtk_file_names = [vtk_file_names]
+
+    for file_name in vtk_file_names:
+        tracts, tracts_data = read_vtkPolyData(file_name)
+        tr.append(tracts, tracts_data)
+
+    return tr
+
+
+def tractography_to_vtk_file(vtk_file_name, tractography):
+    return write_vtkPolyData(
+        vtk_file_name,
+        tractography.tracts(),
+        tractography.tracts_data()
+    )
+
+
 def read_vtkPolyData(filename):
     r'''
     Reads a VTKPolyData file and outputs a tracts/tracts_data pair

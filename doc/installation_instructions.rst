@@ -8,8 +8,8 @@ Requirements
 ------------
 * `Python 2.x, 2.7 or superior <http://www.python.org>`_
 * `NumPy 1.6 or superior <http://www.numpy.org>`_
-* `VTK 5.x installed along with its python wrappings <http://www.vtk.org>`_
 * `nibabel 1.3.x <http://nipy.sourceforge.net/nibabel/>`_
+* If you want to be able to use VTK files to represent tractographies (like for interacting with slicer): `VTK 5.x installed along with its python wrappings <http://www.vtk.org>`_
 
 All of these can be easily obtained from pre-packaged distributions such as `Canopy <https://www.enthought.com/products/canopy>`_ or `Anaconda <http://docs.continuum.io/anaconda/index.html>`_. In these cases, the packages corresponding to *VTK* and *nibabel* will need to be added.
 
