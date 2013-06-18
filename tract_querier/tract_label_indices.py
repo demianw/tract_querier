@@ -58,11 +58,13 @@ class TractographySpatialIndexing:
         self.length_threshold = length_threshold
         self.crossing_threshold = crossing_threshold
 
-        self.crossing_tracts_labels, self.crossing_labels_tracts, \
-            self.ending_tracts_labels, self.ending_labels_tracts = compute_tract_label_indices(
-                self.affine_ras_2_ijk, self.image,
-                self.tractography, self.length_threshold, self.crossing_threshold
-            )
+        (
+            self.crossing_tracts_labels, self.crossing_labels_tracts,
+            self.ending_tracts_labels, self.ending_labels_tracts
+        ) = compute_tract_label_indices(
+            self.affine_ras_2_ijk, self.image,
+            self.tractography, self.length_threshold, self.crossing_threshold
+        )
 
         self.label_bounding_boxes = compute_label_bounding_boxes(self.image, self.affine_ijk_2_ras)
         self.tract_bounding_boxes = compute_tract_bounding_boxes(self.tractography)
@@ -75,22 +77,39 @@ class TractographySpatialIndexing:
 
 
 def compute_label_bounding_boxes(image, affine_ijk_2_ras):
-    labels = np.unique(image)
     linear_component = affine_ijk_2_ras[:3, :3]
     translation = affine_ijk_2_ras[:-1, -1]
-
     label_bounding_boxes = {}
-    for i, label in enumerate(np.sort(labels)):
-        if label == 0:
-            continue
 
-        coords = np.where(image == label)
-        ras_coords = (
-            (linear_component.dot(coords).T +
-             translation)
-        )
+    try:
+        from scipy import ndimage
+        labels = ndimage.find_objects(image)
+        for i, label in enumerate(labels):
+            if label is not None:
+                ras_bounding_box = np.dot(
+                    linear_component,
+                    np.array([(s.start, s.stop) for s in label])
+                ).T + translation
 
-        label_bounding_boxes[label] = BoundingBox(ras_coords)
+                label_bounding_boxes[i + 1] = BoundingBox(
+                    ras_bounding_box
+                )
+
+    except ImportError:
+        labels = np.unique(image)
+        for i, label in enumerate(np.sort(labels)):
+            if label == 0:
+                continue
+
+            coords = np.where(image == label)
+            ras_coords = (
+                (
+                    linear_component.dot(coords).T +
+                    translation
+                )
+            )
+
+            label_bounding_boxes[label] = BoundingBox(ras_coords)
 
     return label_bounding_boxes
 
