@@ -206,7 +206,7 @@ def compute_tract_label_indices(
         any(((all_points_ijk_rounded[:, i] >= img.shape[i]).any() for i in xrange(3))) or
         (all_points_ijk_rounded < 0).any()
     ):
-        print warnings.warn("Warning tract points fall outside the image")
+        warnings.warn("Warning tract points fall outside the image")
 
     for i in xrange(3):
         all_points_ijk_rounded[:, i] = all_points_ijk_rounded[
