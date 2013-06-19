@@ -25,13 +25,12 @@ def tractography_to_trackvis_file(filename, tractography, affine=None, image_dim
         raise ValueError("Image dimensions needed to save a tractvis file")
 
     trk_header['n_count'] = len(tractography.tracts())
-
-    trk_tracks = (
+    trk_tracks = [
         (
             sl, None, None
         )
         for sl in tractography.tracts()
-    )
+    ]
 
     trackvis.write(filename, trk_tracks, trk_header, points_space='rasmm')
 
