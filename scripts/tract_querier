@@ -41,6 +41,11 @@ def main():
         "to put both in AC-PC coordinate space"
     )
 
+    parser.add_option(
+        '--interactive-webdisplay', dest='interactive_url',
+        help='Enables interactive display of the results'
+    )
+
     (options, args) = parser.parse_args()
 
     if (
@@ -116,13 +121,23 @@ def main():
         options.tractography_file_name
     )
 
-    tractography_extension = os.path.splitext(options.tractography_file_name)[-1]
-    if tractography_extension == '.trk':
-        tractography_extra_kwargs = {
-            'affine': tr.affine,
-            'image_dimensions': tr.image_dims
-        }
+    input_split = os.path.splitext(options.tractography_file_name)
+    output_split = os.path.splitext(options.output_file_name)
+    if len(output_split) > 1:
+        options.output_file_name = output_split[0]
+        tractography_extension = output_split[1]
 
+    if tractography_extension == '.trk':
+        if input_split[-1] == '.trk':
+            tractography_extra_kwargs = {
+                'affine': tr.affine,
+                'image_dimensions': tr.image_dims
+            }
+        else:
+            tractography_extra_kwargs = {
+                'affine': labels_nii.get_affine(),
+                'image_dimensions': img.shape
+            }
     else:
         tractography_extra_kwargs = {}
 
@@ -154,13 +169,27 @@ def main():
                 extension=tractography_extension, extra_kwargs=tractography_extra_kwargs
             )
     else:
-        query_save = (
-            lambda query_name, query_result:
-            save_query(
-                query_name, tr, options, {query_name: query_result},
-                extension=tractography_extension, extra_kwargs=tractography_extra_kwargs
-            )
-        )
+        if options.interactive_url is None:
+            def query_save(query_name, query_result):
+                return save_query(
+                    query_name, tr, options, {query_name: query_result},
+                    extension=tractography_extension, extra_kwargs=tractography_extra_kwargs
+                )
+        else:
+            def query_save(query_name, query_result):
+                import urllib
+                filename = save_query(
+                    query_name, tr, options, {query_name: query_result},
+                    extension=tractography_extension, extra_kwargs=tractography_extra_kwargs
+                )
+                if filename is not None:
+                    try:
+                        params = urllib.urlencode({'file': filename})
+                        f = urllib.urlopen(options.interactive_url, params)
+                        f.close()
+                    except Exception, e:
+                        print "Interactive URL error:", e
+                return filename
 
         interactive_shell = tract_querier.TractQuerierCmd(
             tractography_spatial_indexing,
@@ -176,12 +205,14 @@ def save_query(query_name, tractography, options, evaluated_queries, extension='
     tract_numbers = evaluated_queries[query_name]
     print "\tQuery %s: %.6d" % (query_name, len(tract_numbers))
     if tract_numbers:
+        filename = options.output_file_name + "_" + query_name + extension
         save_tractography_file(
-            options.output_file_name + "_" + query_name + extension,
+            filename,
             tractography,
             tract_numbers,
             extra_kwargs=extra_kwargs
         )
+        return filename
 
 
 def save_tractography_file(
