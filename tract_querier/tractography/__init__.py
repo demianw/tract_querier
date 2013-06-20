@@ -5,12 +5,18 @@ from .trackvis import tractography_from_trackvis_file, tractography_to_trackvis_
 __all__ = [
     'Tractography',
     'tractography_from_trackvis_file', 'tractography_to_trackvis_file',
-    'tractography_from_file', 'tractography_to_file'
+    'tractography_from_file', 'tractography_to_file',
 ]
 
 try:
-    __all__ += ['tractography_from_vtk_files', 'tractography_to_vtk_file']
-    from .vtkInterface import tractography_from_vtk_files, tractography_to_vtk_file
+    __all__ += [
+        'tractography_from_vtk_files', 'tractography_to_vtk_file',
+        'vtkPolyData_to_tracts', 'tracts_to_vtkPolyData'
+    ]
+    from .vtkInterface import (
+        tractography_from_vtk_files, tractography_to_vtk_file,
+        vtkPolyData_to_tracts, tracts_to_vtkPolyData
+    )
 
 except ImportError:
     pass

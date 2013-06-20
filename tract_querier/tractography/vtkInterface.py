@@ -13,8 +13,8 @@ def tractography_from_vtk_files(vtk_file_names):
         vtk_file_names = [vtk_file_names]
 
     for file_name in vtk_file_names:
-        tracts, tracts_data = read_vtkPolyData(file_name)
-        tr.append(tracts, tracts_data)
+        tracts = read_vtkPolyData(file_name)
+        tr.append(tracts.tracts(), tracts.tracts_data())
 
     return tr
 
@@ -60,7 +60,7 @@ def read_vtkPolyData(filename):
     return vtkPolyData_to_tracts(polydata)
 
 
-def vtkPolyData_to_tracts(polydata):
+def vtkPolyData_to_tracts(polydata, return_tractography_object=True):
     r'''
     Reads a VTKPolyData object and outputs a tracts/tracts_data pair
 
@@ -102,8 +102,13 @@ def vtkPolyData_to_tracts(polydata):
 
     result['pointData'] = data
 
-    return vtkPolyData_dictionary_to_tracts_and_data(result)
-
+    tracts, data = vtkPolyData_dictionary_to_tracts_and_data(result)
+    if return_tractography_object:
+        tr = Tractography()
+        tr.append(tracts, data)
+        return tr
+    else:
+        return tracts, data
 
 def vtkPolyData_dictionary_to_tracts_and_data(dictionary):
     r'''
@@ -240,6 +245,9 @@ def vtkPolyData_to_lines(polydata):
 
 
 def tracts_to_vtkPolyData(tracts, tracts_data={}, lines_indices=None):
+    if isinstance(tracts, Tractography):
+        tracts_data = tracts.tracts_data()
+        tracts = tracts.tracts()
     lengths = [len(p) for p in tracts]
     line_starts = ns.numpy.r_[0, ns.numpy.cumsum(lengths)]
     if lines_indices is None:
