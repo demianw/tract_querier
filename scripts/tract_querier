@@ -195,26 +195,43 @@ def main():
                     query_name, tr, options, {query_name: query_result},
                     extension=tractography_extension, extra_kwargs=tractography_extra_kwargs
                 )
+            query_del = None
         else:
+            import urllib
             def query_save(query_name, query_result):
-                import urllib
                 filename = save_query(
                     query_name, tr, options, {query_name: query_result},
                     extension=tractography_extension, extra_kwargs=tractography_extra_kwargs
                 )
                 if filename is not None:
                     try:
-                        params = urllib.urlencode({'file': filename})
+                        params = urllib.urlencode({
+                            'name': query_name,
+                            'file': filename,
+                            'action': 'add'
+                        })
                         f = urllib.urlopen(options.interactive_url, params)
                         f.close()
                     except Exception, e:
                         print "Interactive URL error:", e
                 return filename
 
+            def query_del(query_name):
+                try:
+                    params = urllib.urlencode({
+                        'name': query_name,
+                        'action': 'remove'
+                    })
+                    f = urllib.urlopen(options.interactive_url, params)
+                    f.close()
+                except Exception, e:
+                    print "Interactive URL error:", e
+
         interactive_shell = tract_querier.TractQuerierCmd(
             tractography_spatial_indexing,
             initial_body=query_script,
             save_query_callback=query_save,
+            del_query_callback=query_del,
             eof_callback=kill_server_callback,
             include_folders=folders
         )
@@ -277,7 +294,8 @@ def activate_webserver(options):
     import os
     from multiprocessing import Process
     from tract_querier import tornado_server
-
+    from uuid import uuid4
+    suffix = str(uuid4()).replace('-', '')
     options.interactive = True
 
     if options.interactive_url is None:
@@ -292,7 +310,7 @@ def activate_webserver(options):
             'colortable': options.interactive_colortable,
             'port': 9999,
             'files_path': os.getcwd(),
-
+            'suffix': suffix
         }
     )
 

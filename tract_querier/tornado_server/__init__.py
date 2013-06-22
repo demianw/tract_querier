@@ -1,5 +1,6 @@
 import os
 import sys
+import json
 
 import tornado.ioloop
 import tornado.web
@@ -34,12 +35,14 @@ class MainHandler(tornado.web.RequestHandler):
             self,
             host=None, port=None, path=None,
             filename=None, colortable=None,
+            suffix='',
             websocketsuffix='ws'):
         self.filename = filename
         self.colortable = colortable
         self.host = host
         self.port = port
         self.path = path
+        self.suffix = suffix
         self.websocketsuffix = websocketsuffix
 
     def get(self):
@@ -51,40 +54,64 @@ class MainHandler(tornado.web.RequestHandler):
                 'port': self.port,
                 'websocketsuffix': self.websocketsuffix
             },
-            filename=self.filename, colortable=self.colortable
+            filename=self.filename, colortable=self.colortable,
+            suffix=self.suffix
         )
 
 
 class AtlasHandler(tornado.web.StaticFileHandler):
     def initialize(
             self,
-            filename=None, colortable=None,
+            filename=None, colortable=None, suffix=''
     ):
         super(AtlasHandler, self).initialize('/')
         self.filename = filename
         self.colortable = colortable
+        self.suffix = suffix
 
     def get(self, args):
-        print "GETTING", args
-        if args == 'atlas.nii.gz':
+        if args == 'atlas_%s.nii.gz' % self.suffix:
             super(AtlasHandler, self).get(self.filename)
-        elif args == 'colortable.txt':
+        elif args == 'colortable_%s.txt' % self.suffix:
             super(AtlasHandler, self).get(self.colortable)
         else:
             raise ValueError("Unidentified file")
 
 
+class NoCacheStaticHandler(tornado.web.StaticFileHandler):
+    """ Request static file handlers for development and debug only.
+    It disables any caching for static file.
+    """
+    def set_extra_headers(self, path):
+        self.set_header('Cache-Control', 'no-cache')
+        #self.set_header('Expires', '0')
+        #now = datetime.datetime.now()
+        #expiration = datetime.datetime(now.year - 1, now.month, now.day)
+        #self.set_header('Last-Modified', expiration)
+
+
 class TractHandler(tornado.web.RequestHandler):
+    def initialize(self):
+        self.json_encoder = json.JSONEncoder()
+
     def post(self):
         try:
-            arg = self.get_argument("file")
+            action = {
+                'action': self.get_argument('action'),
+                'name': self.get_argument('name')
+            }
+
+            if action['action'] == 'add':
+                action['file'] = self.get_argument("file")
+
+            action_json = self.json_encoder.encode(action)
             for client in websocket_clients:
-                client.write_message(arg)
+                client.write_message(action_json)
         except Exception, e:
             print e
 
 
-def xtk_server(atlas, colortable=None, port=9999, files_path=None):
+def xtk_server(atlas, colortable=None, port=9999, files_path=None, suffix=''):
     print "Using atlas", atlas
     global application
 
@@ -107,7 +134,8 @@ def xtk_server(atlas, colortable=None, port=9999, files_path=None):
             'host': 'localhost', 'port': 9999,
             'path': static_folder,
             'filename': atlas,
-            'colortable': colortable
+            'colortable': colortable,
+            'suffix': suffix
         }),
         (
             r"/static/(.*)",
@@ -120,11 +148,12 @@ def xtk_server(atlas, colortable=None, port=9999, files_path=None):
             r'/atlas/(.*)',
             AtlasHandler, {
                 'filename': atlas,
-                'colortable': colortable
+                'colortable': colortable,
+                'suffix': suffix
             }
 
         ),
-        (r'/files/(.*)', tornado.web.StaticFileHandler, {"path": files_path})
+        (r'/files/(.*)', NoCacheStaticHandler, {"path": files_path})
     ])
     application.listen(port)
     tornado.ioloop.IOLoop.instance().start()

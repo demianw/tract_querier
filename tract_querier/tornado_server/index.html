@@ -4,10 +4,12 @@
 <html>
 <head>
 <meta http-equiv="content-type" content="text/html; charset=UFT-8">
-<title>Test</title>
+<title>White Matter Query Language Vizualization</title>
 <link rel="stylesheet" type="text/css" href="static/css/default.css" />
 <link rel="stylesheet" type="text/css" href="static/css/viewer.css" />
-   
+<link rel="stylesheet" type="text/css" href="static/css/viewer.css" />
+<link rel="stylesheet" type="text/css" href="static/css/jquery-ui-1.9.2.custom.css" />
+  
 <!--<script type="text/javascript" src="http://get.goXTK.com/xtk.js"></script>-->
 <script type="text/javascript" src="static/js/xtk_edge.js"></script>
 <script type="text/javascript" src="static/js/x.controller.js"></script>
@@ -16,17 +18,13 @@
 <script  type="text/javascript" src="static/js/jquery-ui-1.9.2.custom.min.js"></script>
 <script  type="text/javascript" src="static/js/jquery.ui.slider.js"></script>
 
-<!--<script type="text/javascript" src="js/x.viewer2d.js"></script>-->
-
-    
-<!--<script type="text/javascript" src="http://get.goXTK.com/xtk_xdat.gui.js"></script>-->
+<script type="text/javascript" src="http://get.goXTK.com/xtk_xdat.gui.js"></script>
 
 <script  type="text/javascript" src="static/js/FreesurferColorLUT.js"></script>
 <script  type="text/javascript" src="static/js/wmqlviz.js"></script>
 <script  type="text/javascript">
   init_websocket('{{websocket_server}}');
-  //init_volume('{{filename}}', '{{colortable}}');
-  init_volume('atlas/atlas.nii.gz', 'atlas/colortable.txt');
+  init_volume('atlas/atlas_{{suffix}}.nii.gz', 'atlas/colortable_{{suffix}}.txt');
 </script>
 
 </head>

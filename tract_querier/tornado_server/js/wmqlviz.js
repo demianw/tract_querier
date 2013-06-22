@@ -100,17 +100,18 @@ function on2DHover(renderer) {
 	// get cursor position
 	var mousepos = renderer.interactor.mousePosition;
 	var ijk = renderer.xy2ijk(mousepos[0], mousepos[1]);
+        console.info(ijk)
 	if (!ijk) {
 		return;
 	}
 
 	//
 	var orientedIJK = ijk.slice();
-	orientedIJK[0] = ijk[2];
+	orientedIJK[0] = ijk[0];
 	orientedIJK[1] = ijk[1];
-	orientedIJK[2] = ijk[0];
+	orientedIJK[2] = ijk[2];
 
-	var volume = _ATLAS_.volumes[_ATLAS_.currentVolume];
+	var volume = _ATLAS_.currentVolume;
 	
 	// get the number associated with the label
 	var labelvalue = volume.labelmap.image[orientedIJK[0]][orientedIJK[1]][orientedIJK[2]];
@@ -133,9 +134,9 @@ sliceZ = null;
 
 function init_volume(filename, colortable) {
   volume = new X.volume();
-  volume.file = filename; //'MNI152_T1_1mm_brain.nii.gz';
-  volume.labelmap.file = filename; //'MNI152_wmparc_1mm_small.nii.gz';
-  volume.labelmap.colortable.file = colortable; //'FreeSurferColorLUT.txt';
+  volume.file = filename;
+  volume.labelmap.file = filename;
+  volume.labelmap.colortable.file = colortable;
 
   _ATLAS_ = {};
   _ATLAS_.volumes = {};
@@ -152,7 +153,7 @@ function init_volume(filename, colortable) {
 function init_websocket(host) {
   console.info("websocket start");
 
-  _fibers_ = {};
+  _tracts_ = {};
 
   $(document).ready(function () {
     _WS_ = new WebSocket(host);
@@ -162,16 +163,37 @@ function init_websocket(host) {
     };
 
     _WS_.onmessage = function(evt){
-        console.info(evt.data)
-  
-        if (evt.data in _fibers_) {
-          console.info("Removing tract " + evt.data);
-          render3D.remove(_fibers_[evt.data]);
-        };
+        var tract = JSON.parse(evt.data);
+        var name = tract['name'];
+        var file = tract['file'];
+        var action = tract['action'];
+        if (action == 'add') {
+          if (name in _tracts_) {
+            console.info("Removing tract " + name);
+            _tracts_gui_.remove(_tracts_[name].control);
+            render3D.remove(_tracts_[name]);
+          };
 
-        _fibers_[evt.data] = new X.fibers()
-        _fibers_[evt.data].file = 'files/' + evt.data
-        render3D.add(_fibers_[evt.data])
+          delete _tracts_[name];
+
+          _tracts_[name] = new X.fibers();
+          _tracts_[name].file = 'files/' + file;
+          _tracts_[name].caption = name;
+
+          _tracts_[name].control = _tracts_gui_.add(_tracts_[name], 'visible');
+          _tracts_[name].control.name(name);
+
+          render3D.add(_tracts_[name]);
+        }
+
+        if (action == 'remove') {
+          if (name in _tracts_) {
+            console.info("Removing tract " + name);
+            _tracts_gui_.remove(_tracts_[name].control);
+            render3D.remove(_tracts_[name]);
+            delete _tracts_[name];
+          }
+        }
     };
     _WS_.onclose = function () {
         console.info("connection closed");
@@ -187,7 +209,17 @@ window.onload = function() {
 
   render3D.onShowtime = function() {
     init_viewer2d();
-  }
+  };
+    
+  // The GUI panel
+  
+  // indicate if the mesh was loaded
+  var gui = new dat.GUI();
+
+  var labelmapgui = gui.addFolder('Label Map');
+  var labelMapVisibleController = labelmapgui.add(_ATLAS_.currentVolume, 'visible');
+
+  _tracts_gui_ = gui.addFolder('Tracts');
 
   render3D.add(_ATLAS_.currentVolume)
   render3D.render();
