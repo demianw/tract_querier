@@ -95,6 +95,8 @@ class TractQuerierCmd(cmd.Cmd):
             tractography_spatial_indexing,
             initial_body=None, tractography=None,
             save_query_callback=None,
+            del_query_callback=None,
+            eof_callback=None,
             include_folders=['.']
     ):
         cmd.Cmd.__init__(self, 'Tab')
@@ -107,6 +109,9 @@ class TractQuerierCmd(cmd.Cmd):
         self.save_query_visitor = SaveQueries(
             self.save_query_callback, self.querier
         )
+
+        self.del_query_callback = del_query_callback
+        self.eof_callback = eof_callback
 
         if initial_body is not None:
             if isinstance(initial_body, str):
@@ -136,6 +141,16 @@ class TractQuerierCmd(cmd.Cmd):
             keys = k
         for k in keys:
             print k
+
+    @safe_method
+    def do_del(self, name):
+        if self.del_query_callback is None:
+            print "Can not delete a query in this mode"
+            return
+        if name not in self.names():
+            print "Error, query does not exist"
+        else:
+            self.del_query_callback(name)
 
     def emptyline(self):
         return
@@ -186,8 +201,7 @@ class TractQuerierCmd(cmd.Cmd):
             self.names()
         )
 
-        if '=' in text:
-            candidates += keywords
+        candidates += keywords
 
         options = [
             candidate
@@ -203,6 +217,8 @@ class TractQuerierCmd(cmd.Cmd):
     def do_EOF(self, line):
         s = raw_input("\nSure you want to leave (y/n)? ")
         if s.lower() == 'y':
+            if self.eof_callback is not None:
+                self.eof_callback()
             return True
         else:
             return False

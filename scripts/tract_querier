@@ -40,9 +40,16 @@ def main():
         help="Bounding box to apply to the image affine transform and tracts "
         "to put both in AC-PC coordinate space"
     )
-
     parser.add_option(
-        '--interactive-webdisplay', dest='interactive_url',
+        '--interactive-webdisplay', dest='interactive_web', action='store_true',
+        help='Enables interactive display of the results'
+    )
+    parser.add_option(
+        '--interactive-colortable', dest='interactive_colortable', type=str,
+        help='Atlas colortable for the webgl viz'
+    )
+    parser.add_option(
+        '--interactive-webdisplay-url', dest='interactive_url',
         help='Enables interactive display of the results'
     )
 
@@ -65,6 +72,12 @@ def main():
     import nibabel
 
     import tract_querier
+
+    if options.interactive_web:
+        kill_server_callback = activate_webserver(options)
+        options.interactive = True
+    else:
+        kill_server_callback = None
 
     if options.bounding_box_affine_transform:
         bounding_box_affine_transform = np.fromstring(
@@ -127,6 +140,13 @@ def main():
         options.output_file_name = output_split[0]
         tractography_extension = output_split[1]
 
+    if options.interactive_web is not None and tractography_extension != '.trk':
+        print (
+            "The web application only works with Trackvis output files"
+            " setting the output to Trackvis mode"
+        )
+        tractography_extension = '.trk'
+
     if tractography_extension == '.trk':
         if input_split[-1] == '.trk':
             tractography_extra_kwargs = {
@@ -169,7 +189,7 @@ def main():
                 extension=tractography_extension, extra_kwargs=tractography_extra_kwargs
             )
     else:
-        if options.interactive_url is None:
+        if options.interactive_url is None and options.interactive_web is None:
             def query_save(query_name, query_result):
                 return save_query(
                     query_name, tr, options, {query_name: query_result},
@@ -195,6 +215,7 @@ def main():
             tractography_spatial_indexing,
             initial_body=query_script,
             save_query_callback=query_save,
+            eof_callback=kill_server_callback,
             include_folders=folders
         )
 
@@ -250,6 +271,37 @@ def save_tractography_file(
         ),
         **extra_kwargs
     )
+
+
+def activate_webserver(options):
+    import os
+    from multiprocessing import Process
+    from tract_querier import tornado_server
+
+    options.interactive = True
+
+    if options.interactive_url is None:
+        options.interactive_url = 'http://localhost:9999/tracts'
+
+    print "Starting web server, please direct your browser to http://localhost:%04d" % 9999
+
+    p = Process(
+        target=tornado_server.xtk_server,
+        args=(os.path.abspath(options.atlas_file_name),),
+        kwargs={
+            'colortable': options.interactive_colortable,
+            'port': 9999,
+            'files_path': os.getcwd(),
+
+        }
+    )
+
+    p.start()
+
+    def kill_server():
+        p.terminate()
+
+    return kill_server
 
 
 if __name__ == "__main__":
