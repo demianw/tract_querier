@@ -5,6 +5,7 @@ from .trackvis import tractography_from_trackvis_file, tractography_to_trackvis_
 __all__ = [
     'Tractography',
     'tractography_from_trackvis_file', 'tractography_to_trackvis_file',
+    'tractography_from_files',
     'tractography_from_file', 'tractography_to_file',
 ]
 
@@ -20,6 +21,19 @@ try:
 
 except ImportError:
     pass
+
+
+def tractography_from_files(filenames):
+    if isinstance(filenames, str):
+        filenames = [filenames]
+
+    tracts = tractography_from_file(filenames[0])
+
+    for filename in filenames[1:]:
+        tracts_ = tractography_from_file(filename)
+        tracts.append(tracts_.tracts(), tracts_.tracts_data())
+
+    return tracts
 
 
 def tractography_from_file(filename):
