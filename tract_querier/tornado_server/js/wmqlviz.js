@@ -1,3 +1,4 @@
+/*
 $(function() {
 	
 	// create the sliders for the 2D sliders
@@ -17,7 +18,7 @@ $(function() {
 	$("#green_slider .ui-slider-handle").unbind('keydown');
 	
 });
-
+*/
 function init_viewer2d() {
 
 	var volume = _ATLAS_.volumes[_ATLAS_.currentVolume];
@@ -74,19 +75,23 @@ function init_viewer2d() {
 	  };
 
 	// update 2d slice sliders
+        /*
 	var dim = volume.dimensions;
 	$("#yellow_slider").slider("option", "disabled", false);
 	$("#yellow_slider").slider("option", "min", 0);
 	$("#yellow_slider").slider("option", "max", dim[0] - 1);
 	$("#yellow_slider").slider("option", "value", volume.indexX);
+
 	$("#red_slider").slider("option", "disabled", false);
 	$("#red_slider").slider("option", "min", 0);
-	$("#red_slider").slider("option", "max", dim[1] - 1);
-	$("#red_slider").slider("option", "value", volume.indexY);
+	$("#red_slider").slider("option", "max", dim[2] - 1);
+	$("#red_slider").slider("option", "value", volume.indexZ);
+
 	$("#green_slider").slider("option", "disabled", false);
 	$("#green_slider").slider("option", "min", 0);
-	$("#green_slider").slider("option", "max", dim[2] - 1);
-	$("#green_slider").slider("option", "value", volume.indexZ);
+	$("#green_slider").slider("option", "max", dim[1] - 1);
+	$("#green_slider").slider("option", "value", volume.indexY);
+        */
 }//init_viewer2d()
 
 // show labels on hover
@@ -107,9 +112,9 @@ function on2DHover(renderer) {
 
 	//
 	var orientedIJK = ijk.slice();
-	orientedIJK[0] = ijk[0];
-	orientedIJK[1] = ijk[1];
-	orientedIJK[2] = ijk[2];
+	orientedIJK[0] = ijk[1];
+	orientedIJK[1] = ijk[2];
+	orientedIJK[2] = ijk[0];
 
 	var volume = _ATLAS_.currentVolume;
 	
@@ -123,8 +128,9 @@ function on2DHover(renderer) {
 	var _r = parseInt(volume.labelmap.colortable.get(labelvalue)[1] * 255, 10);
 	var _g = parseInt(volume.labelmap.colortable.get(labelvalue)[2] * 255, 10);
 	var _b = parseInt(volume.labelmap.colortable.get(labelvalue)[3] * 255, 10);
-	$('#anatomy_caption').html(labelname);
-	$('#anatomy_caption').css('color', 'rgb( ' + _r + ',' + _g + ',' + _b + ' )' );
+        $('#anatomy_caption').html("");
+	//$('#anatomy_caption').html(labelname);
+	//$('#anatomy_caption').css('color', 'rgb( ' + _r + ',' + _g + ',' + _b + ' )' );
 }
 
 
@@ -183,7 +189,10 @@ function init_websocket(host) {
           _tracts_[name].control = _tracts_gui_.add(_tracts_[name], 'visible');
           _tracts_[name].control.name(name);
 
+          _tracts_[name].modified();
+          
           render3D.add(_tracts_[name]);
+
         }
 
         if (action == 'remove') {
