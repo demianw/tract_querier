@@ -50,7 +50,13 @@ def main():
     )
     parser.add_option(
         '--interactive-webdisplay-url', dest='interactive_url',
-        help='Enables interactive display of the results'
+        help='Server port for the interactive display of the results: default: http://localhost:9999',
+    )
+
+    parser.add_option(
+        '--interactive-webdisplay-port', dest='interactive_port',
+        help='Server port for the interactive display of the results: default $(default)d',
+        default=9999
     )
 
     (options, args) = parser.parse_args()
@@ -298,17 +304,19 @@ def activate_webserver(options):
     suffix = str(uuid4()).replace('-', '')
     options.interactive = True
 
-    if options.interactive_url is None:
-        options.interactive_url = 'http://localhost:9999/tracts'
+    options.interactive_port = int(options.interactive_port)
 
-    print "Starting web server, please direct your browser to http://localhost:%04d" % 9999
+    if options.interactive_url is None:
+        options.interactive_url = 'http://localhost:%04d/tracts' % options.interactive_port
+
+    print "Starting web server, please direct your browser to http://localhost:%04d" % options.interactive_port
 
     p = Process(
         target=tornado_server.xtk_server,
         args=(os.path.abspath(options.atlas_file_name),),
         kwargs={
             'colortable': options.interactive_colortable,
-            'port': 9999,
+            'port': options.interactive_port,
             'files_path': os.getcwd(),
             'suffix': suffix
         }
