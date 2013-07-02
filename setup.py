@@ -24,6 +24,14 @@ def configuration(parent_package='', top_path=None):
 
 
 if __name__ == "__main__":
+    requires = open('requirements.txt').readlines()
+    for i, req in enumerate(requires):
+        req = req.strip()
+        if '>' in req:
+            req = req.replace('>', '(>')
+            req += ')'
+        requires[i] = req
+
     setup(
         name=DISTNAME,
         maintainer=MAINTAINER,
@@ -34,10 +42,7 @@ if __name__ == "__main__":
         version=VERSION,
         download_url=DOWNLOAD_URL,
         long_description=LONG_DESCRIPTION,
-        requires=[
-            'numpy(>=1.6)',
-            'nibabel(>=1.3)'
-        ],
+        requires=requires,
         classifiers=[
             'Intended Audience :: Science/Research',
             'Programming Language :: Python',
