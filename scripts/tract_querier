@@ -56,6 +56,7 @@ def main():
 
     global np
     global tract_querier
+
     import numpy as np
     import nibabel
 
@@ -75,7 +76,7 @@ def main():
     else:
         folders = []
 
-    default_folder = os.path.join(sys.prefix, 'tract_querier', 'queries')
+    default_folder = tract_querier.default_queries_folder
     folders = [os.getcwd()] + folders + [default_folder]
     for folder in folders:
         if not (os.path.exists(folder) and os.path.isdir(folder)):
