@@ -115,15 +115,22 @@ def xtk_server(atlas, colortable=None, port=9999, files_path=None, suffix=''):
     print "Using atlas", atlas
     global application
 
+    folder_prefix = os.path.abspath(os.path.join(
+        *(
+            [os.path.dirname(__file__)] +
+            ['..'] * 5
+        )
+    ))
+
     static_folder = os.path.join(
-        sys.prefix,
+        folder_prefix,
         'tract_querier', 'tornado_server'
     )
 
     if colortable is None:
         print "No color table specified, using FreeSurfer"
         colortable = os.path.join(
-            sys.prefix, 'tract_querier',
+            folder_prefix, 'tract_querier',
             'tornado_server', 'FreeSurferColorLUT.txt'
         )
     else:

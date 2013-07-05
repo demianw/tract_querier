@@ -7,11 +7,10 @@ import tractography
 
 
 default_queries_folder = os.path.abspath(os.path.join(
-    os.path.dirname(__file__),
-    '..', '..', '..', '..',
-    'tract_querier', 'queries'
+    *([os.path.dirname(__file__)] + ['..'] * 4 +
+    ['tract_querier', 'queries'])
 ))
-
+print default_queries_folder
 #import tract_metrics
 
 __version__ = 0.1
