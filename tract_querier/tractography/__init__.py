@@ -1,6 +1,7 @@
 from .tractography import Tractography
 from .trackvis import tractography_from_trackvis_file, tractography_to_trackvis_file
 
+from warnings import warn
 
 __all__ = [
     'Tractography',
@@ -20,7 +21,10 @@ try:
     )
 
 except ImportError:
-    pass
+    warn(
+        'VTK support not installed in this python distribution, '
+        'VTK files will not be read or written'
+    )
 
 
 def tractography_from_files(filenames):
