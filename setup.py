@@ -24,13 +24,16 @@ def configuration(parent_package='', top_path=None):
 
 
 if __name__ == "__main__":
-    requires = open('requirements.txt').readlines()
-    for i, req in enumerate(requires):
+    requires_base = open('requirements.txt').readlines()
+    requires = []
+    for i, req in enumerate(requires_base):
+        if req.strip().startswith('#') or req.strip().startswith('-'):
+            continue
         req = req.strip()
         if '>' in req:
             req = req.replace('>', '(>')
             req += ')'
-        requires[i] = req
+        requires.append(req)
 
     setup(
         name=DISTNAME,
