@@ -1,4 +1,4 @@
-from .. import anisotropy
+from .. import scalar_measures
 
 import numpy
 from numpy.testing import assert_array_almost_equal
@@ -14,4 +14,4 @@ def test_fractional_anisotropy(N=10, random=numpy.random.RandomState(0)):
         mn = ev.mean()
         fa[i] = numpy.sqrt(1.5 * ((ev - mn) ** 2).sum() / (ev ** 2).sum())
 
-    assert_array_almost_equal(fa, anisotropy.fractional_anisotropy(tensors))
+    assert_array_almost_equal(fa, scalar_measures.fractional_anisotropy(tensors))
