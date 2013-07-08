@@ -5,6 +5,8 @@ import StringIO
 import csv
 from os import path
 
+import nibabel
+
 from ..tractography import (
     Tractography, tractography_to_file
 )
@@ -95,6 +97,8 @@ def process_output(output, file_output=None):
             raise TractMathWrongArgumentsError(
                 'This operation needs a tractography file output'
             )
+    elif isinstance(output, nibabel.spatialimages.SpatialImage):
+        nibabel.save(output, file_output)
     elif isinstance(output, Mapping):
         if file_output is None:
             f = StringIO.StringIO()

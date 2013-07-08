@@ -2,7 +2,10 @@ from .decorator import tract_math_operation
 
 from collections import OrderedDict
 import numpy
+
 import nibabel
+from nibabel.spatialimages import SpatialImage
+
 from ..tractography import Tractography, tractography_to_file, tractography_from_files
 
 
@@ -221,26 +224,17 @@ def tract_map_image(tractography, image, quantity_name, file_output):
 
 
 @tract_math_operation('<image> <mask_out>: calculates the mask image from a tract on the space of the given image')
-def tract_generate_mask(tractography, image, image_out):
+def tract_generate_mask(tractography, image, file_output):
     image = nibabel.load(image)
-
     mask = tract_mask(image, tractography)
 
-    nibabel.save(nibabel.spatialimages.SpatialImage(
-        mask, image.get_affine()), image_out)
+    return SpatialImage(mask, image.get_affine())
 
 
 @tract_math_operation('<image> [smoothing] <image_out>: calculates the probabilistic tract image for these tracts', needs_one_tract=False)
-def tract_generate_population_probability_map(tractographies, image, *args):
+def tract_generate_population_probability_map(tractographies, image, smoothing=0, file_output=None):
     from scipy import ndimage
     image = nibabel.load(image)
-
-    if len(args) > 1:
-        smoothing = float(args[0])
-        image_out = args[1]
-    else:
-        smoothing = 0
-        image_out = args[0]
 
     if isinstance(tractographies, Tractography):
         tractographies = [tractographies]
@@ -257,10 +251,7 @@ def tract_generate_population_probability_map(tractographies, image, *args):
 
     prob_map /= len(tractographies)
 
-    nibabel.save(
-        nibabel.spatialimages.SpatialImage(prob_map, image.get_affine()),
-        image_out
-    )
+    return SpatialImage(prob_map, image.get_affine()),
 
 
 @tract_math_operation('<image> <image_out>: calculates the probabilistic tract image for these tracts', needs_one_tract=False)
@@ -273,8 +264,7 @@ def tract_generate_probability_map(tractographies, image, image_out):
         new_prob_map = tract_mask(image, tract)
         prob_map = prob_map + new_prob_map - (prob_map * new_prob_map)
 
-    nibabel.save(nibabel.spatialimages.SpatialImage(
-        prob_map, image.get_affine()), image_out)
+    return SpatialImage(prob_map, image.get_affine())
 
 
 @tract_math_operation('<tractography_out>: strips the data from the tracts', needs_one_tract=True)
