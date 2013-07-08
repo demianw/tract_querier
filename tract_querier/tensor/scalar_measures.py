@@ -4,6 +4,13 @@ Anisotropy measures from tensor operations
 import numpy
 
 
+__all__ = [
+    'fractional_anisotropy', 'volume_fraction',
+    'eigenvalues', 'tensor_trace', 'tensor_contraction',
+    'tensor_det'
+]
+
+
 def fractional_anisotropy(tensor_array):
     r'''
     Fractional Anisotropy (Basser et al.) measure computed as
