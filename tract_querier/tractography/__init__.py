@@ -2,6 +2,7 @@ from .tractography import Tractography
 from .trackvis import tractography_from_trackvis_file, tractography_to_trackvis_file
 
 from warnings import warn
+import numpy
 
 __all__ = [
     'Tractography',
@@ -54,6 +55,18 @@ def tractography_from_file(filename):
 
 def tractography_to_file(filename, tractography, **kwargs):
     if filename.endswith('trk'):
+        if 'affine' not in kwargs:
+            if hasattr(tractography, 'affine'):
+                kwargs['affine'] = tractography.affine
+            else:
+                warn('Setting affine of trk file to the identity')
+                kwargs['affine'] = numpy.eye(4)
+        if 'image_dimensions' not in kwargs:
+            if hasattr(tractography, 'image_dims'):
+                kwargs['image_dimensions'] = tractography.image_dims
+            else:
+                warn('Setting image_dimensions of trk file to: 1 1 1')
+                kwargs['image_dimensions'] = numpy.ones(3)
         return tractography_to_trackvis_file(filename, tractography, **kwargs)
     elif filename.endswith('vtk') or filename.endswith('vtp'):
         if 'tractography_from_vtk_files' in __all__:
