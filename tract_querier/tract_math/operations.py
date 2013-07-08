@@ -1,19 +1,22 @@
 from .decorator import tract_math_operation
 
+from collections import OrderedDict
 import numpy
 import nibabel
-from ..tractography import Tractography, tractography_to_vtk_file, tractography_from_vtk_files
+from ..tractography import Tractography, tractography_to_file, tractography_from_files
 
 
 @tract_math_operation(': counts the number of tracts')
 def count(tractography):
-    print len(tractography.tracts())
+    return {'number of tracts': len(tractography.tracts())}
 
 
 @tract_math_operation(': print the names of scalar data associated with each tract')
 def scalars(tractography):
-    for k in tractography.tracts_data().keys():
-        print k, ' '
+    return {
+        'scalar attributes':
+        tractography.tracts_data().keys()
+    }
 
 
 @tract_math_operation(': calculates mean and std of tract length')
@@ -26,8 +29,10 @@ def length_mean_std(tractography):
     mean = lengths.mean()
     std = lengths.std()
 
-    print mean, std
-    return mean, std
+    return OrderedDict((
+        ('length mean (mm)', mean),
+        ('length std (mm^2)', std)
+    ))
 
 
 def tract_length(tract):
@@ -136,16 +141,16 @@ def tract_point_distance_min_max(tractography):
 
 
 @tract_math_operation('<points per tract> <tractography_file_output>: subsamples tracts to a maximum number of points')
-def tract_subsample(tractography, points_per_tract, tractography_file_output):
+def tract_subsample(tractography, points_per_tract, file_output):
     tractography.subsample_tracts(int(points_per_tract))
-    tractography_to_vtk_file(
-        tractography_file_output, Tractography(
-            tractography.tracts(),  tractography.tracts_data())
+
+    return Tractography(
+        tractography.tracts(),  tractography.tracts_data()
     )
 
 
 @tract_math_operation('<mm per tract> <tractography_file_output>: subsamples tracts to a maximum number of points')
-def tract_remove_short_tracts(tractography, min_tract_length, tractography_file_output):
+def tract_remove_short_tracts(tractography, min_tract_length, file_output):
 
     min_tract_length = float(min_tract_length)
 
@@ -167,12 +172,11 @@ def tract_remove_short_tracts(tractography, min_tract_length, tractography_file_
         else:
             selected_data[key] = item
 
-    tractography_to_vtk_file(
-        tractography_file_output, Tractography(selected_tracts, selected_data))
+    return Tractography(selected_tracts, selected_data)
 
 
 @tract_math_operation('<image> <quantity_name> <tractography_file_output>: maps the values of an image to the tract points')
-def tract_map_image(tractography, image, quantity_name, tractography_file_output):
+def tract_map_image(tractography, image, quantity_name, file_output):
     from os import path
     from scipy import ndimage
 
@@ -182,7 +186,7 @@ def tract_map_image(tractography, image, quantity_name, tractography_file_output
     image_data = image.get_data()
 
     if image_data.ndim > 3:
-        output_name, ext = path.splitext(tractography_file_output)
+        output_name, ext = path.splitext(file_output)
         output_name = output_name + '_%04d' + ext
         for i, image in enumerate(image_data):
             new_scalar_data = ndimage.map_coordinates(
@@ -190,7 +194,7 @@ def tract_map_image(tractography, image, quantity_name, tractography_file_output
             )[:, None]
             tractography.original_tracts_data()[
                 quantity_name] = new_scalar_data
-            tractography_to_vtk_file(output_name % i, Tractography(
+            tractography_to_file(output_name % i, Tractography(
                 tractography.original_tracts(),  tractography.original_tracts_data()))
     else:
         new_scalar_data_flat = ndimage.map_coordinates(
@@ -203,9 +207,9 @@ def tract_map_image(tractography, image, quantity_name, tractography_file_output
                 new_scalar_data_flat[start: start + len(tract)])
             start += len(tract)
         tractography.original_tracts_data()[quantity_name] = new_scalar_data
-        tractography_to_vtk_file(
-            tractography_file_output, Tractography(
-                tractography.original_tracts(),  tractography.original_tracts_data())
+
+        return Tractography(
+            tractography.original_tracts(),  tractography.original_tracts_data()
         )
 
 
@@ -267,13 +271,14 @@ def tract_generate_probability_map(tractographies, image, image_out):
 
 
 @tract_math_operation('<tractography_out>: strips the data from the tracts', needs_one_tract=True)
-def tract_strip(tractography, tractography_file_output):
+def tract_strip(tractography, file_output):
     tractography_out = Tractography(tractography.tracts())
-    tractography_to_vtk_file(tractography_file_output, tractography_out)
+
+    return tractography_out
 
 
 @tract_math_operation('<tractography_out>: takes the union of all tractographies', needs_one_tract=False)
-def tract_merge(tractographies, tractography_file_output):
+def tract_merge(tractographies, file_output):
     all_tracts = []
     all_data = {}
     keys = [set(t.tracts_data().keys()) for t in tractographies]
@@ -290,10 +295,7 @@ def tract_merge(tractographies, tractography_file_output):
             else:
                 all_data[k] = data[k]
 
-    tractography_to_vtk_file(
-        tractography_file_output,
-        Tractography(all_tracts, all_data)
-    )
+    return Tractography(all_tracts, all_data)
 
 
 @tract_math_operation('<volume unit> <tract1.vtk> ... <tractN.vtk>: calculates the kappa value of the first tract with the rest in the space of the reference image')
@@ -304,7 +306,9 @@ def tract_kappa(tractography, resolution, *other_tracts):
 
     for tract in other_tracts:
         voxels1 = voxelized_tract(
-            tractography_from_vtk_files(tract), resolution)
+            tractography_from_files(tract),
+            resolution
+        )
 
         all_voxels = numpy.array(list(voxels.union(voxels1)))
         N = (all_voxels.max(0) - all_voxels.min(0)).prod()
@@ -331,7 +335,7 @@ def tract_kappa_volume(tractography, volume, threshold, resolution, *other_tract
 
     for tract in other_tracts:
         voxels1 = voxelized_tract(
-            tractography_from_vtk_files(tract), resolution)
+            tractography_from_files(tract), resolution)
 
         all_voxels = numpy.array(list(voxels.union(voxels1)))
         N = (all_voxels.max(0) - all_voxels.min(0)).prod()
@@ -356,7 +360,9 @@ def tract_dice(tractography, resolution, *other_tracts):
 
     for tract in other_tracts:
         voxels1 = voxelized_tract(
-            tractography_from_vtk_files(tract), resolution)
+            tractography_from_files(tract),
+            resolution
+        )
         print 2 * len(voxels.intersection(voxels1)) * 1. / (len(voxels) + len(voxels1))
 
 
@@ -369,7 +375,7 @@ def voxelized_tract(tractography, resolution):
 
 
 @tract_math_operation('<var> <tract_out>: smoothes the tract by convolving with a sliding window')
-def tract_smooth(tractography, var, tractography_file_output):
+def tract_smooth(tractography, var, file_output):
     from sklearn.neighbors import BallTree
 
     var = float(var)
@@ -429,15 +435,12 @@ def tract_smooth(tractography, var, tractography_file_output):
 
         weighted_points = (projected_points * weights).sum(1)
 
-        # import ipdb
-        # ipdb.set_trace()
         tract[:] = weighted_points
         # tract /= norm_term
 
-    tractography_to_vtk_file(
-        tractography_file_output,
-        Tractography(tractography.original_tracts(),
-                     tractography.original_tracts_data())
+    return Tractography(
+        tractography.original_tracts(),
+        tractography.original_tracts_data()
     )
 
 
