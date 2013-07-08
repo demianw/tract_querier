@@ -64,22 +64,25 @@ def tract_volume(tractography, resolution):
 
     # print len(dilated_voxels), len(voxels), len(eroded_voxels)
     approx_voxels = (len(dilated_voxels) - len(eroded_voxels)) / 2.
-    print approx_voxels * (resolution ** 3)
-    return approx_voxels * (resolution ** 3)
+
+    return {'tract volume': approx_voxels * (resolution ** 3)}
 
 
 @tract_math_operation('<scalar>: calculates mean and std of a scalar quantity for each tract')
 def scalar_tract_mean_std(tractography, scalar):
     try:
         tracts = tractography.original_tracts_data()[scalar]
-        means = []
-        stds = []
+        result = OrderedDict((
+            ('tract file', []),
+            ('mean %s' % scalar, []),
+            ('std %s' % scalar, [])
+        ))
         for i, t in enumerate(tracts):
-            means.append(t.mean().squeeze())
-            stds.append(t.std().squeeze())
-            print means[-1], stds[-1]
+            result['tract file'].append('Tract %04d' % i)
+            result['mean %s' % scalar].append(t.mean())
+            result['std %s' % scalar].append(t.std())
 
-        return means, stds
+        return result
 
     except KeyError:
         raise ValueError("Tractography does not contain this scalar data")
@@ -89,13 +92,15 @@ def scalar_tract_mean_std(tractography, scalar):
 def scalar_tract_median(tractography, scalar):
     try:
         tracts = tractography.original_tracts_data()[scalar]
-        medians = []
+        result = OrderedDict((
+            ('tract file', []),
+            ('median %s' % scalar, []),
+        ))
         for i, t in enumerate(tracts):
-            medians.append(numpy.median(t).squeeze())
-            print medians[-1]
+            result['tract file'].append('Tract %04d' % i)
+            result['median %s' % scalar].append(float(numpy.median(t)))
 
-        return medians
-
+        return result
     except KeyError:
         raise ValueError("Tractography does not contain this scalar data")
 
@@ -107,9 +112,10 @@ def scalar_mean_std(tractography, scalar):
         all_scalars = numpy.vstack(scalars)
         mean = all_scalars.mean(0)
         std = all_scalars.std(0)
-
-        print mean.squeeze(), std.squeeze()
-        return mean, std
+        return OrderedDict((
+            ('mean %s' % scalar, float(mean)),
+            ('std %s' % scalar, float(std))
+        ))
 
     except KeyError:
         raise ValueError("Tractography does not contain this scalar data")
@@ -122,8 +128,9 @@ def scalar_median(tractography, scalar):
         all_scalars = numpy.vstack(scalars)
         median = numpy.median(all_scalars)
 
-        print median
-        return median
+        return OrderedDict((
+            ('median %s' % scalar, float(median)),
+        ))
 
     except KeyError:
         raise ValueError("Tractography does not contain this scalar data")
@@ -304,6 +311,11 @@ def tract_kappa(tractography, resolution, *other_tracts):
 
     voxels = voxelized_tract(tractography, resolution)
 
+    result = OrderedDict((
+        ('tract file', []),
+        ('kappa value', [])
+    ))
+
     for tract in other_tracts:
         voxels1 = voxelized_tract(
             tractography_from_files(tract),
@@ -322,7 +334,10 @@ def tract_kappa(tractography, resolution, *other_tracts):
 
         k = (observed_agreement - chance_agreement) / (1 - chance_agreement)
 
-        print k
+        result['tract file'].append(tract)
+        result['kappa value'].append(k)
+
+    return result
 
 
 @tract_math_operation('<volume> <threshold> <tract1.vtk> ... <tractN.vtk>: calculates the kappa value of the first tract with the rest in the space of the reference image')
@@ -332,6 +347,11 @@ def tract_kappa_volume(tractography, volume, threshold, resolution, *other_tract
     volume = nibabel.load(volume)
     mask = (volume.get_data() > threshold).astype(int)
     voxels = tract_mask(mask, tractography)
+
+    result = OrderedDict((
+        ('tract file', []),
+        ('kappa value', [])
+    ))
 
     for tract in other_tracts:
         voxels1 = voxelized_tract(
@@ -349,7 +369,10 @@ def tract_kappa_volume(tractography, volume, threshold, resolution, *other_tract
 
         k = (observed_agreement - chance_agreement) / (1 - chance_agreement)
 
-        print k
+        result['tract file'].append(tract)
+        result['kappa value'].append(k)
+
+    return result
 
 
 @tract_math_operation('<volume unit> <tract1.vtk> ... <tractN.vtk>: calculates the dice coefficient of the first tract with the rest in the space of the reference image')
@@ -358,12 +381,23 @@ def tract_dice(tractography, resolution, *other_tracts):
 
     voxels = voxelized_tract(tractography, resolution)
 
+    result = OrderedDict((
+        ('tract file', []),
+        ('dice coefficient', [])
+    ))
+
     for tract in other_tracts:
         voxels1 = voxelized_tract(
             tractography_from_files(tract),
             resolution
         )
-        print 2 * len(voxels.intersection(voxels1)) * 1. / (len(voxels) + len(voxels1))
+        result['tract file'].append(tract)
+        result['dice coefficient'].append(
+            2 * len(voxels.intersection(voxels1)) * 1. /
+            (len(voxels) + len(voxels1))
+        )
+
+    return result
 
 
 def voxelized_tract(tractography, resolution):

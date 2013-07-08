@@ -30,15 +30,18 @@ def tract_math_operation(help_text, needs_one_tract=True):
             argspec = inspect.getargspec(func)
             func_total_args = len(argspec.args)
 
+            if argspec.varargs:
+                func_total_args += 1
+
+            func_args = func_total_args
+
             if argspec.defaults:
                 func_args = func_total_args - len(argspec.defaults)
-            else:
-                func_args = func_total_args
 
             has_file_output = 'file_output' in argspec.args
 
             if (
-                total_args == func_total_args + 1 or
+                (total_args > func_total_args and args[-1] != '-') or
                 has_file_output
             ):
                 if has_file_output:
@@ -57,10 +60,11 @@ def tract_math_operation(help_text, needs_one_tract=True):
 
                 process_output(out, file_output=file_output)
             elif (
-                total_args == func_total_args or
+                total_args >= func_total_args or
                 len(args) == func_args
             ):
-
+                if args[-1] == '-':
+                    args = args[:-1]
                 process_output(func(*args))
             else:
                 raise TractMathWrongArgumentsError(
@@ -78,6 +82,12 @@ def tract_math_operation(help_text, needs_one_tract=True):
 def process_output(output, file_output=None):
     if output is None:
         return
+
+    if file_output is not None and path.exists(file_output):
+        in_key = raw_input("Overwrite file %s (y/N)? " % file_output)
+        if in_key.lower().strip() != 'y':
+            return
+
     if isinstance(output, Tractography):
         if file_output is not None:
             tractography_to_file(file_output, output)
