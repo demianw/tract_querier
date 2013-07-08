@@ -266,6 +266,12 @@ def tract_generate_probability_map(tractographies, image, image_out):
         prob_map, image.get_affine()), image_out)
 
 
+@tract_math_operation('<tractography_out>: strips the data from the tracts', needs_one_tract=True)
+def tract_strip(tractography, tractography_file_output):
+    tractography_out = Tractography(tractography.tracts())
+    tractography_to_vtk_file(tractography_file_output, tractography_out)
+
+
 @tract_math_operation('<tractography_out>: takes the union of all tractographies', needs_one_tract=False)
 def tract_merge(tractographies, tractography_file_output):
     all_tracts = []

@@ -1,12 +1,17 @@
 from .. import Tractography
-from .. import tractography_from_vtk_files, tractography_to_vtk_file
+from .. import (
+    tractography_from_vtk_files, tractography_to_vtk_file,
+    tractography_from_trackvis_file, tractography_to_trackvis_file,
+    tractography_from_files, tractography_to_file
+)
 
 from nose.tools import with_setup
 import copy
 from itertools import izip, chain
 
-from numpy import all
+from numpy import all, eye, ones, allclose
 from numpy.random import randint, randn
+from numpy.testing import assert_array_equal
 
 dimensions = None
 tracts = None
@@ -18,7 +23,7 @@ n_tracts = 50
 
 def equal_tracts(a, b):
     for t1, t2 in izip(a, b):
-        if not all(t1 == t2):
+        if not allclose(t1, t2):
             return False
 
     return True
@@ -35,7 +40,7 @@ def equal_tracts_data(a, b):
             continue
         elif not isinstance(v1, str) and not isinstance(v2, str):
             for t1, t2 in izip(a[k], b[k]):
-                if not all(t1 == t2):
+                if not allclose(t1, t2):
                     return False
         else:
             return False
@@ -163,3 +168,69 @@ def test_saveload_vtp():
     assert(equal_tracts_data(tractography.tracts_data(), new_tractography.tracts_data()))
 
     os.remove(fname)
+
+
+@with_setup(setup)
+def test_saveload_trk():
+    import tempfile
+    import os
+    fname = tempfile.mkstemp('.trk')[1]
+
+    tract_data_new = {
+        k: v
+        for k, v in tractography.tracts_data().iteritems()
+        if (v[0].ndim == 1) or (v[0].ndim == 2 and v[0].shape[1] == 1)
+    }
+
+    tractography_ = Tractography(tractography.tracts(), tract_data_new)
+
+    tractography_to_trackvis_file(
+        fname, tractography_,
+        affine=eye(4), image_dimensions=ones(3)
+    )
+
+    new_tractography = tractography_from_trackvis_file(fname)
+
+    assert(equal_tracts(tractography_.tracts(), new_tractography.tracts()))
+    assert(equal_tracts_data(tractography_.tracts_data(), new_tractography.tracts_data()))
+    assert_array_equal(eye(4), new_tractography.affine)
+    assert_array_equal(ones(3), new_tractography.image_dims)
+
+    os.remove(fname)
+
+
+@with_setup(setup)
+def test_saveload():
+    import tempfile
+    import os
+
+    for ext in ('.vtk', '.vtp', '.trk'):
+        fname = tempfile.mkstemp(ext)[1]
+
+        kwargs = {}
+
+        if ext == '.trk':
+            kwargs['affine'] = eye(4)
+            kwargs['image_dimensions'] = ones(3)
+
+            tract_data_new = {
+                k: v
+                for k, v in tractography.tracts_data().iteritems()
+                if (v[0].ndim == 1) or (v[0].ndim == 2 and v[0].shape[1] == 1)
+            }
+
+            tractography_ = Tractography(tractography.tracts(), tract_data_new)
+        else:
+            tractography_ = tractography
+
+        tractography_to_file(
+            fname, tractography_,
+            **kwargs
+        )
+
+        new_tractography = tractography_from_files(fname)
+
+        assert(equal_tracts(tractography_.tracts(), new_tractography.tracts()))
+        assert(equal_tracts_data(tractography_.tracts_data(), new_tractography.tracts_data()))
+
+        os.remove(fname)

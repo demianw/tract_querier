@@ -20,3 +20,5 @@ tract_querier Package
   query_processor
   tractography
   tract_label_indices
+  tensor
+  tensor.scalar_measures
