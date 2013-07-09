@@ -37,9 +37,12 @@ def main():
         usage += '\t%s %s\n' % (f, operations[f].help_text)
 
     #The first arguments, except for the last one, might be tractography files
+
     n_tracts = len([
+        tract for tract in
         itertools.takewhile(
-            lambda x: x not in operations_names, sys.argv[1:-1]
+            lambda x: x not in operations_names,
+            sys.argv[1:]
         )
     ])
 
