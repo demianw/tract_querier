@@ -2,7 +2,7 @@ from .decorator import tract_math_operation
 
 try:
 	from collections import OrderedDict
-except ImportError:  # Python 2.6 fix 
+except ImportError:  # Python 2.6 fix
 	from ordereddict import OrderedDict
 
 import numpy
@@ -48,7 +48,7 @@ def length_mean_std(tractography):
 
 def tract_length(tract):
     d2 = numpy.sqrt((numpy.diff(tract, axis=0) ** 2).sum(1))
-    return d2.sum()
+    return {'Tract length': d2.sum()}
 
 
 @tract_math_operation('<volume unit>: calculates the volume of a tract based on voxel occupancy of a certain voxel volume')
@@ -243,6 +243,7 @@ def tract_generate_mask(tractography, image, file_output):
 def tract_generate_population_probability_map(tractographies, image, smoothing=0, file_output=None):
     from scipy import ndimage
     image = nibabel.load(image)
+    smoothing = float(smoothing)
 
     if isinstance(tractographies, Tractography):
         tractographies = [tractographies]
