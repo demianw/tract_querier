@@ -137,6 +137,23 @@ class TractQuerierCmd(cmd.Cmd):
         for k in keys:
             print k
 
+    @safe_method
+    def do_save(self, line):
+        try:
+            body = queries_preprocess(
+                line,
+                filename='shell', include_folders=self.include_folders
+            )
+            self.save_query_visitor.visit(ast.Module(body=body))
+        except SyntaxError, e:
+            print e.value
+        except TractQuerierSyntaxError, e:
+            print e.value
+        except KeyError, e:
+            print "Query name not recognized: %s" % e
+
+        return False
+
     def emptyline(self):
         return
 
