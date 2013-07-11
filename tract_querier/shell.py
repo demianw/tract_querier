@@ -154,6 +154,21 @@ class TractQuerierCmd(cmd.Cmd):
 
         return False
 
+    def do_help(self, line):
+        print '''WMQL Help
+
+        Commands:
+            dir <pattern>: list the available queries according to the pattern
+            save <query name>: save the corresponding query
+
+        Expressions:
+            <query name> = <query>: execute a query and save its result
+            <query name> |= <query>: execute a query without saving its result
+
+        Exit pressing Ctrl+D
+        '''
+        return
+
     def emptyline(self):
         return
 
