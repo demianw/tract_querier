@@ -152,6 +152,38 @@ class TractQuerierCmd(cmd.Cmd):
         else:
             self.del_query_callback(name)
 
+    def do_save(self, line):
+        try:
+            body = queries_preprocess(
+                line,
+                filename='shell', include_folders=self.include_folders
+            )
+            self.save_query_visitor.visit(ast.Module(body=body))
+        except SyntaxError, e:
+            print e.value
+        except TractQuerierSyntaxError, e:
+            print e.value
+        except KeyError, e:
+            print "Query name not recognized: %s" % e
+
+        return False
+
+    def do_help(self, line):
+        print '''WMQL Help
+
+        Commands:
+            dir <pattern>: list the available queries according to the pattern
+            save <query name>: save / visualize the corresponding query
+            del <query name>: remove a query from the visualization
+
+        Expressions:
+            <query name> = <query>: execute a query and save its result
+            <query name> |= <query>: execute a query without saving its result
+
+        Exit pressing Ctrl+D
+        '''
+        return
+
     def emptyline(self):
         return
 

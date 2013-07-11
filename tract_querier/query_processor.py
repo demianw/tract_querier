@@ -38,7 +38,13 @@ class FiberQueryInfo(object):
         tracts_endpoints : (set, set)
             sets of labels of where the tract endpoints are
     """
-    def __init__(self, tracts=set(), labels=set(), tracts_endpoints=(set(), set())):
+    def __init__(self, tracts=None, labels=None, tracts_endpoints=None):
+        if tracts is None:
+            tracts = set()
+        if labels is None:
+            labels = set()
+        if tracts_endpoints is None:
+            tracts_endpoints = (set(), set())
         self.tracts = tracts
         self.labels = labels
         self.tracts_endpoints = tracts_endpoints
@@ -97,10 +103,16 @@ class FiberQueryInfo(object):
 class EndpointQueryInfo:
     def __init__(
         self,
-        endpoint_tracts=(set(), set()),
-        endpoint_labels=(set(), set()),
-        endpoint_points=(set(), set())
+        endpoint_tracts=None,
+        endpoint_labels=None,
+        endpoint_points=None,
     ):
+        if endpoint_tracts is None:
+            endpoint_tracts = (set(), set())
+        if endpoint_labels is None:
+            endpoint_labels = (set(), set())
+        if endpoint_points is None:
+            endpoint_points = (set(), set())
         self.endpoint_tracts = endpoint_tracts
         self.endpoint_labels = endpoint_labels
         self.endpoint_points = endpoint_points
@@ -277,7 +289,6 @@ class EvaluateQueries(ast.NodeVisitor):
         query_info = FiberQueryInfo()
         for name in fnmatch.filter(self.evaluated_queries_info.keys(), node.s):
             query_info.update(self.evaluated_queries_info[name])
-
         return query_info
 
     def visit_Call(self, node):

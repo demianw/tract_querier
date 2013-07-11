@@ -1,6 +1,10 @@
 from .decorator import tract_math_operation
 
-from collections import OrderedDict
+try:
+	from collections import OrderedDict
+except ImportError:  # Python 2.6 fix 
+	from ordereddict import OrderedDict
+
 import numpy
 
 import nibabel
@@ -255,7 +259,7 @@ def tract_generate_population_probability_map(tractographies, image, smoothing=0
 
 
 @tract_math_operation('<image> <image_out>: calculates the probabilistic tract image for these tracts', needs_one_tract=False)
-def tract_generate_probability_map(tractographies, image, image_out):
+def tract_generate_probability_map(tractographies, image, file_output):
     image = nibabel.load(image)
 
     prob_map = tract_probability_map(image, tractographies[0]).astype(float)
