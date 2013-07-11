@@ -47,7 +47,7 @@ def main():
     ])
 
     parser = ArgumentParser(usage=usage)
-    parser.add_argument('tractographies', nargs=n_tracts, help='tractography files', type=FileType('r'))
+    parser.add_argument('tractographies', nargs=max(n_tracts, 1), help='tractography files', type=FileType('r'))
     parser.add_argument('operation', type=str, choices=operations_names,
                         help="operation to use")
     parser.add_argument('operation_parameters', type=str, nargs=REMAINDER,
