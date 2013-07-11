@@ -80,7 +80,7 @@ def compute_label_bounding_boxes(image, affine_ijk_2_ras):
     linear_component = affine_ijk_2_ras[:3, :3]
     translation = affine_ijk_2_ras[:-1, -1]
     label_bounding_boxes = {}
-
+    image = image.astype(int)
     try:
         from scipy import ndimage
         labels = ndimage.find_objects(image)
