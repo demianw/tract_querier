@@ -13,9 +13,13 @@ from nibabel.spatialimages import SpatialImage
 from ..tractography import Tractography, tractography_to_file, tractography_from_files
 
 
-@tract_math_operation(': counts the number of tracts')
-def count(tractography):
-    return {'number of tracts': len(tractography.tracts())}
+@tract_math_operation(': counts the number of tracts', needs_one_tract=False)
+def count(tractographies):
+    results = {'tract file #': [], 'number of tracts': []}
+    for i, tractography in enumerate(tractographies):
+	    results['tract file #'].append(i)
+	    results['number of tracts'].append(len(tractography.tracts()))
+    return results
 
 
 @tract_math_operation(': print the names of scalar data associated with each tract')
@@ -265,6 +269,8 @@ def tract_generate_probability_map(tractographies, image, file_output):
     prob_map = tract_probability_map(image, tractographies[0]).astype(float)
 
     for tract in tractographies[1:]:
+	if len(tract.tracts()) == 0:
+		continue
         new_prob_map = tract_mask(image, tract)
         prob_map = prob_map + new_prob_map - (prob_map * new_prob_map)
 
