@@ -208,7 +208,7 @@ soff.side = (
 UF.side = (
 	(
 	(orbitofrontalgyrus.side or middle_frontal_gyrus.side  or inferior_frontal_gyrus.side)
-	and endpoints_in(temporalpole.side)
+	and endpoints_in(temporal.side and anterior_of(amygdala.side))
 	and insula.side
 	)
 	not in occipital.side not in parietal.side not in cingular.side
