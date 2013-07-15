@@ -2,7 +2,7 @@ from .decorator import tract_math_operation
 
 try:
 	from collections import OrderedDict
-except ImportError:  # Python 2.6 fix 
+except ImportError:  # Python 2.6 fix
 	from ordereddict import OrderedDict
 
 import numpy
@@ -13,9 +13,13 @@ from nibabel.spatialimages import SpatialImage
 from ..tractography import Tractography, tractography_to_file, tractography_from_files
 
 
-@tract_math_operation(': counts the number of tracts')
-def count(tractography):
-    return {'number of tracts': len(tractography.tracts())}
+@tract_math_operation(': counts the number of tracts', needs_one_tract=False)
+def count(tractographies):
+    results = {'tract file #': [], 'number of tracts': []}
+    for i, tractography in enumerate(tractographies):
+	    results['tract file #'].append(i)
+	    results['number of tracts'].append(len(tractography.tracts()))
+    return results
 
 
 @tract_math_operation(': print the names of scalar data associated with each tract')
@@ -44,7 +48,7 @@ def length_mean_std(tractography):
 
 def tract_length(tract):
     d2 = numpy.sqrt((numpy.diff(tract, axis=0) ** 2).sum(1))
-    return d2.sum()
+    return {'Tract length': d2.sum()}
 
 
 @tract_math_operation('<volume unit>: calculates the volume of a tract based on voxel occupancy of a certain voxel volume')
@@ -239,6 +243,7 @@ def tract_generate_mask(tractography, image, file_output):
 def tract_generate_population_probability_map(tractographies, image, smoothing=0, file_output=None):
     from scipy import ndimage
     image = nibabel.load(image)
+    smoothing = float(smoothing)
 
     if isinstance(tractographies, Tractography):
         tractographies = [tractographies]
@@ -265,6 +270,8 @@ def tract_generate_probability_map(tractographies, image, file_output):
     prob_map = tract_probability_map(image, tractographies[0]).astype(float)
 
     for tract in tractographies[1:]:
+	if len(tract.tracts()) == 0:
+		continue
         new_prob_map = tract_mask(image, tract)
         prob_map = prob_map + new_prob_map - (prob_map * new_prob_map)
 
