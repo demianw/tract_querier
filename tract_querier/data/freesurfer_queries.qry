@@ -235,7 +235,7 @@ MDLF.side = only(
 
 
 
-ILF.side = only(temporal.side and occipital.side) and anterior_of(hippocampus.side) not in parahippocampal.side 
+ILF.side = endpoints_in(temporal.side and anterior_of(hippocampus.side)) and endpoints_in(occipital.side)
 
 ec.side = (
   (superiortemporal.side and frontal.side) and (parietal.side or occipital.side) 
