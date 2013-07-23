@@ -1,9 +1,11 @@
 from .decorator import tract_math_operation
+from warnings import warn
+
 
 try:
-	from collections import OrderedDict
+    from collections import OrderedDict
 except ImportError:  # Python 2.6 fix
-	from ordereddict import OrderedDict
+    from ordereddict import OrderedDict
 
 import numpy
 
@@ -17,8 +19,8 @@ from ..tractography import Tractography, tractography_to_file, tractography_from
 def count(tractographies):
     results = {'tract file #': [], 'number of tracts': []}
     for i, tractography in enumerate(tractographies):
-	    results['tract file #'].append(i)
-	    results['number of tracts'].append(len(tractography.tracts()))
+        results['tract file #'].append(i)
+        results['number of tracts'].append(len(tractography.tracts()))
     return results
 
 
@@ -167,6 +169,15 @@ def tract_subsample(tractography, points_per_tract, file_output):
     )
 
 
+@tract_math_operation('<points per tract> <tractography_file_output>: resamples tracts to a fixed number of points')
+def tract_resubsample(tractography, points_per_tract, file_output):
+    tractography.subsample_tracts(int(points_per_tract), True)
+
+    return Tractography(
+        tractography.tracts(),  tractography.tracts_data()
+    )
+
+
 @tract_math_operation('<mm per tract> <tractography_file_output>: subsamples tracts to a maximum number of points')
 def tract_remove_short_tracts(tractography, min_tract_length, file_output):
 
@@ -270,8 +281,8 @@ def tract_generate_probability_map(tractographies, image, file_output):
     prob_map = tract_probability_map(image, tractographies[0]).astype(float)
 
     for tract in tractographies[1:]:
-	if len(tract.tracts()) == 0:
-		continue
+        if len(tract.tracts()) == 0:
+            continue
         new_prob_map = tract_mask(image, tract)
         prob_map = prob_map + new_prob_map - (prob_map * new_prob_map)
 
@@ -525,3 +536,59 @@ def tract_in_ijk(image, tractography):
         numpy.ones((len(ras_points), 1))
     )).T).T[:, :-1]
     return ijk_points
+
+
+@tract_math_operation('<tract_out>: compute the protoype tract')
+def tract_prototype_median(tractography, file_output):
+    from .tract_obb import prototype_tract
+
+    tracts = tractography.tracts()
+    data = tractography.tracts_data()
+    prototype_ix = prototype_tract(tracts)
+
+    selected_tracts = [tracts[prototype_ix]]
+    selected_data = dict()
+    for key, item in data.items():
+        if len(item) == len(tracts):
+            selected_data_items = [item[prototype_ix]]
+            selected_data[key] = selected_data_items
+        else:
+            selected_data[key] = item
+
+    return Tractography(selected_tracts, selected_data)
+
+
+@tract_math_operation('<smooth order> <tract_out>: compute the protoype tract')
+def tract_prototype_mean(tractography, smooth_order, file_output):
+    from .tract_obb import prototype_tract
+
+    tracts = tractography.tracts()
+    prototype_ix, leave_centers = prototype_tract(tracts, return_leave_centers=True)
+
+    median_tract = tracts[prototype_ix]
+
+    mean_tract = numpy.empty_like(median_tract)
+    centers_used = set()
+    for point in median_tract:
+        closest_leave_center_ix = (
+            ((leave_centers - point[None, :]) ** 2).sum(1)
+        ).argmin()
+
+        if closest_leave_center_ix in centers_used:
+            continue
+
+        mean_tract[len(centers_used)] = leave_centers[closest_leave_center_ix]
+        centers_used.add(closest_leave_center_ix)
+
+    mean_tract = mean_tract[:len(centers_used)]
+
+    if smooth_order > 0:
+        try:
+            from scipy import interpolate
+
+            tck, u = interpolate.splprep(mean_tract.T)
+            mean_tract = numpy.transpose(interpolate.splev(u, tck))
+        except ImportError:
+            warn("A smooth order larger than 0 needs scipy installed")
+
+    return Tractography([mean_tract], {})
