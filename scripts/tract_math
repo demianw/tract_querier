@@ -23,7 +23,7 @@ def tract_math_operation(help_text, needs_one_tract=True):
 
 
 def main():
-    from tract_querier.tract_math import operations
+    from tract_querier.tract_math import tract_math_operations as operations
 
     usage = r"""
     usage: %(prog)s <tract1.vtk> ... <tractN.vtk> operation <operation parameter1> ... <operation parameterN> <output_tract.vtk>

@@ -28,53 +28,50 @@ def tract_math_operation(help_text, needs_one_tract=True):
 
     def internal_decorator(func):
         def wrapper(*args):
-            total_args = len(args)
             argspec = inspect.getargspec(func)
-            func_total_args = len(argspec.args)
+            func_args = argspec.args
 
-            if argspec.varargs:
-                func_total_args += 1
+            has_file_output = 'file_output' in func_args
 
-            func_args = func_total_args
+            if argspec.defaults is None:
+                defaults = tuple()
+            else:
+                defaults = argspec.defaults
 
-            if argspec.defaults:
-                func_args = func_total_args - len(argspec.defaults)
+            if has_file_output:
+                if func_args[-1] != 'file_output':
+                    raise TractMathWrongArgumentsError('Output file reserved parameter file_output must be the last one')
 
-            has_file_output = 'file_output' in argspec.args
-
-            if (
-                (total_args > func_total_args and args[-1] != '-') or
-                has_file_output
-            ):
-                if has_file_output:
-                    ix = argspec.args.index('file_output')
-
-                    if ix >= len(args):
-                        raise TractMathWrongArgumentsError(
-                            'Wrong number of parameters for the operation'
-                        )
-                    file_output = args[ix]
+                func_args = func_args[:-1]
+                if args[-1] == '-':
+                    file_output = None
                 else:
                     file_output = args[-1]
-                    args = args[:-1]
 
-                out = func(*args)
+                args = args[:-1]
+                defaults = defaults[:-1]
+            else:
+                file_output = None
 
-                process_output(out, file_output=file_output)
-            elif (
-                total_args >= func_total_args or
-                len(args) == func_args
-            ):
                 if args[-1] == '-':
                     args = args[:-1]
-                process_output(func(*args))
-            else:
-                raise TractMathWrongArgumentsError(
-                    'Wrong number of arguments for the operation'
-                )
+
+            needed_defaults = len(func_args) - len(args)
+            if needed_defaults > len(defaults):
+                    raise TractMathWrongArgumentsError('Wrong number of arguments')
+            elif needed_defaults == -1:
+                file_output = args[-1]
+                args = args[:-1]
+
+            if needed_defaults > 0:
+                args += defaults[-needed_defaults:]
+
+            out = func(*args)
+            process_output(out, file_output=file_output)
 
         wrapper.help_text = help_text
         wrapper.needs_one_tract = needs_one_tract
+        wrapper.original_function = func
 
         return wrapper
 
