@@ -1,6 +1,6 @@
 from inspect import getmembers
 
-from decorator import tract_math_operation
+from decorator import tract_math_operation, TractMathWrongArgumentsError
 
 tract_math_operations = dict()
 

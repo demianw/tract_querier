@@ -3,6 +3,15 @@ import sys
 import itertools
 from argparse import ArgumentParser, FileType, REMAINDER
 
+import warnings
+
+
+def custom_formatwarning(msg, *a):
+    # ignore everything except the message
+    return '\nWarning: ' + str(msg) + '\n'
+
+warnings.formatwarning = custom_formatwarning
+
 
 def tract_math_operation(help_text, needs_one_tract=True):
     '''
@@ -24,6 +33,7 @@ def tract_math_operation(help_text, needs_one_tract=True):
 
 def main():
     from tract_querier.tract_math import tract_math_operations as operations
+    from tract_querier.tract_math import TractMathWrongArgumentsError
 
     usage = r"""
     usage: %(prog)s <tract1.vtk> ... <tractN.vtk> operation <operation parameter1> ... <operation parameterN> <output_tract.vtk>
@@ -70,10 +80,12 @@ def main():
     if  args.operation in operations:
         try:
             operations[args.operation](tractography, *args.operation_parameters)
+        except TractMathWrongArgumentsError, e:
+            parser.error('\n\n' + str(e))
         except TypeError:
-            parser.error("Wrong number of parameters for the operation")
+            parser.error("\n\nWrong number of parameters for the operation")
     else:
-        parser.error("Operation not found")
+        parser.error("\n\nOperation not found")
 
 
 if __name__ == "__main__":
