@@ -161,7 +161,7 @@ def tract_point_distance_min_max(tractography):
 
 
 @tract_math_operation('<points per tract> <tractography_file_output>: subsamples tracts to a maximum number of points')
-def tract_subsample(tractography, points_per_tract, file_output):
+def tract_subsample(tractography, points_per_tract, file_output=None):
     tractography.subsample_tracts(int(points_per_tract))
 
     return Tractography(
@@ -170,7 +170,7 @@ def tract_subsample(tractography, points_per_tract, file_output):
 
 
 @tract_math_operation('<points per tract> <tractography_file_output>: resamples tracts to a fixed number of points')
-def tract_resubsample(tractography, points_per_tract, file_output):
+def tract_resubsample(tractography, points_per_tract, file_output=None):
     tractography.subsample_tracts(int(points_per_tract), True)
 
     return Tractography(
@@ -179,7 +179,7 @@ def tract_resubsample(tractography, points_per_tract, file_output):
 
 
 @tract_math_operation('<mm per tract> <tractography_file_output>: subsamples tracts to a maximum number of points')
-def tract_remove_short_tracts(tractography, min_tract_length, file_output):
+def tract_remove_short_tracts(tractography, min_tract_length, file_output=None):
 
     min_tract_length = float(min_tract_length)
 
@@ -205,7 +205,7 @@ def tract_remove_short_tracts(tractography, min_tract_length, file_output):
 
 
 @tract_math_operation('<image> <quantity_name> <tractography_file_output>: maps the values of an image to the tract points')
-def tract_map_image(tractography, image, quantity_name, file_output):
+def tract_map_image(tractography, image, quantity_name, file_output=None):
     from os import path
     from scipy import ndimage
 
@@ -243,7 +243,7 @@ def tract_map_image(tractography, image, quantity_name, file_output):
 
 
 @tract_math_operation('<image> <mask_out>: calculates the mask image from a tract on the space of the given image')
-def tract_generate_mask(tractography, image, file_output):
+def tract_generate_mask(tractography, image, file_output=None):
     image = nibabel.load(image)
     mask = tract_mask(image, tractography)
 
@@ -275,7 +275,7 @@ def tract_generate_population_probability_map(tractographies, image, smoothing=0
 
 
 @tract_math_operation('<image> <image_out>: calculates the probabilistic tract image for these tracts', needs_one_tract=False)
-def tract_generate_probability_map(tractographies, image, file_output):
+def tract_generate_probability_map(tractographies, image, file_output=None):
     image = nibabel.load(image)
 
     prob_map = tract_probability_map(image, tractographies[0]).astype(float)
@@ -290,14 +290,14 @@ def tract_generate_probability_map(tractographies, image, file_output):
 
 
 @tract_math_operation('<tractography_out>: strips the data from the tracts', needs_one_tract=True)
-def tract_strip(tractography, file_output):
+def tract_strip(tractography, file_output=None):
     tractography_out = Tractography(tractography.tracts())
 
     return tractography_out
 
 
 @tract_math_operation('<tractography_out>: takes the union of all tractographies', needs_one_tract=False)
-def tract_merge(tractographies, file_output):
+def tract_merge(tractographies, file_output=None):
     all_tracts = []
     all_data = {}
     keys = [set(t.tracts_data().keys()) for t in tractographies]
@@ -421,7 +421,7 @@ def voxelized_tract(tractography, resolution):
 
 
 @tract_math_operation('<var> <tract_out>: smoothes the tract by convolving with a sliding window')
-def tract_smooth(tractography, var, file_output):
+def tract_smooth(tractography, var, file_output=None):
     from sklearn.neighbors import BallTree
 
     var = float(var)
@@ -539,7 +539,7 @@ def tract_in_ijk(image, tractography):
 
 
 @tract_math_operation('<tract_out>: compute the protoype tract')
-def tract_prototype_median(tractography, file_output):
+def tract_prototype_median(tractography, file_output=None):
     from .tract_obb import prototype_tract
 
     tracts = tractography.tracts()
@@ -559,7 +559,7 @@ def tract_prototype_median(tractography, file_output):
 
 
 @tract_math_operation('<smooth order> <tract_out>: compute the protoype tract')
-def tract_prototype_mean(tractography, smooth_order, file_output):
+def tract_prototype_mean(tractography, smooth_order, file_output=None):
     from .tract_obb import prototype_tract
 
     tracts = tractography.tracts()
