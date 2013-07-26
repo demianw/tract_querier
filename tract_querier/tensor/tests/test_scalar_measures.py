@@ -17,6 +17,30 @@ def test_fractional_anisotropy(N=10, random=numpy.random.RandomState(0)):
     assert_array_almost_equal(fa, scalar_measures.fractional_anisotropy(tensors))
 
 
+def test_axial_diffusivity(N=10, random=numpy.random.RandomState(0)):
+    tensors = random.randn(N, 3, 3)
+    d = numpy.empty(N)
+    for i, t in enumerate(tensors):
+        tt = numpy.dot(t, t.T)
+        tensors[i] = tt
+        ev = numpy.linalg.eigvalsh(tt)
+        d[i] = ev.max()
+
+    assert_array_almost_equal(d, scalar_measures.axial_diffusivity(tensors))
+
+
+def test_radial_diffusivity(N=10, random=numpy.random.RandomState(0)):
+    tensors = random.randn(N, 3, 3)
+    d = numpy.empty(N)
+    for i, t in enumerate(tensors):
+        tt = numpy.dot(t, t.T)
+        tensors[i] = tt
+        ev = numpy.linalg.eigvalsh(tt)
+        d[i] = (ev.sum() - ev.max()) / 2.
+
+    assert_array_almost_equal(d, scalar_measures.radial_diffusivity(tensors))
+
+
 def test_volume_fraction(N=10, random=numpy.random.RandomState(0)):
     tensors = random.randn(N, 3, 3)
     vf = numpy.empty(N)

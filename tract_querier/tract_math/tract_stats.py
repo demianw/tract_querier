@@ -214,13 +214,38 @@ def prototype_index_for_point(tangent_tensor, dist_threshold2, prototype_tract, 
         ix = sel_points_ix[min_points_ix[0][((differences[min_points_ix, :] ** 2).sum(1)).argmin()]]
     return ix
 
-@tract_math_operation('<measure> <output_scalar_name> <output_tractography>: calculates a tensor-derived measure', needs_one_tract=True)
-def tract_tensor_measure(tractography, measure, scalar_name, file_output=None):
+
+@tract_math_operation('<measure> [output_scalar_name] <output_tractography>: calculates a tensor-derived measure', needs_one_tract=True)
+def tract_tensor_measure(tractography, measure, scalar_name=None, file_output=None):
     try:
         tensors = tractography.tracts_data()['tensors']
+        measure = measure.upper()
+
+        if scalar_name is None:
+            scalar_name = measure
 
         if measure == 'FA':
             measure_func = scalar_measures.fractional_anisotropy
+        elif measure == 'RD':
+            measure_func = scalar_measures.radial_diffusivity
+        elif measure == 'AD':
+            measure_func = scalar_measures.axial_diffusivity
+        elif measure == 'TR':
+            measure_func = scalar_measures.tensor_trace
+        elif measure == 'DET':
+            measure_func = scalar_measures.tensor_det
+        elif measure == 'VF':
+            measure_func = scalar_measures.volume_fraction
+        else:
+            raise TractMathWrongArgumentsError(
+                'Wrong anisotropy measure, avaliable measures are\n'
+                '\tFA: Fractional anisotropy\n'
+                '\tRD: Radial diffusivity\n'
+                '\tAD: Axial diffusivity\n'
+                '\tTR: Tract\n'
+                '\tDET: Determinant\n'
+                '\tVF: Volume fraction'
+            )
 
         measure = []
         for td in tensors:

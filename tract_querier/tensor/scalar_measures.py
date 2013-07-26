@@ -5,7 +5,8 @@ import numpy
 
 
 __all__ = [
-    'fractional_anisotropy', 'volume_fraction',
+    'fractional_anisotropy', 'volume_fraction', 'axial_diffusivity',
+    'radial_diffusivity',
     'eigenvalues', 'tensor_trace', 'tensor_contraction',
     'tensor_det'
 ]
@@ -83,3 +84,26 @@ def tensor_contraction(tensor_array_1, tensor_array_2):
     Return the contraction of each tensor pair
     '''
     return (tensor_array_1 * tensor_array_2).sum(-1).sum(-1)
+
+
+def radial_diffusivity(tensor_array):
+    r'''
+    Radial diffusivity
+
+
+    .. math::
+        RA = \frac{\lambda_2 + \lambda_3} 2
+    '''
+    ev = eigenvalues(tensor_array)
+    return (ev.sum(1) - ev.max(1)) / 2.
+
+
+def axial_diffusivity(tensor_array):
+    r'''
+    Axial diffusivity
+
+    .. math::
+        RA = \frac{\lambda_2 + \lambda_3} 2
+    '''
+    ev = eigenvalues(tensor_array)
+    return ev.max(1)
