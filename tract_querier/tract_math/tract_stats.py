@@ -114,6 +114,48 @@ def tract_prototype_scalar_to_tract(tractography, prototype_tract, scalar, outpu
         raise TractMathWrongArgumentsError('Scalar value %s not found in prototype' % scalar)
 
 
+@tract_math_operation('<scalar name> <output_file>: Output a csv file per tract with the x,y,z coordinates, the arc-length and a set of scalar values')
+def tract_export(tractography, scalar_name, file_output=None):
+    import re
+
+    output = OrderedDict([
+        ('tract_number', []),
+        ('x', []),
+        ('y', []),
+        ('z', []),
+        ('arc_length', []),
+    ])
+
+    scalar_names = [
+        scalar_name_ for scalar_name_ in tractography.tracts_data()
+        if re.match(scalar_name, scalar_name_)
+    ]
+
+    if len(scalar_names) == 0:
+        raise TractMathWrongArgumentsError('Scalar attribute %s not found' % scalar_name)
+
+    for scalar_name_ in scalar_names:
+        output[scalar_name_] = []
+
+    for i, tract in enumerate(tractography.tracts()):
+        x, y, z = tract.T
+
+        tangents = numpy.r_[(tract[:-1] - tract[1:]), (tract[-2] - tract[-1])[None, :]]
+        arc_length = numpy.r_[0, numpy.cumsum(numpy.sqrt((tangents ** 2).sum(1))[:-1])]
+
+        output['x'] += x.tolist()
+        output['y'] += y.tolist()
+        output['z'] += z.tolist()
+        output['arc_length'] += arc_length.tolist()
+        output['tract_number'] += [i] * len(tract)
+
+        for scalar_name_ in scalar_names:
+            tract_data = tractography.tracts_data()[scalar_name_][i]
+            output[scalar_name_] += tract_data.squeeze().tolist()
+
+    return output
+
+
 def project_tractography_to_prototype(tractography, scalar_name, prototype_tract, tangent_tensor, dist_threshold=8.):
     dist_threshold2 = dist_threshold ** 2
     prototype_value_buffer = numpy.zeros((len(prototype_tract), 1))
