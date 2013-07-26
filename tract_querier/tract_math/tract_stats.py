@@ -156,6 +156,35 @@ def tract_export(tractography, scalar_name, file_output=None):
     return output
 
 
+@tract_math_operation('<scalar name> <csv_input_file> <output_file>: Input a column of a csv file to the tractography')
+def tract_import(tractography, scalar_name, csv_input, file_output=None):
+    if len(tractography.tracts()) != 1:
+        raise TractMathWrongArgumentsError('The input tractography for this operation can only have one tract')
+    import re
+    import csv
+
+    reader = csv.DictReader(open(csv_input))
+
+    scalar_names = [
+        name for name in reader.fieldnames
+        if re.match(scalar_name, name)
+    ]
+
+    tracts_data = tractography.tracts_data()
+    tract = tractography.tracts()[0]
+    for name in scalar_names:
+        tracts_data[name] = [numpy.empty(len(tract))[:, None]]
+
+    for i, row in enumerate(reader):
+        for name in scalar_names:
+            tracts_data[name][0][i] = float(row[name])
+
+    if i < len(tract[0]):
+        raise TractMathWrongArgumentsError('The input CSV needs to have %d rows' % len(tract))
+
+    return tractography
+
+
 def project_tractography_to_prototype(tractography, scalar_name, prototype_tract, tangent_tensor, dist_threshold=8.):
     dist_threshold2 = dist_threshold ** 2
     prototype_value_buffer = numpy.zeros((len(prototype_tract), 1))
