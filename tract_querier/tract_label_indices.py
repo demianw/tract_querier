@@ -66,7 +66,7 @@ class TractographySpatialIndexing:
             self.tractography, self.length_threshold, self.crossing_threshold
         )
 
-        self.label_bounding_boxes = compute_label_bounding_boxes(self.image, self.affine_ijk_2_ras)
+        self.label_bounding_boxes = compute_label_bounding_boxes(self.image.astype(int), self.affine_ijk_2_ras)
         self.tract_bounding_boxes = compute_tract_bounding_boxes(self.tractography)
 
         self.tract_endpoints_pos = np.empty((len(self.tractography), 2, 3))

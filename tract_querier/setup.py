@@ -12,6 +12,7 @@ def configuration(parent_package='', top_path=None):
     config.add_subpackage('tornado_server')
     config.add_data_files(('queries', [
         'data/FreeSurfer.qry',
+        'data/JHU_MNI_SS_WMPM_Type_I.qry',
         'data/JHU_MNI_SS_WMPM_Type_II.qry',
         'data/freesurfer_queries.qry',
         'data/mori_queries.qry',
