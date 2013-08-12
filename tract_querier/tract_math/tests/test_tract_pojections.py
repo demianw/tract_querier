@@ -1,5 +1,5 @@
 from ... import tractography
-from .. import tract_stats
+from .. import tract_projections
 
 import os
 import tempfile
@@ -35,7 +35,7 @@ def test_tract_scalar_to_prototype_one_to_one(random=numpy.random.RandomState(0)
         fname_proto, tractography_prototype
     )
 
-    projected_tractography = tract_stats.tract_scalar_to_prototype.original_function(
+    projected_tractography = tract_projections.tract_scalar_to_prototype.original_function(
         [tractography_bundle], fname_proto, 'point_id'
     )
 
@@ -79,7 +79,7 @@ def test_tract_scalar_to_prototype_one_to_many(random=numpy.random.RandomState(0
         fname_proto, tractography_prototype
     )
 
-    projected_tractography = tract_stats.tract_scalar_to_prototype.original_function(
+    projected_tractography = tract_projections.tract_scalar_to_prototype.original_function(
         [tractography_bundle], fname_proto, 'point_id'
     )
 

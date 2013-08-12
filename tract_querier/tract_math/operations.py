@@ -206,25 +206,23 @@ def tract_remove_short_tracts(tractography, min_tract_length, file_output=None):
 
 @tract_math_operation('<image> <quantity_name> <tractography_file_output>: maps the values of an image to the tract points')
 def tract_map_image(tractography, image, quantity_name, file_output=None):
-    from os import path
     from scipy import ndimage
 
     image = nibabel.load(image)
 
     ijk_points = tract_in_ijk(image, tractography)
-    image_data = image.get_data()
+    image_data = image.get_data().squeeze()
 
     if image_data.ndim > 3:
-        output_name, ext = path.splitext(file_output)
-        output_name = output_name + '_%04d' + ext
-        for i, image in enumerate(image_data):
+        for i in xrange(image_data.shape[-1]):
+            image = image_data[..., i]
             new_scalar_data = ndimage.map_coordinates(
                 image.T, ijk_points.T
             )[:, None]
             tractography.original_tracts_data()[
-                quantity_name] = new_scalar_data
-            tractography_to_file(output_name % i, Tractography(
-                tractography.original_tracts(),  tractography.original_tracts_data()))
+                quantity_name + '_%04d' % i
+            ] = new_scalar_data
+        return tractography
     else:
         new_scalar_data_flat = ndimage.map_coordinates(
             image_data.T, ijk_points.T
