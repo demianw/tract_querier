@@ -489,14 +489,17 @@ def tract_smooth(tractography, var, file_output=None):
 
 
 def tract_mask(image, tractography):
-    ijk_points = tract_in_ijk(image, tractography)
     image_data = image.get_data()
+    mask = numpy.zeros_like(image_data, dtype=float)
+    if len(tractography.tracts()) == 0:
+        return mask
+
+    ijk_points = tract_in_ijk(image, tractography)
 
     ijk_clipped = ijk_points.clip(
         (0, 0, 0), numpy.array(image_data.shape) - 1
     ).astype(int)
 
-    mask = numpy.zeros_like(image_data, dtype=float)
     mask[tuple(ijk_clipped.T)] = 1
     return mask
 
