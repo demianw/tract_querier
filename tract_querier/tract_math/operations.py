@@ -269,7 +269,7 @@ def tract_generate_population_probability_map(tractographies, image, smoothing=0
 
     prob_map /= len(tractographies)
 
-    return SpatialImage(prob_map, image.get_affine()),
+    return SpatialImage(prob_map, image.get_affine())
 
 
 @tract_math_operation('<image> <image_out>: calculates the probabilistic tract image for these tracts', needs_one_tract=False)
