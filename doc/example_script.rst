@@ -24,7 +24,7 @@ WMQL Terms
 ----------
 WMQL queries are based on combinations of the following terms
 
-.. image:: WMQL_terms.svg
+.. image:: WMQL_terms.png
    :width: 80 %
    :alt: Terms of the WMQL language
    :align: center
