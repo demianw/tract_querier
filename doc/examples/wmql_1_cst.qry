@@ -1,0 +1,8 @@
+#Import the freesurfer label definitions from the Desikan atlas (Desikan et al 2006)
+import FreeSurfer.qry
+
+#Define bi-laterally the cortico-spinal tract
+cortico_spinal.side =  (
+  endpoints_in(brain_stem) and
+  (endpoints_in(precentral.side) or endpoints_in(postcentral.side))
+)

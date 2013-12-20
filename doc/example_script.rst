@@ -18,6 +18,8 @@ Once all of these files are setup, the tract bundles are obtained by issuing the
 
 where **tractography_file.vtk** is the full-brain tractography, **wmparc.nii.gz** is the brain parcellation, **wmql_script.qry** is the WMQL script and **tract_output** is the prefix for the output bundles.
 
+There is an `example dataset <http://midas.kitware.com/item/view/859>`_ located in the Midas website.
+
 WMQL Terms
 ----------
 WMQL queries are based on combinations of the following terms
@@ -30,13 +32,13 @@ WMQL queries are based on combinations of the following terms
 First WMQL example script: Cortico-Spinal Tract
 -----------------------------------------------
 
-.. literalinclude:: ../example_data/wmql_1_cst.qry
+.. literalinclude:: examples/wmql_1_cst.qry
   :language: wmql
 
 More complex example: The Uncinate Fasciculus
 ---------------------------------------------
 
-.. literalinclude:: ../example_data/wmql_2_uf.qry
+.. literalinclude:: examples/wmql_2_uf.qry
   :language: wmql
 
 Globbing example: Commissural Tracts
@@ -45,7 +47,7 @@ The whole point of this example is showing the use of
 `glob expressions <http://en.wikipedia.org/wiki/Glob_(programming)>`_ to
 define a region such as the left hemisphere
 
-.. literalinclude:: ../example_data/wmql_3_commissural.qry
+.. literalinclude:: examples/wmql_3_commissural.qry
   :language: wmql
 
 

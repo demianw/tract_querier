@@ -1,0 +1,38 @@
+#Import the freesurfer label definitions from the Desikan atlas (Desikan et al 2006)
+import FreeSurfer.qry
+
+#Define the temporal lobe but ignore it on the output using the |= operator
+temporal.side |= (
+        (entorhinal.side or parahippocampal.side or temporalpole.side or
+         fusiform.side or superiortemporal.side or middletemporal.side or
+         inferiortemporal.side or transversetemporal.side or bankssts.side)  
+     )
+
+
+temporal_anterior_section.side |= temporal.side and anterior_of(amygdala.side)
+
+#Define the frontal regions connected to the uncinate fasciculus
+inferior_frontal_gyrus.side |= (
+  parsopercularis.side or parstriangularis.side or parsorbitalis.side
+)
+
+orbito_frontal_gyrus.side |= (
+			lateralorbitofrontal.side or
+			medialorbitofrontal.side
+                    )
+
+middle_frontal_gyrus.side |= caudalmiddlefrontal.side or rostralmiddlefrontal.side 
+
+
+#Define bi-laterally the uncinate-fasciculus
+uncinate.side =  (
+  endpoints_in(temporal_anterior_section.side) and 
+  insula.side and
+  (
+    inferior_frontal_gyrus.side or
+    middle_frontal_gyrus.side or
+    orbito_frontal_gyrus.side
+  )
+)
+
+
