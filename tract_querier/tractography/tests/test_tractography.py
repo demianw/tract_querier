@@ -23,7 +23,7 @@ n_tracts = 50
 
 def equal_tracts(a, b):
     for t1, t2 in izip(a, b):
-        if not allclose(t1, t2):
+        if not (len(t1) == len(t2) and allclose(t1, t2)):
             return False
 
     return True
@@ -40,7 +40,7 @@ def equal_tracts_data(a, b):
             continue
         elif not isinstance(v1, str) and not isinstance(v2, str):
             for t1, t2 in izip(a[k], b[k]):
-                if not allclose(t1, t2):
+                if not (len(t1) == len(t2) and allclose(t1, t2)):
                     return False
         else:
             return False
