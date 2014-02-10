@@ -1,2 +1,6 @@
 doc/_build/*
 htmlcov
+*~
+*pyc
+.*sw?
+*bak
