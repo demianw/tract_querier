@@ -107,7 +107,12 @@ def process_output(output, file_output=None):
                 dialect = 'excel'
             f = open(file_output, 'w')
         writer = csv.DictWriter(f, output.keys(), dialect=dialect)
-        writer.writeheader()
+
+        if hasattr(writer, 'writeheader'):
+            writer.writeheader()
+        else:
+            header = dict(zip(writer.fieldnames, writer.fieldnames))
+            writer.writerow(header)
 
         first_value = output.values()[0]
         if (

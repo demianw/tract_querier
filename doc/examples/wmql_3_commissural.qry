@@ -1,0 +1,9 @@
+#Import the freesurfer label definitions from the Desikan atlas (Desikan et al 2006)
+import FreeSurfer.qry
+
+#Define hemispheres using glob patterns ( http://en.wikipedia.org/wiki/Glob_(programming) )
+hemisphere.left |= '*.left'
+hemisphere.right |= '*.right'
+
+#Define all the commissural tracts
+all_commissural = endpoints_in(hemisphere.left) and endpoints_in(hemisphere.right)
