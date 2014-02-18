@@ -35,7 +35,6 @@ def scalars(tractography):
 @tract_math_operation(': calculates mean and std of tract length')
 def length_mean_std(tractography):
     lengths = numpy.empty(len(tractography.tracts()))
-
     for i, tract in enumerate(tractography.tracts()):
         lengths[i] = tract_length(tract)
 
@@ -50,7 +49,7 @@ def length_mean_std(tractography):
 
 def tract_length(tract):
     d2 = numpy.sqrt((numpy.diff(tract, axis=0) ** 2).sum(1))
-    return {'Tract length': d2.sum()}
+    return d2.sum()
 
 
 @tract_math_operation('<volume unit>: calculates the volume of a tract based on voxel occupancy of a certain voxel volume')
