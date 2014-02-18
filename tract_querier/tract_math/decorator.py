@@ -38,8 +38,18 @@ def tract_math_operation(help_text, needs_one_tract=True):
             else:
                 defaults = argspec.defaults
 
-            if has_file_output:
-                if func_args[-1] != 'file_output':
+            kwargs = {}
+
+            if argspec.keywords is not None:
+                kwargs['file_output'] = args[-1]
+                args = args[:-1]
+            elif argspec.varargs is not None:
+                file_output = None
+            elif has_file_output:
+                if (
+                    func_args[-1] != 'file_output' and
+                    argspec.keywords is None
+                ):
                     raise TractMathWrongArgumentsError('Output file reserved parameter file_output must be the last one')
 
                 func_args = func_args[:-1]
@@ -52,19 +62,19 @@ def tract_math_operation(help_text, needs_one_tract=True):
                 defaults = defaults[:-1]
             else:
                 file_output = None
-
                 if args[-1] == '-':
                     args = args[:-1]
 
-            needed_defaults = len(func_args) - len(args)
-            if needed_defaults > len(defaults):
-                    raise TractMathWrongArgumentsError('Wrong number of arguments')
-            elif needed_defaults == -1:
-                file_output = args[-1]
-                args = args[:-1]
+            if argspec.varargs is None:
+                needed_defaults = len(func_args) - len(args)
+                if needed_defaults > len(defaults):
+                        raise TractMathWrongArgumentsError('Wrong number of arguments')
+                elif needed_defaults == -1:
+                    file_output = args[-1]
+                    args = args[:-1]
 
-            if needed_defaults > 0:
-                args += defaults[-needed_defaults:]
+                if needed_defaults > 0:
+                    args += defaults[-needed_defaults:]
 
             out = func(*args)
             process_output(out, file_output=file_output)
