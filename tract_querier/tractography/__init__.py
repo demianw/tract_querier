@@ -43,10 +43,14 @@ def tractography_from_files(filenames):
 
 def tractography_from_file(filename):
     if filename.endswith('trk'):
-        return tractography_from_trackvis_file(filename)
+        tract = tractography_from_trackvis_file(filename)
+        tract.filename = filename
+        return tract
     elif filename.endswith('vtk') or filename.endswith('vtp'):
         if 'tractography_from_vtk_files' in __all__:
-            return tractography_from_vtk_files(filename)
+            tract = tractography_from_vtk_files(filename)
+            tract.filename = filename
+            return tract
         else:
             raise IOError("No VTK support installed, VTK files could not be read")
     else:
