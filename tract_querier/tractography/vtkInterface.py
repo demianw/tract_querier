@@ -297,7 +297,10 @@ def tracts_to_vtkPolyData(tracts, tracts_data={}, lines_indices=None):
             raise ValueError(
                 "Data in %s does not have the correct number of items")
 
-        vtk_value = ns.numpy_to_vtk(np.ascontiguousarray(value_), deep=True)
+        vtk_value = ns.numpy_to_vtk(
+            np.ascontiguousarray(value_, dtype=ns.get_vtk_to_numpy_typemap()[vtk.VTK_FLOAT]),
+            deep=True
+        )
         vtk_value.SetName(name)
         if key == 'ActiveScalars' or key == 'Scalars_':
             poly_data.GetPointData().SetScalars(vtk_value)

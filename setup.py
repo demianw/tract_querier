@@ -57,7 +57,8 @@ if __name__ == "__main__":
         ],
         scripts=[
             'scripts/tract_querier',
-            'scripts/tract_math'
+            'scripts/tract_math',
+            'scripts/sliced_probmap_viz',
         ],
         **(configuration().todict())
     )

@@ -32,7 +32,7 @@ def tract_math_operation(help_text, needs_one_tract=True):
 
 
 def main():
-    from tract_querier.tract_math import operations
+    from tract_querier.tract_math import tract_math_operations as operations
     from tract_querier.tract_math import TractMathWrongArgumentsError
 
     usage = r"""

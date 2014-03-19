@@ -1,6 +1,13 @@
+from warnings import warn
 import numpy as np
 
 __all__ = ['Tractography']
+
+try:
+    from scipy import interpolate
+    scipy_interpolate = True
+except ImportError:
+    scipy_interpolate = False
 
 
 class Tractography:
@@ -127,7 +134,7 @@ class Tractography:
 
         self._tract_map = None
 
-    def subsample_tracts(self, points_per_tract):
+    def subsample_tracts(self, points_per_tract, interpolate_points=False):
         r"""
         Subsample the tracts in the dataset to a maximum number of
         points per tract
@@ -145,21 +152,48 @@ class Tractography:
         for k in self._tracts_data:
             self._subsampled_data[k] = []
 
-        for i in xrange(len(self._tracts)):
-            f = self._tracts[i]
-            s = np.linspace(
-                0,
-                f.shape[0] - 1,
-                min(f.shape[0], self._quantity_of_points_per_tract)
-            ).round().astype(int)
+        if interpolate_points and not scipy_interpolate:
+            warn(
+                'Scipy is needed for interpolated subsampling,'
+                ' switching to non-interpolated subsampling'
+            )
 
-            self._subsampled_tracts.append(f[s, :])
+        if not interpolate_points:
+            for i in xrange(len(self._tracts)):
+                f = self._tracts[i]
+                s = np.linspace(
+                    0,
+                    f.shape[0] - 1,
+                    min(f.shape[0], self._quantity_of_points_per_tract)
+                ).round().astype(int)
 
-            for k, v in self._tracts_data.iteritems():
-                if not isinstance(v, str):
-                    self._subsampled_data[k].append(v[i][s])
+                self._subsampled_tracts.append(f[s, :])
 
-        self._interpolated = False
+                for k, v in self._tracts_data.iteritems():
+                    if not isinstance(v, str):
+                        self._subsampled_data[k].append(v[i][s])
+
+            self._interpolated = False
+        else:
+            for i in xrange(len(self._tracts)):
+                f = self._tracts[i]
+                segments_length = np.sqrt(
+                    (np.diff(f, axis=0) ** 2).sum(1)
+                )
+                arclength = np.r_[0, np.cumsum(segments_length)]
+
+                spline = interpolate.splprep(f.T, u=arclength)[0]
+                s = np.linspace(0, arclength[-1], points_per_tract)
+                new_f = np.r_[interpolate.splev(s, spline)].T
+                self._subsampled_tracts.append(new_f)
+
+                for k, v in self._tracts_data.iteritems():
+                    if not isinstance(v, str):
+                        spline_data = interpolate.splprep(v[i].T, u=arclength)[0]
+                        new_data = np.r_[interpolate.splev(s, spline_data)].T
+                        self._subsampled_data[k].append(new_data)
+
+                self._interpolated = True
 
     def filter_tracts(self, criterium):
         r"""
