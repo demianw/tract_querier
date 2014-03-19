@@ -9,7 +9,7 @@ import argparse
 
 def main():
     parser = argparse.ArgumentParser(description='Superimposed slices viz')
-    parser.add_argument('-s', dest='slices', type=int, nargs='+',
+    parser.add_argument('-s', dest='slices', type=float, nargs='+',
                         help='Slices to show')#, required=True)
     parser.add_argument('-i', dest='base_image', type=str,
                         help='base image to show')#, required=True)
@@ -27,6 +27,10 @@ def main():
                         help='axis of the slices')
     parser.add_argument('--mip', dest='mip', action='store_true',
                         help='show maximum intensity projections')
+
+    parser.add_argument('--mm', dest='mm', action='store_true',
+                        help='slices are in millimeters')
+
 
     parser.add_argument(
         '--displacement', dest='displacement', type=float, default=.1,
@@ -60,7 +64,8 @@ def main():
         parser.exit(0)
 
     fig = figure(frameon=False)
-    fa = nibabel.load(args.base_image).get_data()
+    fa_img = nibabel.load(args.base_image)
+    fa = fa_img.get_data()
 
     if isinstance(args.tract_image, str):
         args.tract_image = [args.tract_image]
@@ -83,8 +88,22 @@ def main():
 
     fa_cm = cm.gray
     fa_cm.set_under(alpha=0)
+
     if args.step:
-        args.slices = xrange(args.slices[0], args.slices[1], args.slices[2])
+        args.slices = np.linspace(args.slices[0], args.slices[1], (args.slices[1] - args.slices[0]) / args.slices[2])
+
+    if args.mm:
+        ras_pos = zeros(4)
+        ras_pos[-1] = 1.
+        if any(np.diag(np.diag(fa_img.get_affine()[:3, :3])) != fa_img.get_affine()[:3, :3]):
+                raise ValueError("Affine matrix is not diagonal, we don't handle this case")
+        for i, s in enumerate(args.slices):
+            ras_pos[args.axis] = s
+            ijk_pos = np.linalg.solve(fa_img.get_affine(), ras_pos)
+            args.slices[i] = int(round(ijk_pos[args.axis]))
+    else:
+            args.slices = [int(s) for s in args.slices]
+
     for i, y in enumerate(args.slices):
         if args.inverse_order:
             pos = len(args.slices) - 1 - i
