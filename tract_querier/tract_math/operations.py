@@ -52,11 +52,12 @@ def tract_length(tract):
     return d2.sum()
 
 
-@tract_math_operation('<volume unit>: calculates the volume of a tract based on voxel occupancy of a certain voxel volume')
-def tract_volume(tractography, resolution):
+@tract_math_operation('<volume unit>: calculates the volume of a tract based on voxel occupancy of a certain voxel volume', needs_one_tract=False)
+def tract_volume(tractographies, resolution):
+    results = OrderedDict()
+    results['tract name'] = []
+    results['tract volume'] = []
     resolution = float(resolution)
-    voxels = voxelized_tract(tractography, resolution)
-
     neighbors = numpy.array([
         [0, 1, 0],
         [0, -1, 0],
@@ -65,20 +66,25 @@ def tract_volume(tractography, resolution):
         [0, 0, 1],
         [0, 0, -1]
     ])
-    dilated_voxels = set()
-    dilated_voxels.update(voxels)
-    eroded_voxels = set()
-    for voxel in voxels:
-        neighbors_list = zip(*(neighbors + voxel).T)
-        dilated_voxels.update(neighbors_list)
-        if len(voxels.intersection(neighbors_list)) == len(neighbors):
-            eroded_voxels.add(voxel)
 
-    # print len(dilated_voxels), len(voxels), len(eroded_voxels)
-    approx_voxels = (len(dilated_voxels) - len(eroded_voxels)) / 2.
+    for tractography in tractographies:
+        voxels = voxelized_tract(tractography, resolution)
 
-    return {'tract volume': approx_voxels * (resolution ** 3)}
+        dilated_voxels = set()
+        dilated_voxels.update(voxels)
+        eroded_voxels = set()
+        for voxel in voxels:
+            neighbors_list = zip(*(neighbors + voxel).T)
+            dilated_voxels.update(neighbors_list)
+            if len(voxels.intersection(neighbors_list)) == len(neighbors):
+                eroded_voxels.add(voxel)
 
+        # print len(dilated_voxels), len(voxels), len(eroded_voxels)
+        approx_voxels = (len(dilated_voxels) - len(eroded_voxels)) / 2.
+        results['tract name'].append(tractography.filename)
+        results['tract volume'].append(approx_voxels * (resolution ** 3))
+
+    return results
 
 @tract_math_operation('<scalar>: calculates mean and std of a scalar quantity for each tract')
 def scalar_tract_mean_std(tractography, scalar):
@@ -239,6 +245,43 @@ def tract_map_image(tractography, image, quantity_name, file_output=None):
         )
 
 
+@tract_math_operation('<bins> <qty> <output>')
+def tract_tract_confidence(tractography, bins, qty, file_output=None):
+    bins = int(bins)
+    lengths = numpy.empty(len(tractography.tracts()))
+    tracts = tractography.tracts()
+    tracts_prob_data = []
+    tracts_length_bin = []
+    for i, tract in enumerate(tracts):
+        lengths[i] = tract_length(tract)
+        tracts_prob_data.append(numpy.zeros(len(tract)))
+        tracts_length_bin.append(numpy.zeros(len(tract)))
+
+    length_histogram_counts, length_histogram_bins = numpy.histogram(lengths, normed=True, bins=bins)
+
+    for i in xrange(1, bins):
+        tract_log_prob = []
+        indices_bin = ((length_histogram_bins[i - 1] < lengths) * (lengths < length_histogram_bins[i])).nonzero()[0]
+        if len(indices_bin) == 0:
+            continue
+
+        for j in indices_bin:
+            tract_log_prob.append(numpy.log(tractography.tracts_data()[qty][j]).sum())
+        tract_log_prob = numpy.array(tract_log_prob)
+        tract_log_prob = numpy.nan_to_num(tract_log_prob)
+        lp_a0 = tract_log_prob[tract_log_prob < 0].max()
+        tract_log_prob_total = numpy.log(numpy.exp(tract_log_prob - lp_a0).sum()) + lp_a0
+        tract_prob = numpy.exp(tract_log_prob - tract_log_prob_total)
+
+        for tract_number, tract_prob in zip(indices_bin, tract_prob):
+            tracts_prob_data[tract_number][:] = tract_prob
+            tracts_length_bin[tract_number][:] = length_histogram_bins[i - 1]
+
+    tractography.tracts_data()['tprob'] = tracts_prob_data
+    tractography.tracts_data()['tprob_bin'] = tracts_length_bin
+
+    return tractography
+
 @tract_math_operation('<image> <mask_out>: calculates the mask image from a tract on the space of the given image')
 def tract_generate_mask(tractography, image, file_output=None):
     image = nibabel.load(image)
@@ -312,6 +355,71 @@ def tract_merge(tractographies, file_output=None):
                 all_data[k] = data[k]
 
     return Tractography(all_tracts, all_data)
+
+
+
+@tract_math_operation('r ICC')
+def tract_icc(tractography, resolution, *other_tracts):
+    import rpy2.robjects as robjects
+    from rpy2.robjects.numpy2ri import numpy2ri
+    r = robjects.r
+    r.library('irr')
+
+    result = OrderedDict((
+        ('tract file', []),
+        ('kappa value', []),
+        ('totals', []),
+    ))
+
+    resolution = float(resolution)
+    voxels = voxelized_tract(tractography, resolution)
+    for other_tract_fname in other_tracts:
+        other_tract = tractography_from_files(other_tract_fname)
+        other_voxels = voxelized_tract(other_tract, resolution)
+
+        all_voxels = voxels.union(other_voxels)
+
+        for _ in xrange(1):
+            all_voxels = dilate_voxels(all_voxels)
+
+        #all_voxels = dilated_voxels
+        all_voxels = list(all_voxels)
+        mask = numpy.zeros((len(all_voxels), 2), dtype=int)
+
+        for i, vx in enumerate(all_voxels):
+            if vx in voxels:
+                mask[i, 0] = 1
+            if vx in other_voxels:
+                mask[i, 1] = 1
+
+        r_mask = numpy2ri(mask)
+        res = r.icc(r_mask, model='twoway', type='agreement')
+        #res = r.icc(r_mask, model='twoway')
+        result['totals'].append((mask.all(1).sum() + (~mask.any(1)).sum()) * 1. / len(all_voxels))
+        #res = r.kappa2(r_mask, "equal")
+        result['tract file'].append(other_tract_fname)
+        for t in res.iteritems():
+            if t[0] == 'value':
+                result['kappa value'].append(numpy.round(t[1][0],2))
+
+    return result
+
+def dilate_voxels(voxels):
+    neighbors = numpy.array([
+        [0, 1, 0],
+        [0, -1, 0],
+        [1, 0, 0],
+        [-1, 0, 0],
+        [0, 0, 1],
+        [0, 0, -1]
+    ])
+
+    dilated_voxels = set()
+    dilated_voxels.update(voxels)
+    for voxel in voxels:
+        neighbors_list = zip(*(neighbors + voxel).T)
+        dilated_voxels.update(neighbors_list)
+    return dilated_voxels
 
 
 @tract_math_operation('<volume unit> <tract1.vtk> ... <tractN.vtk>: calculates the kappa value of the first tract with the rest in the space of the reference image')
@@ -592,3 +700,60 @@ def tract_prototype_mean(tractography, smooth_order, file_output=None):
             warn("A smooth order larger than 0 needs scipy installed")
 
     return Tractography([mean_tract], {})
+
+
+@tract_math_operation('<volume unit> <tract1.vtk> ... <tractN.vtk>: calculates the Bhattacharyya coefficient of the first tract with the rest in the space of the reference image')
+def tract_bhattacharyya_coefficient(tractography, resolution, *other_tracts):
+    resolution = float(resolution)
+    coord = ('X', 'Y', 'Z')
+    result = OrderedDict(
+        [('tract file', [])]
+        + [
+            ('bhattacharyya %s value' % coord[i], [])
+            for i in xrange(3)
+        ]
+    )
+
+    tractography_points = numpy.vstack(tractography.tracts())
+
+    other_tracts_tractographies = [tractography_from_files(t_)
+        for t_ in other_tracts
+    ]
+
+    other_tracts_points = [
+        numpy.vstack(t_.tracts())
+        for t_ in other_tracts_tractographies
+    ]
+
+    mn_ = tractography_points.min(0)
+    mx_ = tractography_points.max(0)
+
+    for pts in other_tracts_points:
+        mn_ = numpy.minimum(mn_, pts.min(0))
+        mx_ = numpy.maximum(mn_, pts.max(0))
+
+    bins = numpy.ceil((mx_ - mn_) * 1. / resolution)
+    hists_tract = [
+        numpy.histogram(tractography_points[:, i], bins=bins[i], density=True, range=(mn_[i], mx_[i]))[0]
+        for i in xrange(3)
+    ]
+
+    for tract, tract_points in zip(other_tracts, other_tracts_points):
+        hists_other_tract = [
+            numpy.histogram(tract_points[:, i], bins=bins[i], density=True, range=(mn_[i], mx_[i]))[0]
+            for i in xrange(3)
+        ]
+
+        distances = [
+            numpy.sqrt(
+                hists_other_tract[i] * hists_tract[i] /
+                (hists_other_tract[i].sum() * hists_tract[i].sum())
+            ).sum()
+            for i in xrange(3)
+        ]
+        for i in xrange(3):
+            result['tract file'].append(tract)
+            result['bhattacharyya %s value' % coord[i]].append(numpy.nan_to_num(distances[i]))
+
+    return result
+
