@@ -18,7 +18,7 @@ def main():
     parser.add_option('-o', "--output", dest="output_file_name",
                       help="clustering output file prefix")
     parser.add_option('-I',  dest="include",
-                      help="qry_search_folders to include query files")
+                      help="folders to include query files")
     parser.add_option(
         '--threshold', dest='threshold', default=2,
         help="Minimum percentage of the tract to be "
