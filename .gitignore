@@ -4,3 +4,6 @@ htmlcov
 *pyc
 .*sw?
 *bak
+## The Pycharm internal directory.
+.idea
+build
