@@ -110,6 +110,7 @@ def vtkPolyData_to_tracts(polydata, return_tractography_object=True):
     else:
         return tracts, data
 
+
 def vtkPolyData_dictionary_to_tracts_and_data(dictionary):
     r'''
     Create a tractography from a dictionary
