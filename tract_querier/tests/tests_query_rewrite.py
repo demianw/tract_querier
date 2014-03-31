@@ -10,6 +10,7 @@ import token
 import symbol
 from types import ListType, TupleType
 
+
 def match(pattern, data, vars=None):
     if vars is None:
         vars = {}
@@ -25,6 +26,7 @@ def match(pattern, data, vars=None):
         if not same:
             break
     return same, vars
+
 
 @expectedFailure
 def test_rewrite_notin_precedence():

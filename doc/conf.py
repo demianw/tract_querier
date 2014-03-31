@@ -26,9 +26,9 @@ sys.path.insert(1, sourcepath)
 # -- General configuration ---------------------------------------------------
 
 # Try to override the matplotlib configuration as early as possible
-#try:
+# try:
 #    import gen_rst
-#except:
+# except:
 #    pass
 
 # Add any Sphinx extension module names here, as strings. They can be
@@ -132,7 +132,7 @@ html_theme = 'sphinxdoc'
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-#html_theme_options = {'oldversion': False, 'collapsiblesidebar': True,
+# html_theme_options = {'oldversion': False, 'collapsiblesidebar': True,
 #                      'google_analytics': True
 #                      }
 

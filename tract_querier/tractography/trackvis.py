@@ -38,10 +38,8 @@ def tractography_to_trackvis_file(filename, tractography, affine=None, image_dim
         else:
             data[k] = v
 
-
-
     #data_new = {}
-    #for k, v in data.iteritems():
+    # for k, v in data.iteritems():
     #    if (v[0].ndim > 1 and v[0].shape[1] > 1):
     #        for i in xrange(v[0].shape[1]):
     #            data_new['%s_%02d' % (k, i)] = [
@@ -49,7 +47,6 @@ def tractography_to_trackvis_file(filename, tractography, affine=None, image_dim
     #            ]
     #    else:
     #       data_new[k] = v
-
     trk_header['n_count'] = len(tractography.tracts())
     trk_header['n_properties'] = 0
     trk_header['n_scalars'] = len(data)
@@ -84,7 +81,7 @@ def tractography_from_trackvis_file(filename):
 
     #scalar_names_unique = []
     #scalar_names_subcomp = {}
-    #for sn in scalar_names:
+    # for sn in scalar_names:
     #    if re.match('.*_[0-9]{2}', sn):
     #        prefix = sn[:sn.rfind('_')]
     #        if prefix not in scalar_names_unique:

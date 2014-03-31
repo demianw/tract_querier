@@ -1,4 +1,5 @@
 class DocStringInheritor(type):
+
     '''A variation on
     http://groups.google.com/group/comp.lang.python/msg/26f7b4fcb4d66c95
     by Paul McGuire
@@ -25,8 +26,10 @@ import sys
 
 
 class Test(unittest.TestCase):
+
     def test_null(self):
         class Foo(object):
+
             def frobnicate(self):
                 pass
 
@@ -38,7 +41,9 @@ class Test(unittest.TestCase):
 
     def test_inherit_from_parent(self):
         class Foo(object):
+
             'Foo'
+
             def frobnicate(self):
                 'Frobnicate this gonk.'
         class Bar(Foo):
@@ -51,7 +56,9 @@ class Test(unittest.TestCase):
 
     def test_inherit_from_mro(self):
         class Foo(object):
+
             'Foo'
+
             def frobnicate(self):
                 'Frobnicate this gonk.'
         class Bar(Foo):
@@ -65,7 +72,9 @@ class Test(unittest.TestCase):
 
     def test_inherit_metaclass_(self):
         class Foo(object):
+
             'Foo'
+
             def frobnicate(self):
                 'Frobnicate this gonk.'
         class Bar(Foo):

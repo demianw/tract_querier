@@ -7,6 +7,7 @@ __all__ = ['TractographySpatialIndexing']
 
 
 class TractographySpatialIndexing:
+
     r"""
     This class implements a mutual spatial indexing of
     an labeled image and a tractography

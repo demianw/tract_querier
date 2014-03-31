@@ -26,6 +26,7 @@ keywords = [
 
 
 class FiberQueryInfo(object):
+
     r"""
     Information about a processed query
 
@@ -38,6 +39,7 @@ class FiberQueryInfo(object):
         tracts_endpoints : (set, set)
             sets of labels of where the tract endpoints are
     """
+
     def __init__(self, tracts=None, labels=None, tracts_endpoints=None):
         if tracts is None:
             tracts = set()
@@ -62,7 +64,7 @@ class FiberQueryInfo(object):
         return FiberQueryInfo(
             self.tracts.copy(), self.labels.copy(),
             (self.tracts_endpoints[0].copy(), self.tracts_endpoints[1].copy()),
-#            (self.labels_endpoints[0].copy(), self.labels_endpoints[1].copy()),
+            #            (self.labels_endpoints[0].copy(), self.labels_endpoints[1].copy()),
         )
 
     def set_operation(self, name):
@@ -101,6 +103,7 @@ class FiberQueryInfo(object):
 
 
 class EndpointQueryInfo:
+
     def __init__(
         self,
         endpoint_tracts=None,
@@ -165,6 +168,7 @@ class EndpointQueryInfo:
 
 
 class EvaluateQueries(ast.NodeVisitor):
+
     r"""
     This class implements the parser to process
     White Matter Query Language modules. By inheriting from
@@ -324,14 +328,14 @@ class EvaluateQueries(ast.NodeVisitor):
                 query_info = self.visit(node.args[0])
                 new_tracts = query_info.tracts_endpoints[0].union(query_info.tracts_endpoints[1])
 
-                #tracts = set().union(set(
+                # tracts = set().union(set(
                 #    tract for tract in query_info.tracts
                 #    if (
                 #        self.tractography_spatial_indexing.ending_tracts_labels[i][tract] in query_info.labels
                 #    )
                 #))
 
-                #labels = set().union(
+                # labels = set().union(
                 #    *tuple((self.tractography_spatial_indexing.crossing_tracts_labels[tract] for tract in tracts))
                 #)
                 return FiberQueryInfo(new_tracts, query_info.labels, query_info.tracts_endpoints)
@@ -642,6 +646,7 @@ class EvaluateQueries(ast.NodeVisitor):
 
 
 class TractQuerierSyntaxError(ValueError):
+
     def __init__(self, value):
         self.value = value
 
@@ -650,6 +655,7 @@ class TractQuerierSyntaxError(ValueError):
 
 
 class RewriteChangeNotInPrescedence(ast.NodeTransformer):
+
     def visit_BoolOp(self, node):
         predicate = lambda value: not (
             isinstance(value, ast.Compare) and
@@ -704,6 +710,7 @@ class RewriteChangeNotInPrescedence(ast.NodeTransformer):
 
 
 class RewritePreprocess(ast.NodeTransformer):
+
     def __init__(self, *args, **kwargs):
         if 'include_folders' in kwargs:
             self.include_folders = kwargs['include_folders']
@@ -822,6 +829,7 @@ def eval_queries(
 
 def queries_syntax_check(query_file_body):
     class DummySpatialIndexing:
+
         def __init__(self):
             self.crossing_tracts_labels = {}
             self.crossing_labels_tracts = {}

@@ -4,6 +4,7 @@ __all__ = ['Tractography']
 
 
 class Tractography:
+
     r"""
     Class to represent a tractography dataset
 

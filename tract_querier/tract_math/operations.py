@@ -1,9 +1,9 @@
 from .decorator import tract_math_operation
 
 try:
-	from collections import OrderedDict
+    from collections import OrderedDict
 except ImportError:  # Python 2.6 fix
-	from ordereddict import OrderedDict
+    from ordereddict import OrderedDict
 
 import numpy
 
@@ -17,8 +17,8 @@ from ..tractography import Tractography, tractography_to_file, tractography_from
 def count(tractographies):
     results = {'tract file #': [], 'number of tracts': []}
     for i, tractography in enumerate(tractographies):
-	    results['tract file #'].append(i)
-	    results['number of tracts'].append(len(tractography.tracts()))
+        results['tract file #'].append(i)
+        results['number of tracts'].append(len(tractography.tracts()))
     return results
 
 
@@ -270,8 +270,8 @@ def tract_generate_probability_map(tractographies, image, file_output):
     prob_map = tract_probability_map(image, tractographies[0]).astype(float)
 
     for tract in tractographies[1:]:
-	if len(tract.tracts()) == 0:
-		continue
+        if len(tract.tracts()) == 0:
+            continue
         new_prob_map = tract_mask(image, tract)
         prob_map = prob_map + new_prob_map - (prob_map * new_prob_map)
 
