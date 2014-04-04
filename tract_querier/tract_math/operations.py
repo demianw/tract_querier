@@ -133,6 +133,29 @@ def scalar_mean_std(tractography, scalar):
         raise ValueError("Tractography does not contain this scalar data")
 
 
+@tract_math_operation('<scalar>: calculates mean and std of a scalar quantity that has been averaged along each tract')
+def scalar_per_tract_mean_std(tractography, scalar):
+    try:
+        scalars = tractography.tracts_data()[scalar]
+        weighted_scalars = numpy.empty((len(tractography.tracts()), 2))
+        for i, t in enumerate(tractography.tracts()):
+            tdiff = numpy.sqrt((numpy.diff(t, axis=0) ** 2).sum(-1))
+            length = tdiff.sum()
+            values = scalars[i][1:].squeeze()
+            average = numpy.average(values, weights=tdiff)
+            weighted_scalars[i, 0] = average
+            weighted_scalars[i, 1] = length
+        mean = numpy.average(weighted_scalars[:, 0], weights=weighted_scalars[:, 1])
+        std = numpy.average((weighted_scalars[:, 0] - mean) ** 2, weights=weighted_scalars[:, 1])
+        return OrderedDict((
+            ('per tract distance weighted mean %s' % scalar, float(mean)),
+            ('per tract distance weighted std %s' % scalar, float(std))
+        ))
+
+    except KeyError:
+        raise ValueError("Tractography does not contain this scalar data")
+
+
 @tract_math_operation('<scalar>: calculates median of a scalar quantity over tracts')
 def scalar_median(tractography, scalar):
     try:
