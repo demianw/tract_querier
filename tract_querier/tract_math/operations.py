@@ -6,6 +6,7 @@ except ImportError:  # Python 2.6 fix
     from ordereddict import OrderedDict
 
 import numpy
+from numpy import linalg
 
 import nibabel
 from nibabel.spatialimages import SpatialImage
@@ -208,7 +209,7 @@ def tract_map_image(tractography, image, quantity_name, file_output):
         output_name = output_name + '_%04d' + ext
         for i, image in enumerate(image_data):
             new_scalar_data = ndimage.map_coordinates(
-                image.T, ijk_points.T
+                image, ijk_points.T
             )[:, None]
             tractography.original_tracts_data()[
                 quantity_name] = new_scalar_data
@@ -216,13 +217,14 @@ def tract_map_image(tractography, image, quantity_name, file_output):
                 tractography.original_tracts(),  tractography.original_tracts_data()))
     else:
         new_scalar_data_flat = ndimage.map_coordinates(
-            image_data.T, ijk_points.T
+            image_data, ijk_points.T
         )[:, None]
         start = 0
         new_scalar_data = []
         for tract in tractography.original_tracts():
             new_scalar_data.append(
-                new_scalar_data_flat[start: start + len(tract)])
+                new_scalar_data_flat[start: start + len(tract)].copy()
+            )
             start += len(tract)
         tractography.original_tracts_data()[quantity_name] = new_scalar_data
 
@@ -520,7 +522,7 @@ def each_tract_in_ijk(image, tractography):
 
 def tract_in_ijk(image, tractography):
     ras_points = numpy.vstack(tractography.tracts())
-    ijk_points = numpy.dot(numpy.linalg.inv(image.get_affine()), numpy.hstack((
+    ijk_points = numpy.linalg.solve(image.get_affine(), numpy.hstack((
         ras_points,
         numpy.ones((len(ras_points), 1))
     )).T).T[:, :-1]
