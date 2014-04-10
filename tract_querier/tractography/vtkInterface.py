@@ -328,10 +328,10 @@ def write_vtkPolyData(filename, tracts, tracts_data={}):
         writer.SetFileTypeToBinary()
 
     writer.SetFileName(filename)
-    if vtk.VTK_MAJOR_VERSION <= 5:
-        writer.SetInput(poly_data)
-    else:
+    if hasattr(vtk, 'VTK_MAJOR_VERSION') and vtk.VTK_MAJOR_VERSION > 5:
         writer.SetInputData(poly_data)
+    else:
+        writer.SetInput(poly_data)
     writer.Write()
 
 
