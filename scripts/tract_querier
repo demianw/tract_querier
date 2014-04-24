@@ -67,7 +67,7 @@ def main():
         ).reshape(4, 4)
         print "RAS transform:"
     else:
-        bounding_box_affine_transform = np.eye(4)
+        bounding_box_affine_transform = None
 
     print "Loading files"
 
@@ -148,6 +148,14 @@ def main():
     print "Calculating labels and crossings"
     affine_ijk_2_ras = labels_nii.get_affine()
     tracts = tr.tracts()
+
+    if bounding_box_affine_transform is not None:
+        tracts = [
+            affine_transform_tract(np.linalg.inv(bounding_box_affine_transform), tract)
+            for tract in tracts
+        ]
+
+        affine_ijk_2_ras = np.dot(affine_ijk_2_ras, bounding_box_affine_transform)
 
     tractography_spatial_indexing = tract_querier.TractographySpatialIndexing(
         tracts, img, affine_ijk_2_ras, options.length_threshold, options.threshold
@@ -239,6 +247,14 @@ def save_tractography_file(
         **extra_kwargs
     )
 
+
+def affine_transform_tract(affine_transform, tract):
+    import numpy as np
+
+    tract = np.dot(affine_transform[:3, :3], tract.T).T
+    tract += affine_transform[:-1, :3]
+
+    return tract
 
 if __name__ == "__main__":
     main()
