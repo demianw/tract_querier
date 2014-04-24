@@ -1,4 +1,4 @@
-#!/projects/schiz/software/LabPython/bin/python
+#!/usr/bin/env python
 import sys
 import itertools
 from argparse import ArgumentParser, FileType, REMAINDER

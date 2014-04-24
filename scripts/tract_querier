@@ -3,7 +3,6 @@ from optparse import OptionParser
 import os
 import sys
 
-
 def main():
     parser = OptionParser(
         version=0.1,
@@ -95,16 +94,35 @@ def main():
         bounding_box_affine_transform = np.eye(4)
 
     print "Loading files"
-    if options.include:
-        folders = options.include.split(':')
-    else:
-        folders = []
 
-    default_folder = tract_querier.default_queries_folder
-    folders = [os.getcwd()] + folders + [default_folder]
-    for folder in folders:
-        if not (os.path.exists(folder) and os.path.isdir(folder)):
-            parser.error("Error in include folder %s" % folder)
+    # Search order precidence for .qry files
+    # 1. Command line options specified are respected first
+    # 2. Current directory is respected second
+    # 3. Default query location thrid
+    # 4. Source Tree 4th
+    qry_search_folders = []
+    if options.include:
+        command_line_qry_folders = options.include.split(':')
+        ## Check that all commandline provided folders are valid paths
+        for folder in command_line_qry_folders:
+            if not (os.path.exists(folder) and os.path.isdir(folder)):
+                parser.error("Error in include folder %s" % folder)
+        qry_search_folders.extend(command_line_qry_folders)
+
+    qry_search_folders.extend([os.getcwd()])
+
+    if os.path.exists(tract_querier.default_queries_folder):
+        qry_search_folders.extend([tract_querier.default_queries_folder])
+
+    ## Source Tree Data
+    source_tree_data_path = os.path.abspath(
+        os.path.join(
+        os.path.dirname(os.path.dirname(__file__)),
+        'tract_querier','data')
+    )
+    if os.path.exists(source_tree_data_path):
+        qry_search_folders.extend([source_tree_data_path])
+
 
     try:
         if os.path.exists(options.queries_string):
@@ -112,7 +130,7 @@ def main():
             query_filename = options.queries_string
         else:
             found = False
-            for folder in folders:
+            for folder in qry_search_folders:
                 file_ = os.path.join(folder, options.queries_string)
                 if os.path.exists(file_):
                     found = True
@@ -127,7 +145,7 @@ def main():
         query_file_body = tract_querier.queries_preprocess(
             query_script,
             filename=query_filename,
-            include_folders=folders
+            include_folders=qry_search_folders
         )
 
         tract_querier.queries_syntax_check(query_file_body)
@@ -238,9 +256,13 @@ def main():
             tractography_spatial_indexing,
             initial_body=query_script,
             save_query_callback=query_save,
+<<<<<<< HEAD
             del_query_callback=query_del,
             eof_callback=kill_server_callback,
             include_folders=folders
+=======
+            include_folders=qry_search_folders
+>>>>>>> master
         )
 
         interactive_shell.cmdloop()

@@ -9,26 +9,28 @@ from itertools import izip
 from nipype.interfaces.base import (TraitedSpec, traits)
 from nipype.interfaces.ants import utils
 
+
 class ANTSAffineCommandInputSpec(utils.ANTSCommandInputSpec):
     dimension = traits.Enum(3, 2, argstr='%d', usedefault=True,
-                             desc='image dimension (2 or 3)', position=1)
+                            desc='image dimension (2 or 3)', position=1)
 
     reference_image = traits.File(
-                           argstr='%s', desc='template file to warp to',
-                           mandatory=True, copyfile=True, position=2)
+        argstr='%s', desc='template file to warp to',
+        mandatory=True, copyfile=True, position=2)
 
     input_image = traits.File(
-                       argstr='%s', desc='input image to warp to template',
-                       mandatory=True, copyfile=False, position=3)
+        argstr='%s', desc='input image to warp to template',
+        mandatory=True, copyfile=False, position=3)
 
     out_prefix = traits.Str('ants_', argstr='%s', usedefault=True,
-                             desc=('Prefix that is prepended to all output '
-                                   'files (default = ants_)'), position=4)
+                            desc=('Prefix that is prepended to all output '
+                                  'files (default = ants_)'), position=4)
 
     rigid_affine = traits.Bool(False,
-                        argstr='1',
-                        usedefault=False, position=5
-                    )
+                               argstr='1',
+                               usedefault=False, position=5
+                               )
+
 
 class ANTSAffineCommandOutputSpec(TraitedSpec):
     affine_transformation = traits.File(
@@ -37,10 +39,12 @@ class ANTSAffineCommandOutputSpec(TraitedSpec):
     )
 
     deformed_image = traits.File(
-                            exists=True,
-                            desc='deformed_image')
+        exists=True,
+        desc='deformed_image')
+
 
 class GenAffine(utils.ANTSCommand):
+
     """Uses ANTS to generate matrices to warp data from one space to another.
 
     Examples
@@ -61,78 +65,77 @@ class GenAffine(utils.ANTSCommand):
         outputs = self._outputs().get()
 
         outputs['affine_transformation'] = os.path.join(os.getcwd(),
-                            self.inputs.out_prefix + 'Affine.txt')
+                                                        self.inputs.out_prefix + 'Affine.txt')
 
         outputs['deformed_image'] = os.path.join(os.getcwd(),
-                            self.inputs.out_prefix + 'deformed.nii.gz')
-
+                                                 self.inputs.out_prefix + 'deformed.nii.gz')
 
         return outputs
 
 
 class ANTSCommandInputSpec(utils.ANTSCommandInputSpec):
     dimension = traits.Enum(3, 2, argstr='%d', usedefault=True,
-                             desc='image dimension (2 or 3)', position=1)
+                            desc='image dimension (2 or 3)', position=1)
     reference_images = traits.List(traits.File, sep=',',
-                           argstr='', desc='template file to warp to',
-                           mandatory=True, copyfile=True, position=2)
+                                   argstr='', desc='template file to warp to',
+                                   mandatory=True, copyfile=True, position=2)
     input_images = traits.List(traits.File, sep=',',
-                       argstr='', desc='input image to warp to template',
-                       mandatory=True, copyfile=False, position=3)
+                               argstr='', desc='input image to warp to template',
+                               mandatory=True, copyfile=False, position=3)
     metric_weights = traits.List(traits.Float, [1], argstr='',
-                            desc='Different weights for metric combinations',
-                            usedefault=True
-                        )
+                                 desc='Different weights for metric combinations',
+                                 usedefault=True
+                                 )
     max_iterations = traits.List(traits.Int, [30, 90, 20], argstr='-i %s',
-                             sep='x', usedefault=True,
-                             desc=('maximum number of iterations (must be '
-                                   'list of integers in the form [J,K,L...]: '
-                                   'J = coarsest resolution iterations, K = '
-                                   'middle resolution interations, L = fine '
-                                   'resolution iterations'), position=4)
+                                 sep='x', usedefault=True,
+                                 desc=('maximum number of iterations (must be '
+                                       'list of integers in the form [J,K,L...]: '
+                                       'J = coarsest resolution iterations, K = '
+                                       'middle resolution interations, L = fine '
+                                       'resolution iterations'), position=4)
     regularization_parameters = traits.List(traits.Float, [3., 0.],
-                                 argstr='-r Gauss[%s]', sep=',', usedefault=True,
-                                desc=('Parameters for the regularization'),
-                                position=5)
+                                            argstr='-r Gauss[%s]', sep=',', usedefault=True,
+                                            desc=('Parameters for the regularization'),
+                                            position=5)
     transformation_parameters = traits.List(traits.Float, [.25, 2, 0.05], argstr='-t SyN[%s]',
-                            sep=',', usedefault=True,
-                            desc=('Parameters for the transformation'),
-                            position=6)
+                                            sep=',', usedefault=True,
+                                            desc=('Parameters for the transformation'),
+                                            position=6)
     out_prefix = traits.Str('ants_', argstr='-o %s', usedefault=True,
-                             desc=('Prefix that is prepended to all output '
-                                   'files (default = ants_)'), position=7)
+                            desc=('Prefix that is prepended to all output '
+                                  'files (default = ants_)'), position=7)
 
     use_histogram_matching = traits.Bool(True,
-                                        argstr='--use-Histogram-Matching',
-                                        usedefault=True, position=8)
+                                         argstr='--use-Histogram-Matching',
+                                         usedefault=True, position=8)
 
     number_of_affine_iterations = traits.List(traits.Int, [10000, ] * 5,
-                            argstr='--number-of-affine-iterations %s', sep='x',
-                            usedefault=True, position=9)
+                                              argstr='--number-of-affine-iterations %s', sep='x',
+                                              usedefault=True, position=9)
 
     mi_option = traits.List(traits.Int, [32, 16000],
                             argstr='--MI-option %s', sep='x',
                             usedefault=True, position=10)
 
     affine_metric = traits.Enum('MI', 'CC', 'MSQ', 'PR', argstr='--affine-metric-type %s',
-            desc=('Type of similartiy metric used for affine registration '
-                  '(CC = cross correlation, MI = mutual information, '
-                  'PR = probability mapping, MSQ = mean square difference)'),
-            usedefault=True, position=11)
+                                desc=('Type of similartiy metric used for affine registration '
+                                      '(CC = cross correlation, MI = mutual information, '
+                                      'PR = probability mapping, MSQ = mean square difference)'),
+                                usedefault=True, position=11)
 
     initial_affine = traits.File(exists=False,
-                    argstr='-a %s', desc='Initial affine transform',
-                    mandatory=False, copyfile=False, position=12)
+                                 argstr='-a %s', desc='Initial affine transform',
+                                 mandatory=False, copyfile=False, position=12)
 
     rigid_affine = traits.Bool(False,
-                        argstr='--rigid-affine true',
-                        usedefault=False, position=13
-                    )
+                               argstr='--rigid-affine true',
+                               usedefault=False, position=13
+                               )
 
     not_continue_affine = traits.Bool(False,
-                        argstr='--continue-affine false',
-                        usedefault=False, position=14
-                    )
+                                      argstr='--continue-affine false',
+                                      usedefault=False, position=14
+                                      )
 
 
 class ANTSCommandOutputSpec(TraitedSpec):
@@ -145,16 +148,18 @@ class ANTSCommandOutputSpec(TraitedSpec):
         desc='warp field (prefix_Warp.nii)'
     )
     inverse_warp_field = traits.File(exists=False,
-                            desc='inverse warp field (prefix_InverseWarp.nii)')
+                                     desc='inverse warp field (prefix_InverseWarp.nii)')
     input_file = traits.File(
-                            exists=True,
-                            desc='input image (prefix_repaired.nii)')
+        exists=True,
+        desc='input image (prefix_repaired.nii)')
 
     transforms = traits.List(traits.File, desc='transform list')
 
     inverse_transforms = traits.List(traits.File, desc='transform list with inversed warp (but not affine)')
 
+
 class GenWarpFields(utils.ANTSCommand):
+
     """Uses ANTS to generate matrices to warp data from one space to another.
 
     Examples
@@ -198,7 +203,7 @@ class GenWarpFields(utils.ANTSCommand):
             ):
                 arg_string = ''
                 N = len(self._internal['reference_images'])
-                if  len(self._internal['input_images']) != N:
+                if len(self._internal['input_images']) != N:
                     raise ValueError(
                         'The number of reference and'
                         'input images must be the same'
@@ -231,14 +236,14 @@ class GenWarpFields(utils.ANTSCommand):
         outputs = self._outputs().get()
 
         outputs['affine_transformation'] = os.path.join(os.getcwd(),
-                            self.inputs.out_prefix + 'Affine.txt')
+                                                        self.inputs.out_prefix + 'Affine.txt')
 
         out_warp = os.path.join(os.getcwd(),
-                                             self.inputs.out_prefix +
-                                             'Warp.nii.gz')
+                                self.inputs.out_prefix +
+                                'Warp.nii.gz')
         out_inv_warp = os.path.join(os.getcwd(),
-                                             self.inputs.out_prefix +
-                                             'InverseWarp.nii.gz')
+                                    self.inputs.out_prefix +
+                                    'InverseWarp.nii.gz')
 
         if os.path.exists(out_warp):
             outputs['warp_field'] = out_warp

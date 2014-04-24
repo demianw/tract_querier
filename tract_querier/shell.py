@@ -21,6 +21,7 @@ def safe_method(f):
 
 
 class SaveQueries(ast.NodeVisitor):
+
     def __init__(self, save_query_callback, querier):
         self.save_query_callback = save_query_callback
         self.querier = querier
@@ -85,11 +86,12 @@ class SaveQueries(ast.NodeVisitor):
             self.visit(line)
 
     def visit_For(self, node):
-        #If it is a for loop, only execute
+        # If it is a for loop, only execute
         pass
 
 
 class TractQuerierCmd(cmd.Cmd):
+
     def __init__(
             self,
             tractography_spatial_indexing,

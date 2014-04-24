@@ -81,7 +81,7 @@ def setup(*args, **kwargs):
 
     if test_active_data:
         mask = 0
-        for  k, v in tracts_data.items():
+        for k, v in tracts_data.items():
             if mask & (1 + 2 + 4):
                 break
             if v[0].shape[1] == 1 and mask & 1 == 0:
@@ -93,7 +93,6 @@ def setup(*args, **kwargs):
             if v[0].shape[1] == 9 and mask & 4 == 0:
                 tracts_data['ActiveTensors'] = k
                 mask |= 4
-
 
     tractography = Tractography(tracts, tracts_data)
 
