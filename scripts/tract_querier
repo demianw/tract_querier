@@ -143,9 +143,11 @@ def main():
         }
     input_split = os.path.splitext(options.tractography_file_name)
     output_split = os.path.splitext(options.output_file_name)
-    if len(output_split) > 1:
+    if len(output_split[-1]) > 0:
         options.output_file_name = output_split[0]
         tractography_extension = output_split[1]
+    else:
+        tractography_extension = input_split[1]
 
     if tractography_extension == '.trk':
         if input_split[-1] == '.trk':
