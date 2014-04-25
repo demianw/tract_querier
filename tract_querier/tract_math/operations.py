@@ -6,6 +6,7 @@ except ImportError:  # Python 2.6 fix
     from ordereddict import OrderedDict
 
 import numpy
+from numpy import linalg
 
 import nibabel
 from nibabel.spatialimages import SpatialImage
@@ -48,7 +49,7 @@ def length_mean_std(tractography):
 
 def tract_length(tract):
     d2 = numpy.sqrt((numpy.diff(tract, axis=0) ** 2).sum(1))
-    return {'Tract length': d2.sum()}
+    return d2.sum()
 
 
 @tract_math_operation('<volume unit>: calculates the volume of a tract based on voxel occupancy of a certain voxel volume')
@@ -126,6 +127,29 @@ def scalar_mean_std(tractography, scalar):
         return OrderedDict((
             ('mean %s' % scalar, float(mean)),
             ('std %s' % scalar, float(std))
+        ))
+
+    except KeyError:
+        raise ValueError("Tractography does not contain this scalar data")
+
+
+@tract_math_operation('<scalar>: calculates mean and std of a scalar quantity that has been averaged along each tract')
+def scalar_per_tract_mean_std(tractography, scalar):
+    try:
+        scalars = tractography.tracts_data()[scalar]
+        weighted_scalars = numpy.empty((len(tractography.tracts()), 2))
+        for i, t in enumerate(tractography.tracts()):
+            tdiff = numpy.sqrt((numpy.diff(t, axis=0) ** 2).sum(-1))
+            length = tdiff.sum()
+            values = scalars[i][1:].squeeze()
+            average = numpy.average(values, weights=tdiff)
+            weighted_scalars[i, 0] = average
+            weighted_scalars[i, 1] = length
+        mean = numpy.average(weighted_scalars[:, 0], weights=weighted_scalars[:, 1])
+        std = numpy.average((weighted_scalars[:, 0] - mean) ** 2, weights=weighted_scalars[:, 1])
+        return OrderedDict((
+            ('per tract distance weighted mean %s' % scalar, float(mean)),
+            ('per tract distance weighted std %s' % scalar, float(std))
         ))
 
     except KeyError:
@@ -234,7 +258,7 @@ def tract_map_image(tractography, image, quantity_name, file_output):
         output_name = output_name + '_%04d' + ext
         for i, image in enumerate(image_data):
             new_scalar_data = ndimage.map_coordinates(
-                image.T, ijk_points.T
+                image, ijk_points.T
             )[:, None]
             tractography.original_tracts_data()[
                 quantity_name] = new_scalar_data
@@ -242,13 +266,14 @@ def tract_map_image(tractography, image, quantity_name, file_output):
                 tractography.original_tracts(),  tractography.original_tracts_data()))
     else:
         new_scalar_data_flat = ndimage.map_coordinates(
-            image_data.T, ijk_points.T
+            image_data, ijk_points.T
         )[:, None]
         start = 0
         new_scalar_data = []
         for tract in tractography.original_tracts():
             new_scalar_data.append(
-                new_scalar_data_flat[start: start + len(tract)])
+                new_scalar_data_flat[start: start + len(tract)].copy()
+            )
             start += len(tract)
         tractography.original_tracts_data()[quantity_name] = new_scalar_data
 
@@ -546,7 +571,7 @@ def each_tract_in_ijk(image, tractography):
 
 def tract_in_ijk(image, tractography):
     ras_points = numpy.vstack(tractography.tracts())
-    ijk_points = numpy.dot(numpy.linalg.inv(image.get_affine()), numpy.hstack((
+    ijk_points = numpy.linalg.solve(image.get_affine(), numpy.hstack((
         ras_points,
         numpy.ones((len(ras_points), 1))
     )).T).T[:, :-1]

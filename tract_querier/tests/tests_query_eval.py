@@ -4,7 +4,7 @@ from nose.tools import assert_true, assert_equal
 from numpy import random
 import ast
 
-#Ten tracts traversing random labels
+# Ten tracts traversing random labels
 another_set = True
 while (another_set):
     tracts_labels = dict([(i, set(random.randint(100, size=2))) for i in xrange(100)])
@@ -18,6 +18,7 @@ tract_in_label_0_uniquely = labels_tracts[0].difference(tracts_in_all_but_0)
 
 
 class DummySpatialIndexing:
+
     def __init__(
         self,
         crossing_tracts_labels, crossing_labels_tracts,

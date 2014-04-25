@@ -7,6 +7,7 @@ import glob
 
 from nipype.interfaces.base import (CommandLine, CommandLineInputSpec, TraitedSpec, traits)
 
+
 class TractQuerierInputSpec(CommandLineInputSpec):
     atlas_type = traits.Enum('Desikan', 'Mori', argstr='-q %s', usedefault=True,
                              desc='Atlas type for the queries')
@@ -16,11 +17,12 @@ class TractQuerierInputSpec(CommandLineInputSpec):
     queries = traits.List(desc="Input queries", exists=True, mandatory=False, argstr="--query_selection %s")
 
 
-
 class TractQuerierOutputSpec(TraitedSpec):
     output_queries = traits.List(exists=True, desc='resulting query files')
 
+
 class TractQuerier(CommandLine):
+
     """Uses WMQL to generate white matter tracts
 
     Examples
@@ -43,34 +45,32 @@ class TractQuerier(CommandLine):
     input_spec = TractQuerierInputSpec
     output_spec = TractQuerierOutputSpec
 
-
     def _format_arg(self, name, spec, value):
         if name == 'atlas_type':
-            return spec.argstr%{"Mori":'mori_queries.qry', "Desikan":'freesurfer_queries.qry'}[value]
+            return spec.argstr % {"Mori": 'mori_queries.qry', "Desikan": 'freesurfer_queries.qry'}[value]
         elif name == 'queries':
-            return spec.argstr%(''.join((q + ',' for q in value[:-1])) + value[-1])
+            return spec.argstr % (''.join((q + ',' for q in value[:-1])) + value[-1])
         return super(TractQuerier, self)._format_arg(name, spec, value)
 
     def _list_outputs(self):
         outputs = self._outputs().get()
         outputs['output_queries'] = glob.glob(os.path.join(os.getcwd(),
-                                                        self.inputs.out_prefix +
-                                                        '*.vtk')
-                                             )
+                                                           self.inputs.out_prefix +
+                                                           '*.vtk')
+                                              )
         return outputs
 
 
 class MapImageToTractsInputSpec(CommandLineInputSpec):
-    input_tractography = traits.File(desc = "Input Tractography", exists = False, mandatory = True, argstr="%s", copy_file=False, position=0)
-    input_image = traits.File(desc = "Input Image", exists = False, mandatory = True, argstr="-i %s", copy_file=False)
-    output_tractography_prefix = traits.File('out_', desc = "output tract name", mandatory = False, argstr="-o %s", usedefault=True)
-    data_name = traits.String(desc = "Name of the property", mandatory = True, argstr="-n %s")
+    input_tractography = traits.File(desc="Input Tractography", exists=False, mandatory=True, argstr="%s", copy_file=False, position=0)
+    input_image = traits.File(desc="Input Image", exists=False, mandatory=True, argstr="-i %s", copy_file=False)
+    output_tractography_prefix = traits.File('out_', desc="output tract name", mandatory=False, argstr="-o %s", usedefault=True)
+    data_name = traits.String(desc="Name of the property", mandatory=True, argstr="-n %s")
     output_point_value_prefix = traits.File(
         'out_',
         desc="Values of the image at every point of the tract", exists=False, mandatory=False, argstr="--output_point_value_file %s",
         usedefault=True
     )
-
 
 
 class MapImageToTractsOutputSpec(TraitedSpec):
@@ -79,6 +79,7 @@ class MapImageToTractsOutputSpec(TraitedSpec):
 
 
 class MapImageToTracts(CommandLine):
+
     """Uses WMQL to generate white matter tracts
 
     Examples
@@ -101,17 +102,17 @@ class MapImageToTracts(CommandLine):
 
     def _format_arg(self, name, spec, value):
         if name == 'output_tractography_prefix':
-            return spec.argstr%((
+            return spec.argstr % ((
                 value + os.path.basename(self.inputs.input_tractography)
             ))
 
         if name == 'output_point_value_prefix':
             basename = os.path.basename(self.inputs.input_tractography)
             name, ext = os.path.splitext(basename)
-            return spec.argstr%((
-                    value +
-                    name +
-                    '.txt'
+            return spec.argstr % ((
+                value +
+                name +
+                '.txt'
             ))
 
         return super(MapImageToTracts, self)._format_arg(name, spec, value)
@@ -134,6 +135,6 @@ class MapImageToTracts(CommandLine):
                 self.inputs.output_point_value_prefix +
                 name +
                 '.txt'
-        ))
+            ))
 
         return outputs

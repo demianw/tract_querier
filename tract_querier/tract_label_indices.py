@@ -7,6 +7,7 @@ __all__ = ['TractographySpatialIndexing']
 
 
 class TractographySpatialIndexing:
+
     r"""
     This class implements a mutual spatial indexing of
     an labeled image and a tractography
@@ -104,7 +105,7 @@ def compute_label_bounding_boxes(image, affine_ijk_2_ras):
             coords = np.where(image == label)
             ras_coords = (
                 (
-                    linear_component.dot(coords).T +
+                    np.dot(linear_component, coords).T +
                     translation
                 )
             )
@@ -124,7 +125,7 @@ def compute_tract_bounding_boxes(tracts, affine_transform=None):
     for i, tract in enumerate(tracts):
         if affine_transform is not None:
             ras_coords = (
-                linear_component.dot(tract.T).T +
+                np.dot(linear_component, tract.T).T +
                 translation
             )
         else:

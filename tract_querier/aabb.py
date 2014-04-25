@@ -4,6 +4,7 @@ __all__ = ['BoundingBox']
 
 
 class BoundingBox(np.ndarray):
+
     """Bounding box assuming RAS coordinate system"""
     def __new__(cls, input_array, info=None):
         try:
@@ -201,7 +202,7 @@ class AABBTree:
             if isinstance(tree, self.leaf):
                 return [tree]
             else:
-                return self._intersect(tree.left, box)+self._intersect(tree.right, box)
+                return self._intersect(tree.left, box) + self._intersect(tree.right, box)
         else:
             return []
 
@@ -213,7 +214,6 @@ class AABBTree:
             if len(indices) == 1:
                 return self.leaf(allboxes[indices[0], :], indices[0], parent=parent)
             boxes = allboxes[indices, :]
-
 
     def buildTree_old(self, allboxes, indices=None, leafPointers=None, parent=None, verbose=False):
         """
@@ -232,7 +232,7 @@ class AABBTree:
         if verbose:
             print '*******************************************'
 
-        dimensions = len(boxes[0])/2
+        dimensions = len(boxes[0]) / 2
 
         box = np.empty(2 * dimensions)
         np.min(boxes[:, ::2], axis=0, out=box[::2])
@@ -240,16 +240,16 @@ class AABBTree:
         boxes[:, ::2].min(0, out=box[::2])
         boxes[:, 1::2].max(0, out=box[1::2])
 
-        lengths = box[1::2]-box[::2]
+        lengths = box[1::2] - box[::2]
         largestDimension = lengths.argmax()
         largestDimensionLength = lengths[largestDimension]
-        cuttingPlaneAt = largestDimensionLength/2.
+        cuttingPlaneAt = largestDimensionLength / 2.
 
         halfLength = (
-            boxes[:, 2*largestDimension] +
+            boxes[:, 2 * largestDimension] +
             (
-                boxes[:, 2*largestDimension+1]-boxes[:, 2*largestDimension]
-            )/2.
+                boxes[:, 2 * largestDimension + 1] - boxes[:, 2 * largestDimension]
+            ) / 2.
         )
 
         halfLengthSortedIndices = halfLength.argsort()
@@ -260,7 +260,7 @@ class AABBTree:
         rightIndices = indices[halfLengthSortedIndices[division:]]
 
         if len(leftIndices) == 0 or len(rightIndices) == 0:
-            n = len(indices)/2
+            n = len(indices) / 2
             leftIndices = indices[:n]
             rightIndices = indices[n:]
 
