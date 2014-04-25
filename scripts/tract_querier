@@ -145,7 +145,25 @@ def main():
             'affine': tr.affine,
             'image_dimensions': tr.image_dims
         }
+    input_split = os.path.splitext(options.tractography_file_name)
+    output_split = os.path.splitext(options.output_file_name)
+    if len(output_split[-1]) > 0:
+        options.output_file_name = output_split[0]
+        tractography_extension = output_split[1]
+    else:
+        tractography_extension = input_split[1]
 
+    if tractography_extension == '.trk':
+        if input_split[-1] == '.trk':
+            tractography_extra_kwargs = {
+                'affine': tr.affine,
+                'image_dimensions': tr.image_dims
+            }
+        else:
+            tractography_extra_kwargs = {
+                'affine': labels_nii.get_affine(),
+                'image_dimensions': img.shape
+            }
     else:
         tractography_extra_kwargs = {}
 
@@ -207,12 +225,14 @@ def save_query(query_name, tractography, options, evaluated_queries, extension='
     tract_numbers = evaluated_queries[query_name]
     print "\tQuery %s: %.6d" % (query_name, len(tract_numbers))
     if tract_numbers:
+        filename = options.output_file_name + "_" + query_name + extension
         save_tractography_file(
-            options.output_file_name + "_" + query_name + extension,
+            filename,
             tractography,
             tract_numbers,
             extra_kwargs=extra_kwargs
         )
+        return filename
 
 
 def save_tractography_file(
