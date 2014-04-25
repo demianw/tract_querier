@@ -256,13 +256,9 @@ def main():
             tractography_spatial_indexing,
             initial_body=query_script,
             save_query_callback=query_save,
-<<<<<<< HEAD
             del_query_callback=query_del,
             eof_callback=kill_server_callback,
             include_folders=folders
-=======
-            include_folders=qry_search_folders
->>>>>>> master
         )
 
         interactive_shell.cmdloop()
