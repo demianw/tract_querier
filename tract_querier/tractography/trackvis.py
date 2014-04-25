@@ -30,6 +30,8 @@ def tractography_to_trackvis_file(filename, tractography, affine=None, image_dim
     orig_data = tractography.tracts_data()
     data = {}
     for k, v in orig_data.iteritems():
+        if not isinstance(v[0], numpy.ndarray):
+            continue
         if (v[0].ndim > 1 and any(d > 1 for d in v[0].shape[1:])):
             warn(
                 "Scalar data %s ignored as trackvis "
