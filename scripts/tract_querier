@@ -86,12 +86,16 @@ def main():
         kill_server_callback = None
 
     if options.bounding_box_affine_transform:
-        bounding_box_affine_transform = np.fromstring(
-            options.bounding_box_affine_transform, sep=','
-        ).reshape(4, 4)
-        print "RAS transform:"
+        try:
+            bounding_box_affine_transform = np.fromstring(
+                options.bounding_box_affine_transform, sep=','
+            ).reshape(4, 4)
+            print "Affine transform:"
+            print bounding_box_affine_transform
+        except ValueError:
+            parser.error("Matrix format not valid")
     else:
-        bounding_box_affine_transform = np.eye(4)
+        bounding_box_affine_transform = None
 
     print "Loading files"
 
@@ -173,6 +177,19 @@ def main():
         tractography_extension = '.trk'
 
     if tractography_extension == '.trk':
+        tractography_extra_kwargs = {
+            'affine': tr.affine,
+            'image_dimensions': tr.image_dims
+        }
+    input_split = os.path.splitext(options.tractography_file_name)
+    output_split = os.path.splitext(options.output_file_name)
+    if len(output_split[-1]) > 0:
+        options.output_file_name = output_split[0]
+        tractography_extension = output_split[1]
+    else:
+        tractography_extension = input_split[1]
+
+    if tractography_extension == '.trk':
         if input_split[-1] == '.trk':
             tractography_extra_kwargs = {
                 'affine': tr.affine,
@@ -189,6 +206,14 @@ def main():
     print "Calculating labels and crossings"
     affine_ijk_2_ras = labels_nii.get_affine()
     tracts = tr.tracts()
+
+    if bounding_box_affine_transform is not None:
+        tracts = [
+            affine_transform_tract(np.linalg.inv(bounding_box_affine_transform), tract)
+            for tract in tracts
+        ]
+
+        affine_ijk_2_ras = np.dot(bounding_box_affine_transform, affine_ijk_2_ras)
 
     tractography_spatial_indexing = tract_querier.TractographySpatialIndexing(
         tracts, img, affine_ijk_2_ras, options.length_threshold, options.threshold
@@ -348,6 +373,14 @@ def activate_webserver(options):
 
     return kill_server
 
+
+def affine_transform_tract(affine_transform, tract):
+    import numpy as np
+
+    tract = np.dot(affine_transform[:3, :3], tract.T).T
+    tract += affine_transform[-1, :3]
+
+    return tract
 
 if __name__ == "__main__":
     main()

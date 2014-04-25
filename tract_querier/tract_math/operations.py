@@ -178,6 +178,32 @@ def scalar_median(tractography, scalar):
         raise ValueError("Tractography does not contain this scalar data")
 
 
+@tract_math_operation(': Dumps all the data in the tractography', needs_one_tract=True)
+def tract_dump(tractography):
+    res = OrderedDict()
+    tract_number = 'tract #'
+    res[tract_number] = []
+    res['x'] = []
+    res['y'] = []
+    res['z'] = []
+
+    data = tractography.tracts_data()
+
+    for k in data.keys():
+        res[k] = []
+
+    for i, tract in enumerate(tractography.tracts()):
+        res[tract_number] += [i] * len(tract)
+        res['x'] += list(tract[:, 0])
+        res['y'] += list(tract[:, 1])
+        res['z'] += list(tract[:, 2])
+
+        for k in data.keys():
+            res[k] += list(numpy.asarray(data[k][i]).squeeze())
+
+    return res
+
+
 @tract_math_operation(': Minimum and maximum distance between two consecutive points')
 def tract_point_distance_min_max(tractography):
     dist_min = numpy.empty(len(tractography.tracts()))
