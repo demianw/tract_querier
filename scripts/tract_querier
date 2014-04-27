@@ -283,7 +283,7 @@ def main():
             save_query_callback=query_save,
             del_query_callback=query_del,
             eof_callback=kill_server_callback,
-            include_folders=folders
+            include_folders=qry_search_folders
         )
 
         interactive_shell.cmdloop()
