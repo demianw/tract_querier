@@ -1,9 +1,15 @@
 doc/_build/*
+example_data
 htmlcov
+.coverage
+.figleaf
+.ropeproject
 *~
 *pyc
 .*sw?
 *bak
+*.old
+*.orig
 ## The Pycharm internal directory.
 .idea
 build
