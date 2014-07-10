@@ -169,38 +169,40 @@ function init_websocket(host) {
     };
 
     _WS_.onmessage = function(evt){
-        var tract = JSON.parse(evt.data);
-        var name = tract['name'];
-        var file = tract['file'];
-        var action = tract['action'];
-        if (action == 'add') {
-          if (name in _tracts_) {
-            console.info("Removing tract " + name);
-            _tracts_gui_.remove(_tracts_[name].control);
-            render3D.remove(_tracts_[name]);
-          };
+        var ev = JSON.parse(evt.data);
+        if (ev['receiver'] == 'tract') {
+          var name = ev['name'];
+          var file = ev['file'];
+          var action = ev['action'];
+          if (action == 'add') {
+            if (name in _tracts_) {
+              console.info("Removing tract " + name);
+              _tracts_gui_.remove(_tracts_[name].control);
+              render3D.remove(_tracts_[name]);
+            };
 
-          delete _tracts_[name];
-
-          _tracts_[name] = new X.fibers();
-          _tracts_[name].file = 'files/' + file;
-          _tracts_[name].caption = name;
-
-          _tracts_[name].control = _tracts_gui_.add(_tracts_[name], 'visible');
-          _tracts_[name].control.name(name);
-
-          _tracts_[name].modified();
-          
-          render3D.add(_tracts_[name]);
-
-        }
-
-        if (action == 'remove') {
-          if (name in _tracts_) {
-            console.info("Removing tract " + name);
-            _tracts_gui_.remove(_tracts_[name].control);
-            render3D.remove(_tracts_[name]);
             delete _tracts_[name];
+
+            _tracts_[name] = new X.fibers();
+            _tracts_[name].file = 'files/' + file;
+            _tracts_[name].caption = name;
+
+            _tracts_[name].control = _tracts_gui_.add(_tracts_[name], 'visible');
+            _tracts_[name].control.name(name);
+
+            _tracts_[name].modified();
+            
+            render3D.add(_tracts_[name]);
+
+          }
+
+          if (action == 'remove') {
+            if (name in _tracts_) {
+              console.info("Removing tract " + name);
+              _tracts_gui_.remove(_tracts_[name].control);
+              render3D.remove(_tracts_[name]);
+              delete _tracts_[name];
+            }
           }
         }
     };
@@ -210,6 +212,89 @@ function init_websocket(host) {
 
   });
 };
+
+function init_terminal(host) {
+  jQuery(function($, undefined) {
+    var _WS_ = new WebSocket(host);
+
+    function waitForSocketConnection(socket, callback){
+        setTimeout(
+            function () {
+                if (socket.readyState === 1) {
+                    console.log("Connection is made")
+                    if(callback != null){
+                        callback();
+                    }
+                    return;
+
+                } else {
+                    console.log("wait for connection...")
+                    waitForSocketConnection(socket, callback);
+                }
+
+            }, 5); // wait 5 milisecond for the connection...
+    }
+
+    waitForSocketConnection(_WS_, function(){
+      console.log("terminal connected!"); 
+    });
+
+    var wait = 0;
+    function waitForShell() {
+      setTimeout(
+          function () {
+              if (wait === 0) {
+                  console.log("Shell back")
+                  return;
+              } else {
+                  console.log("wait for shell to come back...")
+                  waitForShell();
+              }
+
+          }, 5); // wait 5 milisecond for the connection...
+    };
+    $('#wmql_console').terminal(function(command, term) {
+              _WS_.onmessage = function(evt){
+                console.log("Received!");
+                var ev = JSON.parse(evt.data);
+                var receiver = ev['receiver']
+                if (receiver == 'terminal') {
+                  term.echo(ev['output']);
+                };
+                wait = 0;
+              };
+
+              console.log("Sending command");
+              console.log(command);
+
+              _WS_.send(command);
+              wait = 1;
+              waitForShell();
+
+
+              /*
+              function sendMessage(msg){
+                  // Wait until the state of the socket is not ready and send the message when it is...
+                  waitForSocketConnection(_WS_, function(){
+                      console.log("message sent!!!");
+                      _WS_.send(msg);
+                  });
+              }
+
+              // Make the function wait until the connection is made...
+              sendMessage(command);
+              */
+
+
+    }, {
+        greetings: 'White Matter Query Language Console',
+        name: 'wmql_console',
+        height: 80,
+        prompt: '[WMQL] '});
+  });
+};
+
+
 
 window.onload = function() {
 
@@ -234,6 +319,4 @@ window.onload = function() {
   render3D.render();
 
 }
-
-
 

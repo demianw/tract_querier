@@ -9,6 +9,7 @@
 <link rel="stylesheet" type="text/css" href="static/css/viewer.css" />
 <link rel="stylesheet" type="text/css" href="static/css/viewer.css" />
 <link rel="stylesheet" type="text/css" href="static/css/jquery-ui-1.9.2.custom.css" />
+<link rel="stylesheet" type="text/css" href="static/css/jquery.terminal.css" />
   
 <!--<script type="text/javascript" src="http://get.goXTK.com/xtk.js"></script>-->
 <script type="text/javascript" src="static/js/xtk_edge.js"></script>
@@ -19,18 +20,21 @@
 <script  type="text/javascript" src="static/js/jquery.ui.slider.js"></script>
 
 <script type="text/javascript" src="http://get.goXTK.com/xtk_xdat.gui.js"></script>
+<script type="text/javascript" src="static/js/jquery.mousewheel-min.js"></script>
+<script type="text/javascript" src="static/js/jquery.terminal-min.js"></script>
 
 <script  type="text/javascript" src="static/js/FreesurferColorLUT.js"></script>
 <script  type="text/javascript" src="static/js/wmqlviz.js"></script>
 <script  type="text/javascript">
   init_websocket('{{websocket_server}}');
+  init_terminal('{{websocket_server}}');
   init_volume('atlas/atlas_{{suffix}}.nii.gz', 'atlas/colortable_{{suffix}}.txt');
 </script>
 
 </head>
 
 <body>
-
+    <div id="wmql_console"></div>    
     <!--3D slice rendering-->
     <div id='3d' class='render3D'>
     </div>

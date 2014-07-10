@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+from StringIO import StringIO
 
 import tornado.ioloop
 import tornado.web
@@ -13,6 +14,12 @@ websocket_clients = []
 
 class WSHandler(tornado.websocket.WebSocketHandler):
 
+    def initialize(self, shell=None):
+        self.shell = shell
+        self.sio = StringIO()
+        self.shell.stdout = self.sio
+        self.json_encoder = json.JSONEncoder()
+
     def open(self):
         global websocket_clients
         websocket_clients.append(self)
@@ -21,6 +28,16 @@ class WSHandler(tornado.websocket.WebSocketHandler):
         # self.write_message(u"You Said: " + message)
         global change
         change = message
+        self.sio.seek(0)
+        self.shell.onecmd(message)
+        self.sio.seek(0)
+        result = self.sio.getvalue()
+        term_output = {
+            'receiver': 'terminal',
+            'output': result
+        }
+        self.write_message(self.json_encoder.encode(term_output))
+        self.sio.truncate(0)
 
         #self.write_message(message + "Response")
 
@@ -97,6 +114,7 @@ class TractHandler(tornado.web.RequestHandler):
     def post(self):
         try:
             action = {
+                'receiver': 'tract',
                 'action': self.get_argument('action'),
                 'name': self.get_argument('name')
             }
@@ -111,7 +129,7 @@ class TractHandler(tornado.web.RequestHandler):
             print e
 
 
-def xtk_server(atlas, colortable=None, port=9999, files_path=None, suffix=''):
+def xtk_server(atlas=None, colortable=None, port=9999, files_path=None, suffix='', shell=None):
     print "Using atlas", atlas
     global application
 
@@ -149,7 +167,9 @@ def xtk_server(atlas, colortable=None, port=9999, files_path=None, suffix=''):
             tornado.web.StaticFileHandler,
             {"path": static_folder}
         ),
-        (r'/ws', WSHandler),
+        (r'/ws', WSHandler, {
+            'shell': shell,
+        }),
         (r'/tracts', TractHandler),
         (
             r'/atlas/(.*)',

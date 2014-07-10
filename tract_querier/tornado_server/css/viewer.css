@@ -8,11 +8,25 @@
 .twoDRenderer {
   border-left: thin solid #666;
   background-color: #000;
+  text-color: #FF0;
   position: absolute;
   width: 20%;
   height: 31%;
   /*height: 33.333%;*/
   right: 0%;
+}
+
+.footer {
+  border-left: thin solid #F00;
+  background-color: #F0F;
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  height: 5%;
+}
+
+#shell {
+  bottom: 5%;
 }
 
 #sliceX {

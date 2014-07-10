@@ -80,7 +80,8 @@ def main():
     import tract_querier
 
     if options.interactive_web:
-        kill_server_callback = activate_webserver(options)
+        #kill_server_callback = activate_webserver(options)
+        kill_server_callback = None
         options.interactive = True
     else:
         kill_server_callback = None
@@ -248,6 +249,8 @@ def main():
             query_del = None
         else:
             import urllib
+            from multiprocessing import Process
+
             def query_save(query_name, query_result):
                 filename = save_query(
                     query_name, tr, options, {query_name: query_result},
@@ -260,8 +263,16 @@ def main():
                             'file': filename,
                             'action': 'add'
                         })
-                        f = urllib.urlopen(options.interactive_url, params)
-                        f.close()
+
+                        p = Process(
+                            target=urllib.urlopen,
+                            args=(options.interactive_url, params),
+                            #kwargs=params
+                        )
+                        p.start()
+
+                        #f = urllib.urlopen(options.interactive_url, params)
+                        #f.close()
                     except Exception, e:
                         print "Interactive URL error:", e
                 return filename
@@ -272,8 +283,15 @@ def main():
                         'name': query_name,
                         'action': 'remove'
                     })
-                    f = urllib.urlopen(options.interactive_url, params)
-                    f.close()
+                    p = Process(
+                        target=urllib.urlopen,
+                        args=(options.interactive_url, params),
+                        #kwargs=params
+                    )
+                    p.start()
+
+                    #f = urllib.urlopen(options.interactive_url, params)
+                    #f.close()
                 except Exception, e:
                     print "Interactive URL error:", e
 
@@ -286,7 +304,12 @@ def main():
             include_folders=qry_search_folders
         )
 
-        interactive_shell.cmdloop()
+        if options.interactive_web:
+            activate_webserver(options, interactive_shell)
+        else:
+            interactive_shell.cmdloop()
+        #kill_server_callback = activate_webserver(options)
+
 
 
 def save_query(query_name, tractography, options, evaluated_queries, extension='.vtk', extra_kwargs={}):
@@ -340,7 +363,7 @@ def save_tractography_file(
     )
 
 
-def activate_webserver(options):
+def activate_webserver(options, shell):
     import os
     from multiprocessing import Process
     from tract_querier import tornado_server
@@ -362,16 +385,28 @@ def activate_webserver(options):
             'colortable': options.interactive_colortable,
             'port': options.interactive_port,
             'files_path': os.getcwd(),
-            'suffix': suffix
+            'suffix': suffix,
+            'shell': shell
         }
     )
+    #args=(os.path.abspath(options.atlas_file_name),),
+    args = tuple()
+    kwargs = {
+        'atlas': os.path.abspath(options.atlas_file_name),
+        'colortable': options.interactive_colortable,
+        'port': options.interactive_port,
+        'files_path': os.getcwd(),
+        'suffix': suffix,
+        'shell': shell
+    }
+    tornado_server.xtk_server(*args, **kwargs)
 
-    p.start()
+    #p.start()
 
-    def kill_server():
-        p.terminate()
+    #def kill_server():
+    #    p.terminate()
 
-    return kill_server
+    #return kill_server
 
 
 def affine_transform_tract(affine_transform, tract):
