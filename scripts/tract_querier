@@ -80,11 +80,7 @@ def main():
     import tract_querier
 
     if options.interactive_web:
-        #kill_server_callback = activate_webserver(options)
-        kill_server_callback = None
         options.interactive = True
-    else:
-        kill_server_callback = None
 
     if options.bounding_box_affine_transform:
         try:
@@ -264,15 +260,11 @@ def main():
                             'action': 'add'
                         })
 
-                        p = Process(
+                        Process(
                             target=urllib.urlopen,
                             args=(options.interactive_url, params),
-                            #kwargs=params
-                        )
-                        p.start()
+                        ).start()
 
-                        #f = urllib.urlopen(options.interactive_url, params)
-                        #f.close()
                     except Exception, e:
                         print "Interactive URL error:", e
                 return filename
@@ -283,15 +275,11 @@ def main():
                         'name': query_name,
                         'action': 'remove'
                     })
-                    p = Process(
+                    Process(
                         target=urllib.urlopen,
                         args=(options.interactive_url, params),
-                        #kwargs=params
-                    )
-                    p.start()
+                    ).start()
 
-                    #f = urllib.urlopen(options.interactive_url, params)
-                    #f.close()
                 except Exception, e:
                     print "Interactive URL error:", e
 
@@ -300,7 +288,6 @@ def main():
             initial_body=query_script,
             save_query_callback=query_save,
             del_query_callback=query_del,
-            eof_callback=kill_server_callback,
             include_folders=qry_search_folders
         )
 
@@ -308,8 +295,6 @@ def main():
             activate_webserver(options, interactive_shell)
         else:
             interactive_shell.cmdloop()
-        #kill_server_callback = activate_webserver(options)
-
 
 
 def save_query(query_name, tractography, options, evaluated_queries, extension='.vtk', extra_kwargs={}):
@@ -389,7 +374,6 @@ def activate_webserver(options, shell):
             'shell': shell
         }
     )
-    #args=(os.path.abspath(options.atlas_file_name),),
     args = tuple()
     kwargs = {
         'atlas': os.path.abspath(options.atlas_file_name),
@@ -400,13 +384,6 @@ def activate_webserver(options, shell):
         'shell': shell
     }
     tornado_server.xtk_server(*args, **kwargs)
-
-    #p.start()
-
-    #def kill_server():
-    #    p.terminate()
-
-    #return kill_server
 
 
 def affine_transform_tract(affine_transform, tract):

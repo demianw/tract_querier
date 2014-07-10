@@ -253,6 +253,16 @@ function init_terminal(host) {
 
           }, 5); // wait 5 milisecond for the connection...
     };
+
+    function sendCommand(command) {
+        console.log("Sending command");
+        console.log(command);
+
+        _WS_.send(command);
+        wait = 1;
+        waitForShell();
+    };
+
     $('#wmql_console').terminal(function(command, term) {
               _WS_.onmessage = function(evt){
                 console.log("Received!");
@@ -264,27 +274,7 @@ function init_terminal(host) {
                 wait = 0;
               };
 
-              console.log("Sending command");
-              console.log(command);
-
-              _WS_.send(command);
-              wait = 1;
-              waitForShell();
-
-
-              /*
-              function sendMessage(msg){
-                  // Wait until the state of the socket is not ready and send the message when it is...
-                  waitForSocketConnection(_WS_, function(){
-                      console.log("message sent!!!");
-                      _WS_.send(msg);
-                  });
-              }
-
-              // Make the function wait until the connection is made...
-              sendMessage(command);
-              */
-
+              sendCommand(command);
 
     }, {
         greetings: 'White Matter Query Language Console',
