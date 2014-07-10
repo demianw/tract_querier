@@ -99,9 +99,11 @@ class TractQuerierCmd(cmd.Cmd):
             save_query_callback=None,
             del_query_callback=None,
             eof_callback=None,
-            include_folders=['.']
+            include_folders=['.'],
+            stdin=None,
+            stdout=None
     ):
-        cmd.Cmd.__init__(self, 'Tab')
+        cmd.Cmd.__init__(self, 'Tab', stdin=stdin, stdout=stdout)
         self.prompt = '[wmql] '
         self.include_folders = include_folders
         self.tractography = tractography
@@ -127,6 +129,10 @@ class TractQuerierCmd(cmd.Cmd):
             else:
                 self.querier.visit(initial_body)
 
+    def _print(self, test):
+        self.stdout.write(test + '\n')
+        self.stdout.flush()
+
     @safe_method
     def do_dir(self, patterns):
         if patterns == '':
@@ -142,15 +148,15 @@ class TractQuerierCmd(cmd.Cmd):
         else:
             keys = k
         for k in keys:
-            print k
+            self._print(k)
 
     @safe_method
     def do_del(self, name):
         if self.del_query_callback is None:
-            print "Can not delete a query in this mode"
+            self._print("Can not delete a query in this mode")
             return
         if name not in self.names():
-            print "Error, query does not exist"
+            self._print("Error, query does not exist")
         else:
             self.del_query_callback(name)
 
@@ -162,16 +168,16 @@ class TractQuerierCmd(cmd.Cmd):
             )
             self.save_query_visitor.visit(ast.Module(body=body))
         except SyntaxError, e:
-            print e.value
+            self._print(e.value)
         except TractQuerierSyntaxError, e:
-            print e.value
+            self._print(e.value)
         except KeyError, e:
-            print "Query name not recognized: %s" % e
+            self._print("Query name not recognized: %s" % e)
 
         return False
 
     def do_help(self, line):
-        print '''WMQL Help
+        self._print('''WMQL Help
 
         Commands:
             dir <pattern>: list the available queries according to the pattern
@@ -183,7 +189,7 @@ class TractQuerierCmd(cmd.Cmd):
             <query name> |= <query>: execute a query without saving its result
 
         Exit pressing Ctrl+D
-        '''
+        ''')
         return
 
     def emptyline(self):
@@ -191,7 +197,7 @@ class TractQuerierCmd(cmd.Cmd):
 
     @safe_method
     def default(self, line):
-        print line
+        self._print(line)
         if len(line) == 0:
             return False
 
@@ -204,9 +210,9 @@ class TractQuerierCmd(cmd.Cmd):
             self.querier.visit(body)
             self.save_query_visitor.visit(body)
         except SyntaxError, e:
-            print e.value
+            self._print(e.value)
         except TractQuerierSyntaxError, e:
-            print e.value
+            self._print(e.value)
 
         return False
 
