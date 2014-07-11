@@ -1,8 +1,6 @@
 import os
 import json
 from StringIO import StringIO
-import urllib
-from multiprocessing import Process
 
 import tornado.ioloop
 import tornado.web
@@ -27,11 +25,9 @@ class WSHandler(tornado.websocket.WebSocketHandler):
         websocket_clients.append(self)
 
     def on_message(self, message):
-        # self.write_message(u"You Said: " + message)
         action = self.json_decoder.decode(message)
         if action['receiver'] == 'terminal':
             if action['action'] == 'cmd':
-                print "Received command"
                 self.sio.seek(0)
                 self.shell.onecmd(action['command'])
                 self.sio.seek(0)
@@ -47,7 +43,6 @@ class WSHandler(tornado.websocket.WebSocketHandler):
 
     def on_close(self):
         global websocket_clients
-        print 'connection closed'
         websocket_clients.remove(self)
 
 
@@ -60,7 +55,6 @@ class JSONRPCHandler(tornado.web.RequestHandler):
         self.json_decoder = json.JSONDecoder()
 
     def post(self):
-        print self.request.body
         args = self.get_argument('data', 'No data received')
         decoded_args = self.json_decoder.decode(self.request.body)
         if decoded_args['jsonrpc'] != '2.0':
@@ -100,9 +94,7 @@ class JSONRPCHandler(tornado.web.RequestHandler):
     '''
 
     def completion(self, *args):
-        print "Complete", args[1]
         completions = self.shell.completedefault(args[1])
-        print completions
         return completions
 
 
@@ -166,28 +158,6 @@ class NoCacheStaticHandler(tornado.web.StaticFileHandler):
         #self.set_header('Last-Modified', expiration)
 
 
-class TractHandler(tornado.web.RequestHandler):
-    def initialize(self):
-        self.json_encoder = json.JSONEncoder()
-
-    def post(self):
-        try:
-            action = {
-                'receiver': 'tract',
-                'action': self.get_argument('action'),
-                'name': self.get_argument('name')
-            }
-
-            if action['action'] == 'add':
-                action['file'] = self.get_argument("file")
-
-            action_json = self.json_encoder.encode(action)
-            for client in websocket_clients:
-                client.write_message(action_json)
-        except Exception, e:
-            print e
-
-
 def xtk_server(atlas=None, colortable=None, hostname='localhost', port=9999, files_path=None, suffix='', shell=None):
     print "Using atlas", atlas
     global application
@@ -234,7 +204,6 @@ def xtk_server(atlas=None, colortable=None, hostname='localhost', port=9999, fil
         (r'/jsonrpc', JSONRPCHandler, {
             'shell': shell,
         }),
-        (r'/tracts', TractHandler),
         (
             r'/atlas/(.*)',
             AtlasHandler, {
@@ -252,48 +221,58 @@ def xtk_server(atlas=None, colortable=None, hostname='localhost', port=9999, fil
 
 
 def adapt_shell_callbacks(shell, url):
+    import sys
     shell_save_query_callback = shell.save_query_callback
     shell_del_query_callback = shell.del_query_callback
 
     def save_query_callback(query_name, query_result):
         if shell_save_query_callback is not None:
+            old_stdout = sys.stdout
+            sys.stdout = shell.stdout
             filename = shell_save_query_callback(query_name, query_result)
+            sys.stdout.flush()
+            sys.stdout = old_stdout
         else:
             filename = None
 
         if filename is not None:
             try:
-                params = urllib.urlencode({
-                    'name': query_name,
+                json_encoder = json.JSONEncoder()
+                action = {
+                    'receiver': 'tract',
+                    'action': 'add',
                     'file': filename,
-                    'action': 'add'
-                })
-                Process(
-                    target=urllib.urlopen,
-                    args=(url, params),
-                ).start()
+                    'name': query_name,
+                }
 
+                action_json = json_encoder.encode(action)
+                for client in websocket_clients:
+                    client.write_message(action_json)
             except Exception, e:
-                print "interactive URL error:", e
+                print "Websocket error:", e
         return filename
 
     def del_query_callback(query_name):
         if shell_del_query_callback is not None:
+            old_stdout = sys.stdout
+            sys.stdout = shell.stdout
             shell_del_query_callback(query_name)
-
+            sys.stdout.flush()
+            sys.stdout = old_stdout
         try:
-
-            params = urllib.urlencode({
+            json_encoder = json.JSONEncoder()
+            action = {
+                'receiver': 'tract',
+                'action': 'remove',
                 'name': query_name,
-                'action': 'remove'
-            })
-            Process(
-                target=urllib.urlopen,
-                args=(url, params),
-            ).start()
+            }
+
+            action_json = json_encoder.encode(action)
+            for client in websocket_clients:
+                client.write_message(action_json)
 
         except Exception, e:
-            print "interactive URL error:", e
+            print "Websocket error:", e
 
     shell.save_query_callback = save_query_callback
     shell.del_query_callback = del_query_callback
