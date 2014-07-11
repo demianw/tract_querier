@@ -48,13 +48,14 @@ def main():
         help='Atlas colortable for the webgl viz'
     )
     parser.add_option(
-        '--interactive-webdisplay-url', dest='interactive_url',
-        help='Server port for the interactive display of the results: default: http://localhost:9999',
+        '--interactive-webdisplay-hostname', dest='interactive_hostname',
+        help='Server port for the interactive display of the results: default: $(default)s',
+        default='localhost'
     )
 
     parser.add_option(
         '--interactive-webdisplay-port', dest='interactive_port',
-        help='Server port for the interactive display of the results: default $(default)d',
+        help='Server port for the interactive display of the results: default $(default)04d',
         default=9999
     )
 
@@ -236,58 +237,16 @@ def main():
                 extension=tractography_extension, extra_kwargs=tractography_extra_kwargs
             )
     else:
-        if options.interactive_url is None and options.interactive_web is None:
-            def query_save(query_name, query_result):
-                return save_query(
-                    query_name, tr, options, {query_name: query_result},
-                    extension=tractography_extension, extra_kwargs=tractography_extra_kwargs
-                )
-            query_del = None
-        else:
-            import urllib
-            from multiprocessing import Process
-
-            def query_save(query_name, query_result):
-                filename = save_query(
-                    query_name, tr, options, {query_name: query_result},
-                    extension=tractography_extension, extra_kwargs=tractography_extra_kwargs
-                )
-                if filename is not None:
-                    try:
-                        params = urllib.urlencode({
-                            'name': query_name,
-                            'file': filename,
-                            'action': 'add'
-                        })
-
-                        Process(
-                            target=urllib.urlopen,
-                            args=(options.interactive_url, params),
-                        ).start()
-
-                    except Exception, e:
-                        print "Interactive URL error:", e
-                return filename
-
-            def query_del(query_name):
-                try:
-                    params = urllib.urlencode({
-                        'name': query_name,
-                        'action': 'remove'
-                    })
-                    Process(
-                        target=urllib.urlopen,
-                        args=(options.interactive_url, params),
-                    ).start()
-
-                except Exception, e:
-                    print "Interactive URL error:", e
+        def query_save(query_name, query_result):
+            return save_query(
+                query_name, tr, options, {query_name: query_result},
+                extension=tractography_extension, extra_kwargs=tractography_extra_kwargs
+            )
 
         interactive_shell = tract_querier.TractQuerierCmd(
             tractography_spatial_indexing,
             initial_body=query_script,
             save_query_callback=query_save,
-            del_query_callback=query_del,
             include_folders=qry_search_folders
         )
 
@@ -350,7 +309,6 @@ def save_tractography_file(
 
 def activate_webserver(options, shell):
     import os
-    from multiprocessing import Process
     from tract_querier import tornado_server
     from uuid import uuid4
     suffix = str(uuid4()).replace('-', '')
@@ -358,32 +316,20 @@ def activate_webserver(options, shell):
 
     options.interactive_port = int(options.interactive_port)
 
-    if options.interactive_url is None:
-        options.interactive_url = 'http://localhost:%04d/tracts' % options.interactive_port
-
-    print "Starting web server, please direct your browser to http://localhost:%04d" % options.interactive_port
-
-    p = Process(
-        target=tornado_server.xtk_server,
-        args=(os.path.abspath(options.atlas_file_name),),
-        kwargs={
-            'colortable': options.interactive_colortable,
-            'port': options.interactive_port,
-            'files_path': os.getcwd(),
-            'suffix': suffix,
-            'shell': shell
-        }
+    print "Starting web server, please direct your browser to http://%s:%04d" % (
+        options.interactive_hostname,
+        options.interactive_port
     )
-    args = tuple()
-    kwargs = {
-        'atlas': os.path.abspath(options.atlas_file_name),
-        'colortable': options.interactive_colortable,
-        'port': options.interactive_port,
-        'files_path': os.getcwd(),
-        'suffix': suffix,
-        'shell': shell
-    }
-    tornado_server.xtk_server(*args, **kwargs)
+
+    tornado_server.xtk_server(
+        atlas=os.path.abspath(options.atlas_file_name),
+        colortable=options.interactive_colortable,
+        hostname=options.interactive_hostname,
+        port=options.interactive_port,
+        files_path=os.getcwd(),
+        suffix=suffix,
+        shell=shell
+    )
 
 
 def affine_transform_tract(affine_transform, tract):

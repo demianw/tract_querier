@@ -1,7 +1,8 @@
 import os
-import sys
 import json
 from StringIO import StringIO
+import urllib
+from multiprocessing import Process
 
 import tornado.ioloop
 import tornado.web
@@ -19,6 +20,7 @@ class WSHandler(tornado.websocket.WebSocketHandler):
         self.sio = StringIO()
         self.shell.stdout = self.sio
         self.json_encoder = json.JSONEncoder()
+        self.json_decoder = json.JSONDecoder()
 
     def open(self):
         global websocket_clients
@@ -26,18 +28,20 @@ class WSHandler(tornado.websocket.WebSocketHandler):
 
     def on_message(self, message):
         # self.write_message(u"You Said: " + message)
-        global change
-        change = message
-        self.sio.seek(0)
-        self.shell.onecmd(message)
-        self.sio.seek(0)
-        result = self.sio.getvalue()
-        term_output = {
-            'receiver': 'terminal',
-            'output': result
-        }
-        self.write_message(self.json_encoder.encode(term_output))
-        self.sio.truncate(0)
+        action = self.json_decoder.decode(message)
+        if action['receiver'] == 'terminal':
+            if action['action'] == 'cmd':
+                print "Received command"
+                self.sio.seek(0)
+                self.shell.onecmd(action['command'])
+                self.sio.seek(0)
+                result = self.sio.getvalue()
+                term_output = {
+                    'receiver': 'terminal',
+                    'output': result
+                }
+                self.write_message(self.json_encoder.encode(term_output))
+                self.sio.truncate(0)
 
         #self.write_message(message + "Response")
 
@@ -45,6 +49,61 @@ class WSHandler(tornado.websocket.WebSocketHandler):
         global websocket_clients
         print 'connection closed'
         websocket_clients.remove(self)
+
+
+class JSONRPCHandler(tornado.web.RequestHandler):
+    def initialize(self, shell=None):
+        self.shell = shell
+        self.sio = StringIO()
+        self.shell.stdout = self.sio
+        self.json_encoder = json.JSONEncoder()
+        self.json_decoder = json.JSONDecoder()
+
+    def post(self):
+        print self.request.body
+        args = self.get_argument('data', 'No data received')
+        decoded_args = self.json_decoder.decode(self.request.body)
+        if decoded_args['jsonrpc'] != '2.0':
+            raise ValueError('Wrong JSON-RPC version, must be 2.0')
+        try:
+            if decoded_args['method'].startswith('system.'):
+                method = getattr(self, decoded_args['method'].replace('system.', ''))
+                result = method(self, *decoded_args['params'])
+            else:
+                wmql_string = '%s %s' % (
+                    decoded_args['method'],
+                    ''.join((s + ' ' for s in decoded_args['params']))
+                )
+                self.sio.seek(0)
+                self.shell.onecmd(wmql_string)
+                self.sio.seek(0)
+                result = self.sio.getvalue()
+                self.sio.truncate(0)
+
+            output = {
+                'jsonrpc': "2.0",
+                'result': result,
+                'error': '',
+                'id': decoded_args['id']
+            }
+            self.write(output)
+        except KeyError:
+            raise ValueError("JSON-RPC protocol not well implemented " + args)
+
+
+    def get(self):
+        return self.post()
+
+    def describe(self, *args):
+        return '''
+        White Matter Query Language Command Line
+    '''
+
+    def completion(self, *args):
+        print "Complete", args[1]
+        completions = self.shell.completedefault(args[1])
+        print completions
+        return completions
 
 
 class MainHandler(tornado.web.RequestHandler):
@@ -129,7 +188,7 @@ class TractHandler(tornado.web.RequestHandler):
             print e
 
 
-def xtk_server(atlas=None, colortable=None, port=9999, files_path=None, suffix='', shell=None):
+def xtk_server(atlas=None, colortable=None, hostname='localhost', port=9999, files_path=None, suffix='', shell=None):
     print "Using atlas", atlas
     global application
 
@@ -154,9 +213,11 @@ def xtk_server(atlas=None, colortable=None, port=9999, files_path=None, suffix='
     else:
         colortable = os.path.abspath(colortable)
 
+    adapt_shell_callbacks(shell, 'http://%s:%04d/tracts' % (hostname, port))
+
     application = tornado.web.Application([
         (r"/", MainHandler, {
-            'host': 'localhost', 'port': 9999,
+            'host': hostname, 'port': port,
             'path': static_folder,
             'filename': atlas,
             'colortable': colortable,
@@ -168,6 +229,9 @@ def xtk_server(atlas=None, colortable=None, port=9999, files_path=None, suffix='
             {"path": static_folder}
         ),
         (r'/ws', WSHandler, {
+            'shell': shell,
+        }),
+        (r'/jsonrpc', JSONRPCHandler, {
             'shell': shell,
         }),
         (r'/tracts', TractHandler),
@@ -182,5 +246,58 @@ def xtk_server(atlas=None, colortable=None, port=9999, files_path=None, suffix='
         ),
         (r'/files/(.*)', NoCacheStaticHandler, {"path": files_path})
     ])
+
     application.listen(port)
     tornado.ioloop.IOLoop.instance().start()
+
+
+def adapt_shell_callbacks(shell, url):
+    shell_save_query_callback = shell.save_query_callback
+    shell_del_query_callback = shell.del_query_callback
+
+    def save_query_callback(query_name, query_result):
+        if shell_save_query_callback is not None:
+            filename = shell_save_query_callback(query_name, query_result)
+        else:
+            filename = None
+
+        if filename is not None:
+            try:
+                params = urllib.urlencode({
+                    'name': query_name,
+                    'file': filename,
+                    'action': 'add'
+                })
+                Process(
+                    target=urllib.urlopen,
+                    args=(url, params),
+                ).start()
+
+            except Exception, e:
+                print "interactive URL error:", e
+        return filename
+
+    def del_query_callback(query_name):
+        if shell_del_query_callback is not None:
+            shell_del_query_callback(query_name)
+
+        try:
+
+            params = urllib.urlencode({
+                'name': query_name,
+                'action': 'remove'
+            })
+            Process(
+                target=urllib.urlopen,
+                args=(url, params),
+            ).start()
+
+        except Exception, e:
+            print "interactive URL error:", e
+
+    shell.save_query_callback = save_query_callback
+    shell.del_query_callback = del_query_callback
+
+
+
+

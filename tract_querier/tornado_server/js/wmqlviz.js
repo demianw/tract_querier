@@ -213,74 +213,30 @@ function init_websocket(host) {
   });
 };
 
-function init_terminal(host) {
+
+function init_terminal() {
   jQuery(function($, undefined) {
-    var _WS_ = new WebSocket(host);
-
-    function waitForSocketConnection(socket, callback){
-        setTimeout(
-            function () {
-                if (socket.readyState === 1) {
-                    console.log("Connection is made")
-                    if(callback != null){
-                        callback();
-                    }
-                    return;
-
-                } else {
-                    console.log("wait for connection...")
-                    waitForSocketConnection(socket, callback);
-                }
-
-            }, 5); // wait 5 milisecond for the connection...
-    }
-
-    waitForSocketConnection(_WS_, function(){
-      console.log("terminal connected!"); 
-    });
-
-    var wait = 0;
-    function waitForShell() {
-      setTimeout(
-          function () {
-              if (wait === 0) {
-                  console.log("Shell back")
-                  return;
-              } else {
-                  console.log("wait for shell to come back...")
-                  waitForShell();
-              }
-
-          }, 5); // wait 5 milisecond for the connection...
-    };
-
-    function sendCommand(command) {
-        console.log("Sending command");
-        console.log(command);
-
-        _WS_.send(command);
-        wait = 1;
-        waitForShell();
-    };
-
-    $('#wmql_console').terminal(function(command, term) {
-              _WS_.onmessage = function(evt){
-                console.log("Received!");
-                var ev = JSON.parse(evt.data);
-                var receiver = ev['receiver']
-                if (receiver == 'terminal') {
-                  term.echo(ev['output']);
-                };
-                wait = 0;
-              };
-
-              sendCommand(command);
-
-    }, {
+    $('#wmql_console').terminal("jsonrpc",
+    {
         greetings: 'White Matter Query Language Console',
         name: 'wmql_console',
-        height: 80,
-        prompt: '[WMQL] '});
+        prompt: '[WMQL] ',
+        height: 150,
+        completion: function (terminal, string, callback) {
+          var cmd = 'system.completion'
+          var result = []
+
+          $.jrpc("jsonrpc", cmd, [string], 
+            function (json) {
+              console.log(json)
+              callback(json['result']);
+            }, function(){}
+          );
+        },
+        onBlur: function() {
+          return false;
+        }
+    });
   });
 };
 
