@@ -1,6 +1,7 @@
 import os
 import json
 from StringIO import StringIO
+import sysconfig
 
 import tornado.ioloop
 import tornado.web
@@ -162,12 +163,7 @@ def xtk_server(atlas=None, colortable=None, hostname='localhost', port=9999, fil
     print "Using atlas", atlas
     global application
 
-    folder_prefix = os.path.abspath(os.path.join(
-        *(
-            [os.path.dirname(__file__)] +
-            ['..'] * 5
-        )
-    ))
+    folder_prefix = sysconfig.get_path(name='data')
 
     static_folder = os.path.join(
         folder_prefix,
