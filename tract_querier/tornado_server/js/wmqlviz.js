@@ -156,7 +156,7 @@ function init_volume(filename, colortable) {
   _ATLAS_.volumes[_ATLAS_.currentVolume]  = volume
 };
 
-function init_websocket(host) {
+function init_websocket(host, tract_download_host) {
   console.info("websocket start");
 
   _tracts_ = {};
@@ -204,8 +204,22 @@ function init_websocket(host) {
               delete _tracts_[name];
             }
           }
+
+          if (action == 'download') {
+            //window.open(tract_download_host + '/' + name);
+            // javascript
+                var iframe = document.createElement("iframe");
+                iframe.src = tract_download_host + '/' + name;
+                iframe.onload = function() {
+                    // iframe has finished loading, download has started
+                    //el.innerHTML = "Download";
+                    console.log("test");
+                };
+                iframe.style.display = "none";
+                document.body.appendChild(iframe);
+          }
         }
-    };
+    }
     _WS_.onclose = function () {
         console.info("connection closed");
     };
