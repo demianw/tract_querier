@@ -90,7 +90,7 @@ class SaveQueries(ast.NodeVisitor):
         pass
 
 
-class TractQuerierCmd(cmd.Cmd):
+class TractQuerierCmd(object, cmd.Cmd):
 
     def __init__(
             self,
@@ -110,10 +110,6 @@ class TractQuerierCmd(cmd.Cmd):
         self.querier = EvaluateQueries(tractography_spatial_indexing)
 
         self.save_query_callback = save_query_callback
-        self.save_query_visitor = SaveQueries(
-            self.save_query_callback, self.querier
-        )
-
         self.del_query_callback = del_query_callback
         self.eof_callback = eof_callback
 
@@ -128,6 +124,18 @@ class TractQuerierCmd(cmd.Cmd):
                 self.querier.visit(ast.Module(initial_body))
             else:
                 self.querier.visit(initial_body)
+
+    @property
+    def save_query_callback(self):
+        return self._save_query_callback
+
+    @save_query_callback.setter
+    def save_query_callback(self, value):
+        self._save_query_callback = value
+        self.save_query_visitor = SaveQueries(
+            self._save_query_callback, self.querier
+        )
+
 
     def _print(self, test):
         self.stdout.write(test + '\n')
