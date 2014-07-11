@@ -101,6 +101,10 @@ class JSONRPCHandler(tornado.web.RequestHandler):
                         for client in self.websocket_clients:
                             client.write_message(action_json)
 
+                elif decoded_args['method'] == 'list':
+                    result = ''
+                    for k in self.file_handler.tract_name_file:
+                        result += k + '\n'
                 else:
                     if decoded_args['method'] == 'show':
                         decoded_args['method'] = 'save'
