@@ -139,7 +139,10 @@ class JSONRPCHandler(tornado.web.RequestHandler):
     '''
 
     def completion(self, *args):
-        completions = self.shell.completedefault(args[1])
+        string = args[1]
+        if '(' in string:
+            string = string[string.rindex('(') + 1:]
+        completions = self.shell.completedefault(string)
         return completions
 
 
