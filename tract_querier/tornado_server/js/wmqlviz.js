@@ -105,6 +105,7 @@ function on2DHover(renderer) {
 	// get cursor position
 	var mousepos = renderer.interactor.mousePosition;
 	var ijk = renderer.xy2ijk(mousepos[0], mousepos[1]);
+        $('#anatomy_caption').html("");
         console.info(ijk)
 	if (!ijk) {
 		return;
@@ -112,9 +113,9 @@ function on2DHover(renderer) {
 
 	//
 	var orientedIJK = ijk.slice();
-	orientedIJK[0] = ijk[1];
+	orientedIJK[0] = ijk[0];
 	orientedIJK[1] = ijk[2];
-	orientedIJK[2] = ijk[0];
+	orientedIJK[2] = ijk[1];
 
 	var volume = _ATLAS_.currentVolume;
 	
@@ -129,8 +130,8 @@ function on2DHover(renderer) {
 	var _g = parseInt(volume.labelmap.colortable.get(labelvalue)[2] * 255, 10);
 	var _b = parseInt(volume.labelmap.colortable.get(labelvalue)[3] * 255, 10);
         $('#anatomy_caption').html("");
-	//$('#anatomy_caption').html(labelname);
-	//$('#anatomy_caption').css('color', 'rgb( ' + _r + ',' + _g + ',' + _b + ' )' );
+	$('#anatomy_caption').html(labelname);
+	$('#anatomy_caption').css('color', 'rgb( ' + _r + ',' + _g + ',' + _b + ' )' );
 }
 
 
@@ -178,7 +179,7 @@ function init_websocket(host, tract_download_host) {
             if (name in _tracts_) {
               console.info("Removing tract " + name);
               _tracts_gui_.remove(_tracts_[name].control);
-              render3D.remove(_tracts_[name]);
+              threeDRenderer.remove(_tracts_[name]);
             };
 
             delete _tracts_[name];
@@ -192,7 +193,7 @@ function init_websocket(host, tract_download_host) {
 
             _tracts_[name].modified();
             
-            render3D.add(_tracts_[name]);
+            threeDRenderer.add(_tracts_[name]);
 
           }
 
@@ -200,20 +201,16 @@ function init_websocket(host, tract_download_host) {
             if (name in _tracts_) {
               console.info("Removing tract " + name);
               _tracts_gui_.remove(_tracts_[name].control);
-              render3D.remove(_tracts_[name]);
+              threeDRenderer.remove(_tracts_[name]);
               delete _tracts_[name];
             }
           }
 
           if (action == 'download') {
-            //window.open(tract_download_host + '/' + name);
-            // javascript
                 var iframe = document.createElement("iframe");
                 iframe.src = tract_download_host + '/' + name;
                 iframe.onload = function() {
-                    // iframe has finished loading, download has started
-                    //el.innerHTML = "Download";
-                    console.log("test");
+                    console.log("Download trigger");
                 };
                 iframe.style.display = "none";
                 document.body.appendChild(iframe);
@@ -258,10 +255,11 @@ function init_terminal() {
 
 window.onload = function() {
 
-  render3D = new X.renderer3D();
-  render3D.init();
+  threeDRenderer = new X.renderer3D();
+  threeDRenderer.container = $( "#3d" )[0]
+  threeDRenderer.init();
 
-  render3D.onShowtime = function() {
+  threeDRenderer.onShowtime = function() {
     init_viewer2d();
   };
     
@@ -275,8 +273,8 @@ window.onload = function() {
 
   _tracts_gui_ = gui.addFolder('Tracts');
 
-  render3D.add(_ATLAS_.currentVolume)
-  render3D.render();
+  threeDRenderer.add(_ATLAS_.currentVolume)
+  threeDRenderer.render();
 
 }
 
