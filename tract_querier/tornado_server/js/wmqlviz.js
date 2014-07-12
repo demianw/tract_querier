@@ -232,7 +232,7 @@ function init_terminal() {
         greetings: 'White Matter Query Language Console',
         name: 'wmql_console',
         prompt: '[WMQL] ',
-        height: 150,
+        height: '19%',
         completion: function (terminal, string, callback) {
           var cmd = 'system.completion'
           var result = []
