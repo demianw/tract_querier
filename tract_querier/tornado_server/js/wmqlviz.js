@@ -220,7 +220,7 @@ function init_websocket(host, tract_download_host) {
     _WS_.onclose = function () {
         console.info("connection closed");
     };
-
+    window.location.hash = '#wmql_console';
   });
 };
 
@@ -259,6 +259,13 @@ window.onload = function() {
   threeDRenderer.container = $( "#3d" )[0]
   threeDRenderer.init();
 
+  // restore the original key bindings and reinitialize the interactor
+  // so it doesn't catch anymore the 'r' key to reset the view
+  //
+  window.onkeydown = function (e) { return true; }
+  threeDRenderer.interactor.config.KEYBOARD_ENABLED = false;
+  threeDRenderer.interactor.init();
+
   threeDRenderer.onShowtime = function() {
     init_viewer2d();
   };
@@ -275,6 +282,5 @@ window.onload = function() {
 
   threeDRenderer.add(_ATLAS_.currentVolume)
   threeDRenderer.render();
-
 }
 
