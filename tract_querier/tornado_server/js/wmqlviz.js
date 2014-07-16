@@ -31,6 +31,9 @@ function init_viewer2d() {
 	sliceX.container = 'sliceX';
 	sliceX.orientation = 'X';
 	sliceX.init();
+        window.onkeydown = function (e) { return true; }
+        sliceX.interactor.config.KEYBOARD_ENABLED = false;
+        sliceX.interactor.init();
 	sliceX.add(volume);
 	sliceX.render();
 	sliceX.interactor.onMouseMove = function() {
@@ -48,6 +51,9 @@ function init_viewer2d() {
 	sliceY.container = 'sliceY';
 	sliceY.orientation = 'Y';
 	sliceY.init();
+        window.onkeydown = function (e) { return true; }
+        sliceY.interactor.config.KEYBOARD_ENABLED = false;
+        sliceY.interactor.init();
 	sliceY.add(volume);
 	sliceY.render();
 	sliceY.interactor.onMouseMove = function() {
@@ -65,6 +71,9 @@ function init_viewer2d() {
 	sliceZ.container = 'sliceZ';
 	sliceZ.orientation = 'Z';
 	sliceZ.init();
+        window.onkeydown = function (e) { return true; }
+        sliceZ.interactor.config.KEYBOARD_ENABLED = false;
+        sliceZ.interactor.init();
 	sliceZ.add(volume);
 	sliceZ.render();
 	sliceZ.interactor.onMouseMove = function() {
@@ -220,7 +229,6 @@ function init_websocket(host, tract_download_host) {
     _WS_.onclose = function () {
         console.info("connection closed");
     };
-    window.location.hash = '#wmql_console';
   });
 };
 
@@ -269,7 +277,6 @@ window.onload = function() {
   threeDRenderer.onShowtime = function() {
     init_viewer2d();
   };
-    
   // The GUI panel
   
   // indicate if the mesh was loaded
@@ -282,5 +289,6 @@ window.onload = function() {
 
   threeDRenderer.add(_ATLAS_.currentVolume)
   threeDRenderer.render();
+  document.getElementById("wmql_console").focus();
 }
 
