@@ -17,9 +17,6 @@ import tornado.websocket
 class WSHandler(tornado.websocket.WebSocketHandler):
 
     def initialize(self, shell=None, websocket_clients=None):
-        self.shell = shell
-        self.sio = StringIO()
-        self.shell.stdout = self.sio
         self.json_encoder = json.JSONEncoder()
         self.json_decoder = json.JSONDecoder()
         self.websocket_clients = websocket_clients
@@ -31,19 +28,7 @@ class WSHandler(tornado.websocket.WebSocketHandler):
         self.websocket_clients.append(self)
 
     def on_message(self, message):
-        action = self.json_decoder.decode(message)
-        if action['receiver'] == 'terminal':
-            if action['action'] == 'cmd':
-                self.sio.seek(0)
-                self.shell.onecmd(action['command'])
-                self.sio.seek(0)
-                result = self.sio.getvalue()
-                term_output = {
-                    'receiver': 'terminal',
-                    'output': result
-                }
-                self.write_message(self.json_encoder.encode(term_output))
-                self.sio.truncate(0)
+        pass
 
     def on_close(self):
         self.websocket_clients.remove(self)
@@ -53,8 +38,9 @@ class JSONRPCHandler(tornado.web.RequestHandler):
     def initialize(self, shell=None, file_handler=None, websocket_clients=None):
         self.shell = shell
         self.file_handler = file_handler
-        self.sio = StringIO()
-        self.shell.stdout = self.sio
+        self.stdout_buffer = StringIO()
+        self.stderr_buffer = StringIO()
+        self.shell.stdout = self.stdout_buffer
         self.json_encoder = json.JSONEncoder()
         self.json_decoder = json.JSONDecoder()
 
@@ -113,11 +99,22 @@ class JSONRPCHandler(tornado.web.RequestHandler):
                         decoded_args['method'],
                         ''.join((s + ' ' for s in decoded_args['params']))
                     )
-                    self.sio.seek(0)
+                    self.stdout_buffer.seek(0)
+                    self.stderr_buffer.seek(0)
+                    old_stderr = sys.stderr
+                    sys.stderr = self.stderr_buffer
                     self.shell.onecmd(wmql_string)
-                    self.sio.seek(0)
-                    result = self.sio.getvalue()
-                    self.sio.truncate(0)
+                    if self.stderr_buffer.pos > 0:
+                        error = {
+                            'code': '-1',
+                            'message': self.stderr_buffer.getvalue(),
+                            'data': ''
+                        }
+                    sys.stderr = old_stderr
+                    self.stdout_buffer.seek(0)
+                    self.stderr_buffer.seek(0)
+                    result = self.stdout_buffer.getvalue()
+                    self.stdout_buffer.truncate(0)
 
             output = {
                 'jsonrpc': "2.0",
@@ -139,9 +136,12 @@ class JSONRPCHandler(tornado.web.RequestHandler):
     '''
 
     def completion(self, *args):
-        string = args[1]
+        if len(args[1]) == 0:
+            return []
+
+        string = args[1].split()[-1].strip()
         if '(' in string:
-            string = string[string.rindex('(') + 1:]
+            string = string[string.rindex('(') + 1:].strip()
         completions = self.shell.completedefault(string)
         return completions
 
@@ -264,7 +264,6 @@ def xtk_server(atlas=None, colortable=None, hostname='localhost', port=9999, fil
             {"path": static_folder}
         ),
         (r'/%s' % websocket_suffix, WSHandler, {
-            'shell': shell,
             'websocket_clients': websocket_clients
         }),
         (r'/jsonrpc', JSONRPCHandler, {
@@ -310,7 +309,6 @@ class WMQLFileManagement(object):
 
     def clean_files(self):
         for k, v in self.tract_name_file.iteritems():
-            print "Removing", k, v
             os.remove(v)
         self.tract_name_file = {}
 
@@ -352,7 +350,7 @@ class WMQLFileManagement(object):
                 for client in self.websocket_clients:
                     client.write_message(action_json)
             except Exception, e:
-                print "Websocket error:", e
+                sys.stderr.write("Websocket error: %s\n" % str(e))
         return filename
 
     def del_query_callback(self, query_name):
@@ -376,4 +374,4 @@ class WMQLFileManagement(object):
             os.remove(self.tract_name_file[query_name])
             del self.tract_name_file[query_name]
         except Exception, e:
-            print "Websocket error:", e
+            sys.stderr("Websocket error: %s\n" % str(e))
