@@ -131,6 +131,13 @@ def compute_tract_bounding_boxes(tracts, affine_transform=None):
         else:
             ras_coords = tract
 
+        if len(ras_coords) < 2:
+            raise ValueError(
+                'Tracts in the tractography must have at least 2 points'
+                ' tract #%d has less than two points.'
+                ' You can use the tract_math tool to prune short tracts'
+                ' and solve this problem.' % i
+            )
         bounding_boxes[i] = BoundingBox(ras_coords)
 
     box_array = np.empty(
