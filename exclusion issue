@@ -1,0 +1,38 @@
+Dear Demian
+Still practicing tract_querier we're experiencing a new questioning.
+
+Lets take an example:
+I want to extract the ILF pathway from a trk file using tract_querier and the mori_queries.qry
+My original trk file is in the subject's diffusion space as the JHU template. When I check both in TrackVis there is no problem of registration.
+
+Then I use tract_querier with the following ROIs:
+
+occipital.side |= SUPERIOR_OCCIPITAL_GYRUS.side or INFERIOR_OCCIPITAL_GYRUS.side or MIDDLE_OCCIPITAL_GYRUS.side or CUNEUS.side or PRE_CUNEUS.side
+
+temporal.side |= SUPERIOR_TEMPORAL_GYRUS.side or INFERIOR_TEMPORAL_GYRUS.side or MIDDLE_TEMPORAL_GYRUS.side or LINGUAL_GYRUS.side or \
+FUSIFORM_GYRUS.side or PARAHIPPOCAMPAL_GYRUS.side or ENTORHINAL_AREA.side
+
+and then the following ILF definition
+
+ILF.side = temporal.side and occipital.side and Sagittal_stratum.side\
+     not in HEMISPHERE.opposite not in CEREBELLUM.side not in THALAMUS.side not in corpus_callosum not in frontal.side\
+     not in LINGUAL_GYRUS.side not in Inferior_fronto_occipital_fasciculus.side not in Superior_longitudinal_fasciculus.side not in CINGULATE_GYRUS.side\
+     not in Anterior_limb_of_internal_capsule.side not in Anterior_corona_radiata.side not in Superior_corona_radiata.side\
+     not in Fornix_column_and_body.side not in ANGULAR_GYRUS.side not in PRE_CUNEUS.side not in CUNEUS.side not in SUPRAMARGINAL_GYRUS.side
+
+And, I obtain an ILF_R.trk file (for the right hemisphere) that seems correct but as any tract-querier.trk file is shifted in TrackVis, thus i use a TrakcConverter.py command (From Max Descoteaux lab)
+to correctly display this trk in TrackVis. TrackConverter is working good for all our process up to now. 
+
+The problem is now that the ILF_R.trk looks good but when I download the "not" ROIs to check if I've no streamlines in, I still find some, for example in the CUNEUS...
+I thought first that the exclusion was not good in Tract-querier. But when I download the ILF_R.trk file in tract_querier and try the extract fibers from the CUNEUS, there is no fiber, prooving that tract_querier really removed the CUNEUS fibers...
+If I re-do the ILF tract_querier on the ILF_R.trk, I get exactly the same number of streamlines and after TrackConverter, I get the same display in TrackVis, with streamlines still in the CUNEUS.
+
+It means that this is the location of the CUNEUS ROI which is not considered equally in tract_querier and in trackvis...
+Do you understand what I mean and do you have an explanation?
+The point is that I would like to be sure that the fibers extracted in tract-querier are really the one I expected...
+
+Thanks for your help!
+Laurent Petit
+UMR5296
+CNRS-CEA-Univ.Bordeaux
+
