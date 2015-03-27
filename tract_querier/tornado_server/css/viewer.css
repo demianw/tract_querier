@@ -1,7 +1,9 @@
 .threeDRenderer {
   background-color: #000;
+  border-top: thin solid #666;
+  border-bottom: thin solid #666;
   position: absolute;
-  top: 171px;
+  top: 16%;
   width: 80%;
   height: 80%;
 }
@@ -22,20 +24,20 @@
   position: fixed;
   bottom: 0;
   right: 0;
-  height: 5%;
+  height: 4%;
 }
 
 #anatomy_caption {
   font-family:"Helvetica";
-  top: 95%;
-  height: 5%;
-  border-top: thin solid #666;
+  top: 96%;
+  height: 4%;
   background-color: #000;
   text-color: #FF0;
   position: absolute;
   width: 80%;
   left: 0%;
   padding-left: 2%;
+  padding-top: .25%;
   text-shadow:
     -1px -1px 0 #222,
     1px -1px 0 #222,
