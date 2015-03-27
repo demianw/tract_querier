@@ -280,7 +280,7 @@ window.onload = function() {
   // The GUI panel
   
   // indicate if the mesh was loaded
-  var gui = new dat.GUI();
+  var gui = new dat.GUI({ hideable: false });
 
   var labelmapgui = gui.addFolder('Label Map');
   var labelMapVisibleController = labelmapgui.add(_ATLAS_.currentVolume, 'visible');
