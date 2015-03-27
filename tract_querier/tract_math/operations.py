@@ -204,6 +204,24 @@ def tract_dump(tractography):
     return res
 
 
+@tract_math_operation(': Dumps tract endpoints', needs_one_tract=True)
+def tract_dump_endpoints(tractography):
+    res = OrderedDict()
+    tract_number = 'tract #'
+    res[tract_number] = []
+    res['x'] = []
+    res['y'] = []
+    res['z'] = []
+
+    for i, tract in enumerate(tractography.tracts()):
+        res[tract_number] += [i] * 2
+        res['x'] += list(tract[(0, -1), 0])
+        res['y'] += list(tract[(0, -1), 1])
+        res['z'] += list(tract[(0, -1), 2])
+
+    return res
+
+
 @tract_math_operation(': Minimum and maximum distance between two consecutive points')
 def tract_point_distance_min_max(tractography):
     dist_min = numpy.empty(len(tractography.tracts()))
