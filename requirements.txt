@@ -1,5 +1,4 @@
 numpy>=1.6
 nose>=1.2
-#nibabel>=1.3
--e git://github.com/demianw/nibabel.git@fix_trackvis_scalar_save#egg=nibabel
+nibabel>=2.0
 numpydoc
