@@ -16,6 +16,7 @@ keywords = [
     'not',
     'only',
     'endpoints_in',
+    'both_endpoints_in',
     'anterior_of',
     'posterior_of',
     'medial_of',
@@ -339,7 +340,12 @@ class EvaluateQueries(ast.NodeVisitor):
                 #    *tuple((self.tractography_spatial_indexing.crossing_tracts_labels[tract] for tract in tracts))
                 #)
                 return FiberQueryInfo(new_tracts, query_info.labels, query_info.tracts_endpoints)
-
+            elif (node.func.id.lower() == 'both_endpoints_in'):
+                query_info = self.visit(node.args[0])
+                new_tracts = (
+                    query_info.tracts_endpoints[0].intersection(query_info.tracts_endpoints[1])
+                )
+                return FiberQueryInfo(new_tracts, query_info.labels, query_info.tracts_endpoints)
             elif (node.func.id.lower() == 'save' and isinstance(node.args, ast.Str)):
                 self.queries_to_save.add(node.args[0].s)
                 return
