@@ -255,7 +255,8 @@ def tract_resubsample(tractography, points_per_tract, file_output=None):
     tractography.subsample_tracts(int(points_per_tract), True)
 
     return Tractography(
-        tractography.tracts(),  tractography.tracts_data()
+        tractography.tracts(),  tractography.tracts_data(),
+        **tractography.extra_args
     )
 
 
@@ -758,7 +759,7 @@ def tract_prototype_median(tractography, file_output=None):
         else:
             selected_data[key] = item
 
-    return Tractography(selected_tracts, selected_data)
+    return Tractography(selected_tracts, selected_data, **tractography.extra_args)
 
 
 @tract_math_operation('<smooth order> <tract_out>: compute the protoype tract')
@@ -794,7 +795,7 @@ def tract_prototype_mean(tractography, smooth_order, file_output=None):
         except ImportError:
             warn("A smooth order larger than 0 needs scipy installed")
 
-    return Tractography([mean_tract], {})
+    return Tractography([mean_tract], {}, **tractography.extra_args)
 
 
 @tract_math_operation('<volume unit> <tract1.vtk> ... <tractN.vtk>: calculates the Bhattacharyya coefficient of the first tract with the rest in the space of the reference image')
