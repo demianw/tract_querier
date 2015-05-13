@@ -100,8 +100,9 @@ def tractography_from_trackvis_file(filename):
     affine = header['vox_to_ras']
     image_dims = header['dim']
 
-    tr = Tractography(tracts, tracts_data)
-    tr.affine = affine
-    tr.image_dims = image_dims
+    tr = Tractography(
+        tracts, tracts_data,
+        affine=affine, image_dims=image_dims
+    )
 
     return tr
