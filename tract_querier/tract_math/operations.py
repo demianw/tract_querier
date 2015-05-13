@@ -245,7 +245,8 @@ def tract_subsample(tractography, points_per_tract, file_output=None):
     tractography.subsample_tracts(int(points_per_tract))
 
     return Tractography(
-        tractography.tracts(),  tractography.tracts_data()
+        tractography.tracts(),  tractography.tracts_data(),
+        **tractography.extra_args
     )
 
 
@@ -281,7 +282,10 @@ def tract_remove_short_tracts(tractography, min_tract_length, file_output=None):
         else:
             selected_data[key] = item
 
-    return Tractography(selected_tracts, selected_data)
+    return Tractography(
+        selected_tracts, selected_data,
+        **tractography.extra_args
+    )
 
 
 @tract_math_operation('<image> <quantity_name> <tractography_file_output>: maps the values of an image to the tract points')
@@ -317,7 +321,8 @@ def tract_map_image(tractography, image, quantity_name, file_output=None):
         tractography.original_tracts_data()[quantity_name] = new_scalar_data
 
         return Tractography(
-            tractography.original_tracts(),  tractography.original_tracts_data()
+            tractography.original_tracts(),  tractography.original_tracts_data(),
+            **tractography.extra_args
         )
 
 
@@ -418,8 +423,18 @@ def tract_merge(tractographies, file_output=None):
     all_data = {}
     keys = [set(t.tracts_data().keys()) for t in tractographies]
     common_keys = keys[0].intersection(*keys[1:])
+
+    affine = tractographies[0].extra_args.get('affine', None)
+    image_dims = tractographies[0].extra_args.get('image_dims', None)
+
     for tract in tractographies:
         tracts = tract.tracts()
+        if affine is not None and 'affine' in tract.extra_args:
+            if (tract.affine != affine).any():
+                affine = None
+        if image_dims is not None and 'image_dims' in tract.extra_args:
+            if (tract.image_dims != image_dims).any():
+                image_dims = None
         all_tracts += tract.tracts()
         data = tract.tracts_data()
         for k in common_keys:
@@ -430,7 +445,10 @@ def tract_merge(tractographies, file_output=None):
             else:
                 all_data[k] = data[k]
 
-    return Tractography(all_tracts, all_data)
+    return Tractography(
+        all_tracts, all_data,
+        affine=affine, image_dims=image_dims
+    )
 
 
 
@@ -667,7 +685,8 @@ def tract_smooth(tractography, var, file_output=None):
 
     return Tractography(
         tractography.original_tracts(),
-        tractography.original_tracts_data()
+        tractography.original_tracts_data(),
+        **tractography.extra_args
     )
 
 

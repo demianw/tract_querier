@@ -28,7 +28,7 @@ class Tractography:
         Check that tracts and tracts_data are valid
     """
 
-    def __init__(self, tracts=None, tracts_data=None, validate=True):
+    def __init__(self, tracts=None, tracts_data=None, validate=True, **kwargs):
         if tracts is not None and tracts_data is None:
             tracts_data = {}
         self._tracts = []
@@ -38,8 +38,21 @@ class Tractography:
         self._subsampled_tracts = None
         self._subsampled_data = None
 
+        self._extra_args = []
+        for k, v in kwargs.items():
+            if k[0] != '_':
+                setattr(self, k, v)
+                self._extra_args.append(k)
+
         if tracts is not None:
             self.append(tracts, tracts_data, validate=validate)
+
+    @property
+    def extra_args(self):
+        ret = {}
+        for k in self._extra_args:
+            ret[k] = getattr(self, k)
+        return ret
 
     def append(self, tracts, tracts_data=None, validate=True):
         r"""
