@@ -327,6 +327,77 @@ def tract_map_image(tractography, image, quantity_name, file_output=None):
         )
 
 
+@tract_math_operation(
+    '<deformation> <tractography_file_output>: apply a '
+    'non-linear deformation to a tractography'
+)
+def tract_deform(tractography, image, file_output=None):
+    from scipy import ndimage
+    import numpy as np
+
+    image = nibabel.load(image)
+    coord_adjustment = np.sign(np.diag(image.get_affine())[:-1])
+    ijk_points = tract_in_ijk(image, tractography)
+    image_data = image.get_data().squeeze()
+
+    if image_data.ndim != 4 and image_data.shape[-1] != 3:
+        raise ValueError('Image is not a deformation field')
+
+    new_points = np.vstack(tractography.tracts())  # ijk_points.copy()
+    for i in (0, 1, 2):
+        image_ = image_data[..., i]
+        deformation = ndimage.map_coordinates(
+            image_, ijk_points.T
+        ).squeeze()
+        new_points[:, i] += coord_adjustment[i] * deformation
+
+    new_ras_points = new_points  # tract_in_ras(image, new_points)
+    start = 0
+    new_tracts = []
+    for tract in tractography.original_tracts():
+        new_tracts.append(
+            new_ras_points[start: start + len(tract)].copy()
+        )
+        start += len(tract)
+
+    return Tractography(
+        new_tracts,  tractography.original_tracts_data(),
+        **tractography.extra_args
+    )
+
+
+@tract_math_operation(
+    '<transform> [invert] <tractography_file_output>: apply a '
+    'affine transform to a tractography. '
+    'transform is assumed to be in RAS format like Nifti.'
+)
+def tract_affine_transform(
+    tractography, transform_file,
+    invert=False, file_output=None
+):
+    import nibabel
+    import numpy as np
+    transform = np.loadtxt(transform_file)
+    invert = bool(invert)
+    if invert:
+        print "Inverting transform"
+        transform = np.linalg.inv(transform)
+    orig_points = np.vstack(tractography.tracts())
+    new_points = nibabel.affines.apply_affine(transform, orig_points)
+    start = 0
+    new_tracts = []
+    for tract in tractography.original_tracts():
+        new_tracts.append(
+            new_points[start: start + len(tract)].copy()
+        )
+        start += len(tract)
+
+    return Tractography(
+        new_tracts,  tractography.original_tracts_data(),
+        **tractography.extra_args
+    )
+
+
 @tract_math_operation('<bins> <qty> <output>')
 def tract_tract_confidence(tractography, bins, qty, file_output=None):
     bins = int(bins)
@@ -742,6 +813,15 @@ def tract_in_ijk(image, tractography):
     return ijk_points
 
 
+def tract_in_ras(image, tract_ijk):
+    ijk_points = tract_ijk
+    ras_points = numpy.dot(image.get_affine(), numpy.hstack((
+        ijk_points,
+        numpy.ones((len(ijk_points), 1))
+    )).T).T[:, :-1]
+    return ras_points
+
+
 @tract_math_operation('<tract_out>: compute the protoype tract')
 def tract_prototype_median(tractography, file_output=None):
     from .tract_obb import prototype_tract
@@ -852,4 +932,3 @@ def tract_bhattacharyya_coefficient(tractography, resolution, *other_tracts):
             result['bhattacharyya %s value' % coord[i]].append(numpy.nan_to_num(distances[i]))
 
     return result
-
