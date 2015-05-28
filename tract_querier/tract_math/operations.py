@@ -312,6 +312,114 @@ def tract_map_image(tractography, image, quantity_name, file_output):
         )
 
 
+@tract_math_operation(
+    '<deformation> <tractography_file_output>: apply a '
+    'non-linear deformation to a tractography'
+)
+def tract_deform(tractography, image, file_output=None):
+    from scipy import ndimage
+    import numpy as np
+
+    image = nibabel.load(image)
+    coord_adjustment = np.sign(np.diag(image.get_affine())[:-1])
+    ijk_points = tract_in_ijk(image, tractography)
+    image_data = image.get_data().squeeze()
+
+    if image_data.ndim != 4 and image_data.shape[-1] != 3:
+        raise ValueError('Image is not a deformation field')
+
+    new_points = np.vstack(tractography.tracts())  # ijk_points.copy()
+    for i in (0, 1, 2):
+        image_ = image_data[..., i]
+        deformation = ndimage.map_coordinates(
+            image_, ijk_points.T
+        ).squeeze()
+        new_points[:, i] += coord_adjustment[i] * deformation
+
+    new_ras_points = new_points  # tract_in_ras(image, new_points)
+    start = 0
+    new_tracts = []
+    for tract in tractography.original_tracts():
+        new_tracts.append(
+            new_ras_points[start: start + len(tract)].copy()
+        )
+        start += len(tract)
+
+    return Tractography(
+        new_tracts,  tractography.original_tracts_data(),
+        **tractography.extra_args
+    )
+
+
+@tract_math_operation(
+    '<transform> [invert] <tractography_file_output>: apply a '
+    'affine transform to a tractography. '
+    'transform is assumed to be in RAS format like Nifti.'
+)
+def tract_affine_transform(
+    tractography, transform_file,
+    invert=False, file_output=None
+):
+    import nibabel
+    import numpy as np
+    transform = np.loadtxt(transform_file)
+    invert = bool(invert)
+    if invert:
+        print "Inverting transform"
+        transform = np.linalg.inv(transform)
+    orig_points = np.vstack(tractography.tracts())
+    new_points = nibabel.affines.apply_affine(transform, orig_points)
+    start = 0
+    new_tracts = []
+    for tract in tractography.original_tracts():
+        new_tracts.append(
+            new_points[start: start + len(tract)].copy()
+        )
+        start += len(tract)
+
+    return Tractography(
+        new_tracts,  tractography.original_tracts_data(),
+        **tractography.extra_args
+    )
+
+
+@tract_math_operation('<bins> <qty> <output>')
+def tract_tract_confidence(tractography, bins, qty, file_output=None):
+    bins = int(bins)
+    lengths = numpy.empty(len(tractography.tracts()))
+    tracts = tractography.tracts()
+    tracts_prob_data = []
+    tracts_length_bin = []
+    for i, tract in enumerate(tracts):
+        lengths[i] = tract_length(tract)
+        tracts_prob_data.append(numpy.zeros(len(tract)))
+        tracts_length_bin.append(numpy.zeros(len(tract)))
+
+    length_histogram_counts, length_histogram_bins = numpy.histogram(lengths, normed=True, bins=bins)
+
+    for i in xrange(1, bins):
+        tract_log_prob = []
+        indices_bin = ((length_histogram_bins[i - 1] < lengths) * (lengths < length_histogram_bins[i])).nonzero()[0]
+        if len(indices_bin) == 0:
+            continue
+
+        for j in indices_bin:
+            tract_log_prob.append(numpy.log(tractography.tracts_data()[qty][j]).sum())
+        tract_log_prob = numpy.array(tract_log_prob)
+        tract_log_prob = numpy.nan_to_num(tract_log_prob)
+        lp_a0 = tract_log_prob[tract_log_prob < 0].max()
+        tract_log_prob_total = numpy.log(numpy.exp(tract_log_prob - lp_a0).sum()) + lp_a0
+        tract_prob = numpy.exp(tract_log_prob - tract_log_prob_total)
+
+        for tract_number, tract_prob in zip(indices_bin, tract_prob):
+            tracts_prob_data[tract_number][:] = tract_prob
+            tracts_length_bin[tract_number][:] = length_histogram_bins[i - 1]
+
+    tractography.tracts_data()['tprob'] = tracts_prob_data
+    tractography.tracts_data()['tprob_bin'] = tracts_length_bin
+
+    return tractography
+
 @tract_math_operation('<image> <mask_out>: calculates the mask image from a tract on the space of the given image')
 def tract_generate_mask(tractography, image, file_output):
     image = nibabel.load(image)
@@ -620,3 +728,124 @@ def tract_in_ijk(image, tractography):
         numpy.ones((len(ras_points), 1))
     )).T).T[:, :-1]
     return ijk_points
+
+
+def tract_in_ras(image, tract_ijk):
+    ijk_points = tract_ijk
+    ras_points = numpy.dot(image.get_affine(), numpy.hstack((
+        ijk_points,
+        numpy.ones((len(ijk_points), 1))
+    )).T).T[:, :-1]
+    return ras_points
+
+
+@tract_math_operation('<tract_out>: compute the protoype tract')
+def tract_prototype_median(tractography, file_output=None):
+    from .tract_obb import prototype_tract
+
+    tracts = tractography.tracts()
+    data = tractography.tracts_data()
+    prototype_ix = prototype_tract(tracts)
+
+    selected_tracts = [tracts[prototype_ix]]
+    selected_data = dict()
+    for key, item in data.items():
+        if len(item) == len(tracts):
+            selected_data_items = [item[prototype_ix]]
+            selected_data[key] = selected_data_items
+        else:
+            selected_data[key] = item
+
+    return Tractography(selected_tracts, selected_data, **tractography.extra_args)
+
+
+@tract_math_operation('<smooth order> <tract_out>: compute the protoype tract')
+def tract_prototype_mean(tractography, smooth_order, file_output=None):
+    from .tract_obb import prototype_tract
+
+    tracts = tractography.tracts()
+    prototype_ix, leave_centers = prototype_tract(tracts, return_leave_centers=True)
+
+    median_tract = tracts[prototype_ix]
+
+    mean_tract = numpy.empty_like(median_tract)
+    centers_used = set()
+    for point in median_tract:
+        closest_leave_center_ix = (
+            ((leave_centers - point[None, :]) ** 2).sum(1)
+        ).argmin()
+
+        if closest_leave_center_ix in centers_used:
+            continue
+
+        mean_tract[len(centers_used)] = leave_centers[closest_leave_center_ix]
+        centers_used.add(closest_leave_center_ix)
+
+    mean_tract = mean_tract[:len(centers_used)]
+
+    if smooth_order > 0:
+        try:
+            from scipy import interpolate
+
+            tck, u = interpolate.splprep(mean_tract.T)
+            mean_tract = numpy.transpose(interpolate.splev(u, tck))
+        except ImportError:
+            warn("A smooth order larger than 0 needs scipy installed")
+
+    return Tractography([mean_tract], {}, **tractography.extra_args)
+
+
+@tract_math_operation('<volume unit> <tract1.vtk> ... <tractN.vtk>: calculates the Bhattacharyya coefficient of the first tract with the rest in the space of the reference image')
+def tract_bhattacharyya_coefficient(tractography, resolution, *other_tracts):
+    resolution = float(resolution)
+    coord = ('X', 'Y', 'Z')
+    result = OrderedDict(
+        [('tract file', [])]
+        + [
+            ('bhattacharyya %s value' % coord[i], [])
+            for i in xrange(3)
+        ]
+    )
+
+    tractography_points = numpy.vstack(tractography.tracts())
+
+    other_tracts_tractographies = [tractography_from_files(t_)
+        for t_ in other_tracts
+    ]
+
+    other_tracts_points = [
+        numpy.vstack(t_.tracts())
+        for t_ in other_tracts_tractographies
+    ]
+
+    mn_ = tractography_points.min(0)
+    mx_ = tractography_points.max(0)
+
+    for pts in other_tracts_points:
+        mn_ = numpy.minimum(mn_, pts.min(0))
+        mx_ = numpy.maximum(mn_, pts.max(0))
+
+    bins = numpy.ceil((mx_ - mn_) * 1. / resolution)
+    hists_tract = [
+        numpy.histogram(tractography_points[:, i], bins=bins[i], density=True, range=(mn_[i], mx_[i]))[0]
+        for i in xrange(3)
+    ]
+
+    for tract, tract_points in zip(other_tracts, other_tracts_points):
+        hists_other_tract = [
+            numpy.histogram(tract_points[:, i], bins=bins[i], density=True, range=(mn_[i], mx_[i]))[0]
+            for i in xrange(3)
+        ]
+
+        distances = [
+            numpy.sqrt(
+                hists_other_tract[i] * hists_tract[i] /
+                (hists_other_tract[i].sum() * hists_tract[i].sum())
+            ).sum()
+            for i in xrange(3)
+        ]
+        for i in xrange(3):
+            result['tract file'].append(tract)
+            result['bhattacharyya %s value' % coord[i]].append(numpy.nan_to_num(distances[i]))
+
+    return result
