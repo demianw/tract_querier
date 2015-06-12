@@ -19,7 +19,7 @@ def tractography_to_trackvis_file(filename, tractography, affine=None, image_dim
         raise ValueError("Affine transform has to be provided")
 
     trackvis.aff_to_hdr(affine, trk_header, True, True)
-
+    trk_header['origin'] = 0.
     if image_dimensions is not None:
         trk_header['dim'] = image_dimensions
     elif hasattr(tractography, 'image_dimensions'):
