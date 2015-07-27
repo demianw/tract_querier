@@ -334,7 +334,7 @@ def tract_deform(tractography, image, file_output=None):
         deformation = ndimage.map_coordinates(
             image_, ijk_points.T
         ).squeeze()
-        new_points[:, i] += coord_adjustment[i] * deformation
+        new_points[:, i] -= coord_adjustment[i] * deformation
 
     new_ras_points = new_points  # tract_in_ras(image, new_points)
     start = 0
@@ -357,11 +357,13 @@ def tract_deform(tractography, image, file_output=None):
     'transform is assumed to be in RAS format like Nifti.'
 )
 def tract_affine_transform(
-    tractography, transform_file,
+    tractography, transform_file, ref_image,
     invert=False, file_output=None
 ):
     import nibabel
     import numpy as np
+    ref_image = nibabel.load(ref_image)
+    ref_affine = ref_image.get_affine()
     transform = np.loadtxt(transform_file)
     invert = bool(invert)
     if invert:
@@ -377,9 +379,18 @@ def tract_affine_transform(
         )
         start += len(tract)
 
+    extra_args = {
+        'affine': ref_affine,
+        'image_dims': ref_image.shape
+    }
+
+    #if tractography.extra_args is not None:
+    #    tractography.extra_args.update(extra_args)
+    #    extra_args = tractography.extra_args
+
     return Tractography(
         new_tracts,  tractography.original_tracts_data(),
-        **tractography.extra_args
+        **extra_args
     )
 
 
