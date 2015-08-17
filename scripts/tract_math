@@ -3,6 +3,8 @@ import sys
 import itertools
 from argparse import ArgumentParser, FileType, REMAINDER
 
+import traceback
+
 import warnings
 
 def custom_formatwarning(msg, *a):
@@ -35,7 +37,29 @@ def main():
     from tract_querier.tract_math import TractMathWrongArgumentsError
 
     usage = r"""
-    usage: %(prog)s <tract1.vtk> ... <tractN.vtk> operation <operation parameter1> ... <operation parameterN> <output_tract.vtk>
+    usage: %(prog)s <tract1.vtk> ... <tractN.vtk> operation <operation parameter1> ... <operation parameterN> <output_tract.vtk> \
+                      [ optional flags ]
+
+    optional flags:  Always start with "--" and are considered as boolean flags
+
+    The --useFileNamesAsIndex col_name1:path_dir_index col_name2:path_dir_index2 .. col_nameN:path_dir_indexN
+        Example directory layout:
+        =========================
+        PROJ_XX/SUBJ_01/SESSION_AB/cm1.left.vtp
+        PROJ_XX/SUBJ_01/SESSION_AB/cm1.right.vtp
+        ||||||| ||||||| |||||||||| ||||||||||||||||||||||||
+        4444444 3333333 2222222222 111111111111111111111111
+
+        tract_math call:
+        ================
+        tract_math PROJ_XX/SUBJ_01/SESSION_AB/*.vtp count test.csv --useFileNamesAsIndex proj:4 subj:3 sess:2 tract:1
+
+        result:
+        =======
+        $ cat test.csv
+        sess,number of tracts,subj,proj,tract
+        SESSION_AB,176,SUBJ_01,PROJ_XX,cm1.left.vtp
+        SESSION_AB,88,SUBJ_01,PROJ_XX,cm1.right.vtp
 
     Available operations:
     """
@@ -72,7 +96,8 @@ def main():
         tractography = []
         try:
             for f in args.tractographies:
-                tractography.append(tractography_from_files(f.name))
+                # For each tractography file, pass a tuple of (tractography filename, tractography instance) to tractography list.
+                tractography.append((f.name,tractography_from_files(f.name)))
         except IOError as e:
             print >>sys.stderr, "Error reading file ", f.name, "(%s)" % repr(e)
 
@@ -80,9 +105,12 @@ def main():
         try:
             operations[args.operation](tractography, *args.operation_parameters)
         except TractMathWrongArgumentsError, e:
+            traceback.print_exc(file=sys.stdout)
             parser.error('\n\n' + str(e))
         except TypeError:
-            parser.error("\n\nWrong number of parameters for the operation")
+            traceback.print_exc(file=sys.stdout)
+            parser.error("\n\nError: Wrong number of parameters for the operation")
+
     else:
         parser.error("\n\nOperation not found")
 
