@@ -5,9 +5,6 @@ try:
 except ImportError:  # Python 2.6 fix
     from ordereddict import OrderedDict
 
-import numpy
-from numpy import linalg
-
 import nibabel
 from nibabel.spatialimages import SpatialImage
 
@@ -17,6 +14,7 @@ import os
 import sys
 import traceback
 from collections import OrderedDict  #Only python 2.7
+import numpy
 
 def _set_dictionary_from_use_file_names_as_index(optional_flags,
                                          tractographyName,default_tractographyName,
@@ -38,6 +36,103 @@ def _set_dictionary_from_use_file_names_as_index(optional_flags,
       results.setdefault(meas_k,[]).append(meas_v)
     return results
 
+def _local_geodesic_anisotropy(evals):
+    """ Taken from dipy/reconst/dti.py
+    see for documentation
+    :return:
+    """
+    ev1, ev2, ev3 = evals
+
+    # this is the definition in [1]_
+    detD = numpy.power(ev1 * ev2 * ev3, 1/3.)
+    if detD > 1e-9:
+        log1 = numpy.log(ev1 / detD)
+        log2 = numpy.log(ev2 / detD)
+        log3 = numpy.log(ev3 / detD)
+
+        ga = numpy.sqrt(log1 ** 2 + log2 ** 2 + log3 ** 2)
+    else:
+        ga = 0.0
+    return ga
+
+def _local_fractional_anisotropy(evals):
+    """ Taken from dipy/reconst/dti.py
+    see for documentation
+    :return:
+    """
+    ev1, ev2, ev3 = evals
+    denom=(evals * evals).sum(0)
+    if denom > 1e-9:
+        fa = numpy.sqrt(0.5 * ((ev1 - ev2) ** 2 + (ev2 - ev3) ** 2 + (ev3 - ev1) ** 2)
+                      / (denom))
+    else:
+        fa = 0.0
+    return fa
+
+def _local_axial_diffusivity(evals):
+    """ Taken from dipy/reconst/dti.py
+    see for documentation
+    :return:
+    """
+    ev1, ev2, ev3 = evals
+    return ev1
+
+def _local_mean_diffusivity(evals):
+    """ Taken from dipy/reconst/dti.py
+    see for documentation
+    :return:
+    """
+    return evals.mean(0)
+
+def _local_radial_diffusivity(evals):
+    """ Taken from dipy/reconst/dti.py
+    see for documentation
+    :return:
+    """
+    return evals[1:].mean(0)
+
+def decorate_tract_with_measures(tractography,tensorName):
+    ot= tractography.original_tracts_data()
+    all_tensors=ot[tensorName]
+    fa_fiber_list=list()
+    md_fiber_list=list()
+    ax_fiber_list=list()
+    rd_fiber_list=list()
+    ga_fiber_list=list()
+
+    for one_fiber in all_tensors:
+        fa_by_point = numpy.ndarray((len(one_fiber),1),dtype=numpy.float32)
+        md_by_point = numpy.ndarray((len(one_fiber),1),dtype=numpy.float32)
+        ax_by_point = numpy.ndarray((len(one_fiber),1),dtype=numpy.float32)
+        rd_by_point = numpy.ndarray((len(one_fiber),1),dtype=numpy.float32)
+        ga_by_point = numpy.ndarray((len(one_fiber),1),dtype=numpy.float32)
+
+        index=0
+        for one_tensor_values in one_fiber:
+            one_tensor=numpy.reshape(one_tensor_values,(3,3))
+            _,eigenvals,_ = numpy.linalg.svd(one_tensor)
+            fa_by_point[index]=_local_fractional_anisotropy(eigenvals)
+            md_by_point[index]=_local_mean_diffusivity(eigenvals)
+            ax_by_point[index]=_local_axial_diffusivity(eigenvals)
+            rd_by_point[index]=_local_axial_diffusivity(eigenvals)
+            ga_by_point[index]=_local_geodesic_anisotropy(eigenvals)
+            index=index+1
+        fa_fiber_list.append(fa_by_point)
+        md_fiber_list.append(md_by_point)
+        ax_fiber_list.append(ax_by_point)
+        rd_fiber_list.append(rd_by_point)
+        ga_fiber_list.append(ga_by_point)
+
+    tractography.original_tracts_data()['FA_'+tensorName]=fa_fiber_list
+    tractography.original_tracts_data()['MD_'+tensorName]=md_fiber_list
+    tractography.original_tracts_data()['AX_'+tensorName]=ax_fiber_list
+    tractography.original_tracts_data()['RD_'+tensorName]=rd_fiber_list
+    tractography.original_tracts_data()['GA_'+tensorName]=ga_fiber_list
+
+    return Tractography(
+        tractography.original_tracts(),  tractography.original_tracts_data(),
+        **tractography.extra_args)
+
 
 def tract_length(tract):
     d2 = numpy.sqrt((numpy.diff(tract, axis=0) ** 2).sum(1))
@@ -46,7 +141,30 @@ def tract_length(tract):
 def tract_count(tract):
     return len(tract)
 
+def tract_expand_tensor_metrics(tractography):
+    from os import path
+    from scipy import ndimage
+    from numpy import linalg
+
+    quantity_name = "tensor1_FA"
+    start = 0
+    new_scalar_data = []
+    for tract in tractography.original_tracts():
+        new_scalar_data.append(
+            new_scalar_data_flat[start: start + len(tract)].copy()
+        )
+        start += len(tract)
+    tractography.original_tracts_data()[quantity_name] = new_scalar_data
+
+    return Tractography(
+        tractography.original_tracts(),  tractography.original_tracts_data(),
+        **tractography.extra_args
+    )
+
+
+
 def compute_all_measures(tractography,desired_keys_list, scalars=None, resolution=None):
+
     unorderedResults=dict()
 
     if ('number of tracts' in desired_keys_list):
@@ -167,6 +285,7 @@ def scalar_per_tract_mean_std(optional_flags,tractographies, scalar):
 
 @tract_math_operation('<scalar>: calculates many measurements along each tract', needs_one_tract=False)
 def scalar_compute_most(optional_flags,tractographies, scalar):
+
     if scalar == 'all':
         get_reference_tract = tractographies[0][1]
         scalars = [ s for s in get_reference_tract.tracts_data().keys() if not s.startswith("tensor") ]
@@ -175,13 +294,21 @@ def scalar_compute_most(optional_flags,tractographies, scalar):
     results = OrderedDict()
     try:
         for defaultTractName, (tractName,tract) in enumerate(tractographies):
+            ## First_decorate_tract
+            if 'tensor1' in tract.tracts_data().keys():
+                tract=decorate_tract_with_measures(tract,'tensor1')
+                scalars.extend([ 'FA_tensor1','MD_tensor1','AX_tensor1','RD_tensor1','GA_tensor1'])
+            if 'tensor2' in tract.tracts_data().keys():
+                tract=decorate_tract_with_measures(tract,'tensor2')
+                scalars.extend([ 'FA_tensor2','MD_tensor2','AX_tensor2','RD_tensor2','GA_tensor2'])
 
             measurement_dict = compute_all_measures(tract,
                                                      ['per tract distance weighted mean %s',
                                                       'per tract distance weighted std %s',
                                                       'tract volume',
                                                       'length mean (mm)','length std (mm^2)',
-                                                      'number of tracts'],
+                                                      'number of tracts'
+                                                      ],
                                                      scalars=scalars, resolution=1.)
             results=_set_dictionary_from_use_file_names_as_index(optional_flags,
                                                      tractName,defaultTractName,
