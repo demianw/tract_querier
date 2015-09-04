@@ -7,6 +7,8 @@ try:
 except ImportError:  # Python 2.6 fix
     from ordereddict import OrderedDict
 
+from warnings import warn
+
 import numpy
 from numpy import linalg
 
@@ -333,17 +335,17 @@ def tract_map_image(tractography, image, quantity_name, file_output=None):
 )
 def tract_deform(tractography, image, file_output=None):
     from scipy import ndimage
-    import numpy as np
+    import numpy as numpy
 
     image = nibabel.load(image)
-    coord_adjustment = np.sign(np.diag(image.get_affine())[:-1])
+    coord_adjustment = numpy.sign(numpy.diag(image.get_affine())[:-1])
     ijk_points = tract_in_ijk(image, tractography)
     image_data = image.get_data().squeeze()
 
     if image_data.ndim != 4 and image_data.shape[-1] != 3:
         raise ValueError('Image is not a deformation field')
 
-    new_points = np.vstack(tractography.tracts())  # ijk_points.copy()
+    new_points = numpy.vstack(tractography.tracts())  # ijk_points.copy()
     for i in (0, 1, 2):
         image_ = image_data[..., i]
         deformation = ndimage.map_coordinates(
@@ -376,15 +378,15 @@ def tract_affine_transform(
     invert=False, file_output=None
 ):
     import nibabel
-    import numpy as np
+    import numpy as numpy
     ref_image = nibabel.load(ref_image)
     ref_affine = ref_image.get_affine()
-    transform = np.loadtxt(transform_file)
+    transform = numpy.loadtxt(transform_file)
     invert = bool(invert)
     if invert:
         print "Inverting transform"
-        transform = np.linalg.inv(transform)
-    orig_points = np.vstack(tractography.tracts())
+        transform = numpy.linalg.inv(transform)
+    orig_points = numpy.vstack(tractography.tracts())
     new_points = nibabel.affines.apply_affine(transform, orig_points)
     start = 0
     new_tracts = []
@@ -620,11 +622,11 @@ def tract_kappa(tractography, resolution, *other_tracts):
         N = (all_voxels.max(0) - all_voxels.min(0)).prod()
         pp = len(voxels.intersection(voxels1)) * 1.
         pn = len(voxels.difference(voxels1)) * 1.
-        np = len(voxels1.difference(voxels)) * 1.
-        nn = N - pp - pn - np
+        numpy = len(voxels1.difference(voxels)) * 1.
+        nn = N - pp - pn - numpy
         observed_agreement = (pp + nn) / N
         chance_agreement = (
-            (pp + pn) * (pp + np) + (nn + np) * (nn + pn)) / (N * N)
+            (pp + pn) * (pp + numpy) + (nn + numpy) * (nn + pn)) / (N * N)
 
         k = (observed_agreement - chance_agreement) / (1 - chance_agreement)
 
@@ -655,11 +657,11 @@ def tract_kappa_volume(tractography, volume, threshold, resolution, *other_tract
         N = (all_voxels.max(0) - all_voxels.min(0)).prod()
         pp = len(voxels.intersection(voxels1)) * 1.
         pn = len(voxels.difference(voxels1)) * 1.
-        np = len(voxels1.difference(voxels)) * 1.
-        nn = N - pp - pn - np
+        numpy = len(voxels1.difference(voxels)) * 1.
+        nn = N - pp - pn - numpy
         observed_agreement = (pp + nn) / N
         chance_agreement = (
-            (pp + pn) * (pp + np) + (nn + np) * (nn + pn)) / (N * N)
+            (pp + pn) * (pp + numpy) + (nn + numpy) * (nn + pn)) / (N * N)
 
         k = (observed_agreement - chance_agreement) / (1 - chance_agreement)
 
@@ -943,3 +945,44 @@ def tract_bhattacharyya_coefficient(tractography, resolution, *other_tracts):
             result['bhattacharyya %s value' % coord[i]].append(numpy.nan_to_num(distances[i]))
 
     return result
+
+
+@tract_math_operation(
+    '<image> <label>: Flips tracts such that the first endpoint is '
+    'in the given label',
+    needs_one_tract=True
+)
+def tract_flip_endpoints_in_label(
+    tractography, image, label, file_output=None
+):
+    image = nibabel.load(image)
+    tracts_ijk = each_tract_in_ijk(image, tractography)
+    image_data = image.get_data()
+    label = int(label)
+    print image_data.sum()
+    needs_flip = []
+    for ix, tract in enumerate(tracts_ijk):
+        i, j, k = numpy.round(tract[0]).astype(int)
+        l, m, n = numpy.round(tract[-1]).astype(int)
+
+        e1 = image_data[i, j, k] == label
+        e2 = image_data[l, m, n] == label
+        if e2 and not e1:
+            needs_flip.append(ix)
+        elif e1 and e2:
+            warn("At least one tract has both endpoints in the label")
+        elif not(e1 or e2):
+            warn("At least one tract none of its endpoints in the label")
+
+    tracts = list(tractography.tracts())
+    tracts_data = tractography.tracts_data()
+    print "Flipped %d tracts" % len(needs_flip)
+    for i in needs_flip:
+        tracts[i] = tracts[i][::-1]
+        for data_key, data_points in tracts_data:
+            data_points[i] = data_points[i][::-1]
+
+    return Tractography(
+        tracts,  tracts_data,
+        **tractography.extra_args
+    )

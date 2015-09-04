@@ -4,6 +4,9 @@ from os import path
 import tempfile
 import urllib2
 
+import unittest
+
+
 FILES = {
     'tract_file': (
         'http://midas.kitware.com/bitstream/view/17631',
@@ -22,7 +25,10 @@ FILES = {
     )
 }
 
-class TestDataSet(object):
+
+class TestDataSet(unittest.TestCase):
+
+    @unittest.skip("temporarily disabled")
     def __init__(self):
         self.dirname = path.join(
             tempfile.gettempdir(),

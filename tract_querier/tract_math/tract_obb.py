@@ -659,16 +659,16 @@ def all_obb_3d_along_tract(
 
     if clean:
         labels_count = bincount(labels)
-        labels_count = dict([
-            (side, bincount(split_labels[side]))
+        labels_count = {
+            side: bincount(split_labels[side])
             for side in split_labels
-        ])
+        }
 
-        labels_ratio = dict([
-            (sider, nan_to_num(
+        labels_ratio = {
+            side: nan_to_num(
                 labels_count[side] * 1. / labels_count[:len(labels_count(side))]
-            )) for side in labels_count
-        ])
+            ) for side in labels_count
+        }
 
     new_results = [box_center]
 
@@ -756,16 +756,16 @@ def all_obb_3d(points, vectors, labels, tol=1e-8, level=0, intersection_threshol
 
     if clean:
         labels_count = bincount(labels)
-        labels_count = dict([
-            (side, bincount(split_labels[side]))
+        labels_count = {
+            side: bincount(split_labels[side])
             for side in split_labels
-        ])
+        }
 
-        labels_ratio = dict([
-            (side, nan_to_num(
+        labels_ratio = {
+            side: nan_to_num(
                 labels_count[side] * 1. / labels_count[:len(labels_count(side))]
-            )) for side in labels_count
-        ])
+            ) for side in labels_count
+        }
 
     new_results = [box_center]
     print level
