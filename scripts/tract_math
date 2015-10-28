@@ -3,7 +3,10 @@ import sys
 import itertools
 from argparse import ArgumentParser, FileType, REMAINDER
 
+import traceback
+
 import warnings
+
 
 def custom_formatwarning(msg, *a):
     # ignore everything except the message
@@ -35,7 +38,29 @@ def main():
     from tract_querier.tract_math import TractMathWrongArgumentsError
 
     usage = r"""
-    usage: %(prog)s <tract1.vtk> ... <tractN.vtk> operation <operation parameter1> ... <operation parameterN> <output_tract.vtk>
+    usage: %(prog)s <tract1.vtk> ... <tractN.vtk> operation <operation parameter1> ... <operation parameterN> <output_tract.vtk> \
+                      [ optional flags ]
+
+    optional flags:  Always start with "--" and are considered as boolean flags
+
+    The --use_file_names_as_index col_name1:path_dir_index col_name2:path_dir_index2 .. col_nameN:path_dir_indexN
+        Example directory layout:
+        =========================
+        PROJ_XX/SUBJ_01/SESSION_AB/cm1.left.vtp
+        PROJ_XX/SUBJ_01/SESSION_AB/cm1.right.vtp
+        ||||||| ||||||| |||||||||| ||||||||||||||||||||||||
+        4444444 3333333 2222222222 111111111111111111111111
+
+        tract_math call:
+        ================
+        tract_math PROJ_XX/SUBJ_01/SESSION_AB/*.vtp count test.csv --useFileNamesAsIndex proj:4 subj:3 sess:2 tract:1
+
+        result:
+        =======
+        $ cat test.csv
+        sess,number of tracts,subj,proj,tract
+        SESSION_AB,176,SUBJ_01,PROJ_XX,cm1.left.vtp
+        SESSION_AB,88,SUBJ_01,PROJ_XX,cm1.right.vtp
 
     Available operations:
     """
@@ -45,7 +70,7 @@ def main():
     for f in operations_names:
         usage += '\t%s %s\n' % (f, operations[f].help_text)
 
-    #The first arguments, except for the last one, might be tractography files
+    # The first arguments, except for the last one, might be tractography files
 
     n_tracts = len([
         tract for tract in
@@ -56,33 +81,42 @@ def main():
     ])
 
     parser = ArgumentParser(usage=usage)
-    parser.add_argument('tractographies', nargs=max(n_tracts, 1), help='tractography files', type=FileType('r'))
+    parser.add_argument('tractographies', nargs=max(
+        n_tracts, 1), help='tractography files', type=FileType('r'))
     parser.add_argument('operation', type=str, choices=operations_names,
                         help="operation to use")
     parser.add_argument('operation_parameters', type=str, nargs=REMAINDER,
                         help="operation parameters")
 
     args = parser.parse_args()
-    #Load the global modules after the parsing of parameters
+    # Load the global modules after the parsing of parameters
     from tract_querier.tractography import tractography_from_files
 
-    if  (args.operation in operations) and operations[args.operation].needs_one_tract:
-        tractography = tractography_from_files([f.name for f in args.tractographies])
+    if (args.operation in operations) and operations[args.operation].needs_one_tract:
+        tractography = tractography_from_files(
+            [f.name for f in args.tractographies])
     else:
         tractography = []
         try:
             for f in args.tractographies:
-                tractography.append(tractography_from_files(f.name))
+                # For each tractography file, pass a tuple of (tractography
+                # filename, tractography instance) to tractography list.
+                tractography.append((f.name, tractography_from_files(f.name)))
         except IOError as e:
             print >>sys.stderr, "Error reading file ", f.name, "(%s)" % repr(e)
 
-    if  args.operation in operations:
+    if args.operation in operations:
         try:
-            operations[args.operation](tractography, *args.operation_parameters)
+            operations[args.operation](
+                tractography, *args.operation_parameters)
         except TractMathWrongArgumentsError, e:
+            traceback.print_exc(file=sys.stdout)
             parser.error('\n\n' + str(e))
         except TypeError:
-            parser.error("\n\nWrong number of parameters for the operation")
+            traceback.print_exc(file=sys.stdout)
+            parser.error(
+                "\n\nError: Wrong number of parameters for the operation")
+
     else:
         parser.error("\n\nOperation not found")
 
