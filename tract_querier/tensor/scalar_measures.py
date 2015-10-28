@@ -4,6 +4,69 @@ Anisotropy measures from tensor operations
 import numpy
 
 
+def fractional_anisotropy_from_eigenvalues(evals):
+    """ Taken from dipy/reconst/dti.py
+    see for documentation
+    :return:
+    """
+    ev1, ev2, ev3 = evals
+    denom = (evals * evals).sum(0)
+    if denom > 1e-9:
+        fa = numpy.sqrt(
+            0.5 *
+            ((ev1 - ev2) ** 2 + (ev2 - ev3) ** 2 + (ev3 - ev1) ** 2) /
+            (denom)
+        )
+    else:
+        fa = 0.0
+    return fa
+
+
+def mean_diffusivity(evals):
+    """ Taken from dipy/reconst/dti.py
+    see for documentation
+    :return:
+    """
+    return evals.mean(0)
+
+
+def radial_diffusivity(evals):
+    """ Taken from dipy/reconst/dti.py
+    see for documentation
+    :return:
+    """
+    return evals[1:].mean(0)
+
+
+def axial_diffusivity(evals):
+    """ Taken from dipy/reconst/dti.py
+    see for documentation
+    :return:
+    """
+    ev1, ev2, ev3 = evals
+    return ev1
+
+
+def geodesic_anisotropy(evals):
+    """ Taken from dipy/reconst/dti.py
+    see for documentation
+    :return:
+    """
+    ev1, ev2, ev3 = evals
+
+    # this is the definition in [1]_
+    detD = numpy.power(ev1 * ev2 * ev3, 1 / 3.)
+    if detD > 1e-9:
+        log1 = numpy.log(ev1 / detD)
+        log2 = numpy.log(ev2 / detD)
+        log3 = numpy.log(ev3 / detD)
+
+        ga = numpy.sqrt(log1 ** 2 + log2 ** 2 + log3 ** 2)
+    else:
+        ga = 0.0
+    return ga
+
+
 __all__ = [
     'fractional_anisotropy', 'volume_fraction',
     'eigenvalues', 'tensor_trace', 'tensor_contraction',

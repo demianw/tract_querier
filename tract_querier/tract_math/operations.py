@@ -72,9 +72,8 @@ def scalar_per_tract_mean_std(optional_flags, tractographies, scalar):
     return results
 
 
-@tract_math_operation('<scalar>: calculates many measurements along each tract', needs_one_tract=False)
+@tract_math_operation('<scalar>: calculates many DTI measurements along each tract if there are two tensor data attributes: "tensor1" and "tensor2"', needs_one_tract=False)
 def scalar_compute_most(optional_flags, tractographies, scalar):
-
     if scalar == 'all':
         get_reference_tract = tractographies[0][1]
         scalars = [
@@ -107,7 +106,7 @@ def scalar_compute_most(optional_flags, tractographies, scalar):
                                                                    results, measurement_dict)
     except KeyError:
         traceback.print_exc(file=sys.stdout)
-        raise ValueError("Tractography does not contain this scalar data")
+        raise ValueError("Tractography does not contain this tensor data")
 
     return results
 
