@@ -25,47 +25,48 @@ def tract_math_operation(help_text, needs_one_tract=True):
     needs_one_tract: tells the script if all the input tractographies should
                       be unified as one or left as a tractography list
     '''
-    def parse_optional_args(optional_args,current_dict):
+    def parse_optional_args(optional_args, current_dict):
         if len(optional_args) > 0:
-            values_list=list()
-            key=optional_args[0]
-            optional_args=optional_args[1:]
-            while (len(optional_args) > 0 ) and (not optional_args[0].startswith("--")):
+            values_list = list()
+            key = optional_args[0]
+            optional_args = optional_args[1:]
+            while (len(optional_args) > 0) and (not optional_args[0].startswith("--")):
                 values_list.append(optional_args[0])
-                optional_args=optional_args[1:]
-            current_dict[key]=values_list
-            return parse_optional_args(optional_args,current_dict)
+                optional_args = optional_args[1:]
+            current_dict[key] = values_list
+            return parse_optional_args(optional_args, current_dict)
         else:
             return current_dict
 
     def find_optional_args(args):
         """ Re-organize args to put a dictionary first as the optional arguments
         args=['tract_math', '/tmp/proj/subj/session/t1.vtp','/tmp/proj/subj/session/t2.vtp',
-               '--FileNames','-1','-2','-3','--AnotherOption']
+               '--file_names','-1','-2','-3','--another_option']
         new_args=find_optional_args(args)
         print(new_args)
-        [{'--FileNames': ['-1', '-2', '-3'], '--AnotherOption': []},
+        [{'--file_names': ['-1', '-2', '-3'], '--another_option': []},
              'tract_math', '/tmp/proj/subj/session/t1.vtp', '/tmp/proj/subj/session/t2.vtp']
         """
-        base_args=args
-        optional_args=list()
+        base_args = args
+        optional_args = list()
         for index in range(len(args)):
-            if isinstance(args[index],basestring) and args[index].startswith("--"):
+            if isinstance(args[index], basestring) and args[index].startswith("--"):
                 base_args = args[:index]
                 optional_args = args[index:]
                 break
-        options_dict = parse_optional_args(optional_args,dict())
-        return base_args,options_dict
+        options_dict = parse_optional_args(optional_args, dict())
+        return base_args, options_dict
 
     def internal_decorator(func):
         def wrapper(*input_args):
             # find optional flags and put them as a dictionary
             # at the beginning of args
-            args,options_dict=find_optional_args(input_args)
+            args, options_dict = find_optional_args(input_args)
 
             total_args = len(args)
             argspec = inspect.getargspec(func)
-            func_total_args = len(argspec.args) - 1 # Subtract 1 for implicit options_dict
+            # Subtract 1 for implicit options_dict
+            func_total_args = len(argspec.args) - 1
 
             if argspec.varargs:
                 func_total_args += 1
@@ -82,19 +83,21 @@ def tract_math_operation(help_text, needs_one_tract=True):
                 has_file_output
             ):
                 if has_file_output:
-                    ix = argspec.args.index('file_output') - 1 # Subtract 1 for implicit options_dict
+                    # Subtract 1 for implicit options_dict
+                    ix = argspec.args.index('file_output') - 1
 
                     if ix >= len(args):
                         raise TractMathWrongArgumentsError(
-                            'Wrong number of parameters for the operation:\n'+
-                            str(args)+"\n"+str(ix) + " != " + str(len(args))
+                            'Wrong number of parameters for the operation:\n' +
+                            str(args) + "\n" + str(ix) +
+                            " != " + str(len(args))
                         )
                     file_output = args[ix]
                 else:
                     file_output = args[-1]
                     args = args[:-1]
 
-                option_and_args=(options_dict,)+args
+                option_and_args = (options_dict,) + args
                 out = func(*option_and_args)
 
                 process_output(out, file_output=file_output)
@@ -105,7 +108,7 @@ def tract_math_operation(help_text, needs_one_tract=True):
                 if args[-1] == '-':
                     args = args[:-1]
 
-                option_and_args=(options_dict,)+args
+                option_and_args = (options_dict,) + args
                 process_output(func(*option_and_args))
             else:
                 raise TractMathWrongArgumentsError(
