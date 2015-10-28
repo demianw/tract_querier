@@ -10,6 +10,42 @@ import nibabel
 from ..tractography import (
     Tractography, tractography_to_file
 )
+import os
+
+
+def set_dictionary_from_use_filenames_as_index(
+    optional_flags,
+    tractography_name, default_tractography_name,
+    results, measurement_dict
+):
+    """
+    Parse the use_file_names_as_index option and set dictionary accordingly
+    """
+    file_name_components_to_use = optional_flags.get(
+        "--use_file_names_as_index", None
+    )
+    if file_name_components_to_use is not None:
+        if len(file_name_components_to_use) == 0:
+            results.setdefault('tract_file_path', []).append(tractography_name)
+        else:
+            file_name_elements = tractography_name.split(os.path.sep)
+            for file_path_index_to_record in file_name_components_to_use:
+                col_name = file_path_index_to_record.split(":")[0]
+
+                element_index_from_end = (
+                    -1 *
+                    int(file_path_index_to_record.split(":")[1])
+                )
+
+                results.setdefault(col_name, []).append(
+                    file_name_elements[element_index_from_end]
+                )
+    else:
+        results.setdefault('tract file #', []).append(
+            default_tractography_name)
+    for meas_k, meas_v in measurement_dict.iteritems():
+        results.setdefault(meas_k, []).append(meas_v)
+    return results
 
 __all__ = ['tract_math_operation']
 

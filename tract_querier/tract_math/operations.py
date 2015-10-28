@@ -1,9 +1,4 @@
-from .decorator import tract_math_operation
-
-try:
-    from collections import OrderedDict
-except ImportError:  # Python 2.6 fix
-    from ordereddict import OrderedDict
+from .decorator import tract_math_operation, set_dictionary_from_use_filenames_as_index
 
 from warnings import warn
 
@@ -16,255 +11,16 @@ from ..tractography import (
     Tractography, tractography_to_file, tractography_from_files
 )
 
-import os
 import sys
 import traceback
+from . import tensor_operations
+from . import tract_operations
 
 
-def _set_dictionary_from_use_file_names_as_index(
-    optional_flags,
-    tractography_name, default_tractography_name,
-    results, measurement_dict
-):
-    """
-    Parse the use_file_names_as_index option and set dictionary accordingly
-    """
-    file_name_components_to_use = optional_flags.get(
-        "--use_file_names_as_index", None
-    )
-    if file_name_components_to_use is not None:
-        if len(file_name_components_to_use) == 0:
-            results.setdefault('tract_file_path', []).append(tractography_name)
-        else:
-            file_name_elements = tractography_name.split(os.path.sep)
-            for file_path_index_to_record in file_name_components_to_use:
-                col_name = file_path_index_to_record.split(":")[0]
-
-                element_index_from_end = (
-                    -1 *
-                    int(file_path_index_to_record.split(":")[1])
-                )
-
-                results.setdefault(col_name, []).append(
-                    file_name_elements[element_index_from_end]
-                )
-    else:
-        results.setdefault('tract file #', []).append(
-            default_tractography_name)
-    for meas_k, meas_v in measurement_dict.iteritems():
-        results.setdefault(meas_k, []).append(meas_v)
-    return results
-
-
-def _local_geodesic_anisotropy(evals):
-    """ Taken from dipy/reconst/dti.py
-    see for documentation
-    :return:
-    """
-    ev1, ev2, ev3 = evals
-
-    # this is the definition in [1]_
-    detD = numpy.power(ev1 * ev2 * ev3, 1 / 3.)
-    if detD > 1e-9:
-        log1 = numpy.log(ev1 / detD)
-        log2 = numpy.log(ev2 / detD)
-        log3 = numpy.log(ev3 / detD)
-
-        ga = numpy.sqrt(log1 ** 2 + log2 ** 2 + log3 ** 2)
-    else:
-        ga = 0.0
-    return ga
-
-
-def _local_fractional_anisotropy(evals):
-    """ Taken from dipy/reconst/dti.py
-    see for documentation
-    :return:
-    """
-    ev1, ev2, ev3 = evals
-    denom = (evals * evals).sum(0)
-    if denom > 1e-9:
-        fa = numpy.sqrt(
-            0.5 *
-            ((ev1 - ev2) ** 2 + (ev2 - ev3) ** 2 + (ev3 - ev1) ** 2) /
-            (denom)
-        )
-    else:
-        fa = 0.0
-    return fa
-
-
-def _local_axial_diffusivity(evals):
-    """ Taken from dipy/reconst/dti.py
-    see for documentation
-    :return:
-    """
-    ev1, ev2, ev3 = evals
-    return ev1
-
-
-def _local_mean_diffusivity(evals):
-    """ Taken from dipy/reconst/dti.py
-    see for documentation
-    :return:
-    """
-    return evals.mean(0)
-
-
-def _local_radial_diffusivity(evals):
-    """ Taken from dipy/reconst/dti.py
-    see for documentation
-    :return:
-    """
-    return evals[1:].mean(0)
-
-
-def decorate_tract_with_measures(tractography, tensor_name):
-    ot = tractography.original_tracts_data()
-    all_tensors = ot[tensor_name]
-    fa_fiber_list = list()
-    md_fiber_list = list()
-    ax_fiber_list = list()
-    rd_fiber_list = list()
-    ga_fiber_list = list()
-
-    for one_fiber in all_tensors:
-        fa_by_point = numpy.ndarray((len(one_fiber), 1), dtype=numpy.float32)
-        md_by_point = numpy.ndarray((len(one_fiber), 1), dtype=numpy.float32)
-        ax_by_point = numpy.ndarray((len(one_fiber), 1), dtype=numpy.float32)
-        rd_by_point = numpy.ndarray((len(one_fiber), 1), dtype=numpy.float32)
-        ga_by_point = numpy.ndarray((len(one_fiber), 1), dtype=numpy.float32)
-
-        index = 0
-        for one_tensor_values in one_fiber:
-            one_tensor = numpy.reshape(one_tensor_values, (3, 3))
-            _, eigenvals, _ = numpy.linalg.svd(one_tensor)
-            fa_by_point[index] = _local_fractional_anisotropy(eigenvals)
-            md_by_point[index] = _local_mean_diffusivity(eigenvals)
-            ax_by_point[index] = _local_axial_diffusivity(eigenvals)
-            rd_by_point[index] = _local_axial_diffusivity(eigenvals)
-            ga_by_point[index] = _local_geodesic_anisotropy(eigenvals)
-            index = index + 1
-        fa_fiber_list.append(fa_by_point)
-        md_fiber_list.append(md_by_point)
-        ax_fiber_list.append(ax_by_point)
-        rd_fiber_list.append(rd_by_point)
-        ga_fiber_list.append(ga_by_point)
-
-    tractography.original_tracts_data()['FA_' + tensor_name] = fa_fiber_list
-    tractography.original_tracts_data()['MD_' + tensor_name] = md_fiber_list
-    tractography.original_tracts_data()['AX_' + tensor_name] = ax_fiber_list
-    tractography.original_tracts_data()['RD_' + tensor_name] = rd_fiber_list
-    tractography.original_tracts_data()['GA_' + tensor_name] = ga_fiber_list
-
-    return Tractography(
-        tractography.original_tracts(),  tractography.original_tracts_data(),
-        **tractography.extra_args)
-
-
-def tract_length(tract):
-    d2 = numpy.sqrt((numpy.diff(tract, axis=0) ** 2).sum(1))
-    return d2.sum()
-
-
-def tract_count(tract):
-    return len(tract)
-
-
-def tract_expand_tensor_metrics(tractography):
-    from os import path
-    from scipy import ndimage
-    from numpy import linalg
-
-    quantity_name = "tensor1_FA"
-    start = 0
-    new_scalar_data = []
-    for tract in tractography.original_tracts():
-        new_scalar_data.append(
-            new_scalar_data_flat[start: start + len(tract)].copy()
-        )
-        start += len(tract)
-    tractography.original_tracts_data()[quantity_name] = new_scalar_data
-
-    return Tractography(
-        tractography.original_tracts(),  tractography.original_tracts_data(),
-        **tractography.extra_args
-    )
-
-
-def compute_all_measures(tractography, desired_keys_list, scalars=None, resolution=None):
-
-    unordered_results = dict()
-
-    if ('number of tracts' in desired_keys_list):
-        unordered_results['number of tracts'] = tract_count(
-            tractography.tracts())
-
-    if ('length mean (mm)' in desired_keys_list) or ('length std (mm^2)' in desired_keys_list):
-        lengths = numpy.empty(len(tractography.tracts()))
-        for i, one_tract in enumerate(tractography.tracts()):
-            lengths[i] = tract_length(one_tract)
-        unordered_results['length mean (mm)'] = lengths.mean()
-        unordered_results['length std (mm^2)'] = lengths.std()
-
-    if ('tract volume' in desired_keys_list) and (resolution is not None):
-        resolution = float(resolution)
-        voxels = voxelized_tract(tractography, resolution)
-
-        neighbors = numpy.array([
-            [0, 1, 0],
-            [0, -1, 0],
-            [1, 0, 0],
-            [-1, 0, 0],
-            [0, 0, 1],
-            [0, 0, -1]
-        ])
-        dilated_voxels = set()
-        dilated_voxels.update(voxels)
-        eroded_voxels = set()
-        for voxel in voxels:
-            neighbors_list = zip(*(neighbors + voxel).T)
-            dilated_voxels.update(neighbors_list)
-            if len(voxels.intersection(neighbors_list)) == len(neighbors):
-                eroded_voxels.add(voxel)
-        # print len(dilated_voxels), len(voxels), len(eroded_voxels)
-        approx_voxels = (len(dilated_voxels) - len(eroded_voxels)) / 2.
-        approx_volume = approx_voxels * (resolution ** 3)
-        unordered_results['tract volume'] = approx_volume
-
-    if ( 'per tract distance weighted mean %s' in desired_keys_list ) or \
-            ('per tract distance weighted std %s' in desired_keys_list):
-        mean_keys_list = list()
-        std_keys_list = list()
-        for scalar in scalars:
-            mean_key = 'per tract distance weighted mean %s' % scalar
-            std_key = 'per tract distance weighted std %s' % scalar
-            mean_keys_list.append(mean_key)
-            std_keys_list.append(std_key)
-            scalars = tractography.tracts_data()[scalar]
-            weighted_scalars = numpy.empty((len(tractography.tracts()), 2))
-            for line_index, t_data in enumerate(tractography.tracts()):
-                tdiff = numpy.sqrt((numpy.diff(t_data, axis=0) ** 2).sum(-1))
-                length = tdiff.sum()
-                values = scalars[line_index][1:].squeeze()
-                average = numpy.average(values, weights=tdiff)
-                weighted_scalars[line_index, 0] = average
-                weighted_scalars[line_index, 1] = length
-            mean = numpy.average(
-                weighted_scalars[:, 0], weights=weighted_scalars[:, 1])
-            std = numpy.average(
-                (weighted_scalars[:, 0] - mean) ** 2, weights=weighted_scalars[:, 1])
-            unordered_results[mean_key] = mean
-            unordered_results[std_key] = std
-        mii = desired_keys_list.index('per tract distance weighted mean %s')
-        desired_keys_list[mii:mii + 1] = mean_keys_list
-        sii = desired_keys_list.index('per tract distance weighted std %s')
-        desired_keys_list[sii:sii + 1] = std_keys_list
-    # Make Ordered Dictionary
-    ordered_dict = OrderedDict()
-    for key in desired_keys_list:
-        ordered_dict[key] = unordered_results[key]
-    return ordered_dict
+try:
+    from collections import OrderedDict
+except ImportError:  # Python 2.6 fix
+    from ordereddict import OrderedDict
 
 
 @tract_math_operation(': print the names of scalar data associated with each tract')
@@ -279,8 +35,8 @@ def scalars(optional_flags, tractography):
 def count(optional_flags, tractographies):
     results = OrderedDict()
     for default_tractography_name, (tract_name, tract) in enumerate(tractographies):
-        measurement_dict = compute_all_measures(tract, ['number of tracts'])
-        results = _set_dictionary_from_use_file_names_as_index(optional_flags,
+        measurement_dict = tensor_operations.compute_all_measures(tract, ['number of tracts'])
+        results = set_dictionary_from_use_filenames_as_index(optional_flags,
                                                                tract_name, default_tractography_name,
                                                                results, measurement_dict)
     return results
@@ -288,12 +44,12 @@ def count(optional_flags, tractographies):
 
 @tract_math_operation(': calculates mean and std of tract length')
 def length_mean_std(optional_flags, tractography):
-    return compute_all_measures(tractography, ['length mean (mm)', 'length std (mm^2)'])
+    return tensor_operations.compute_all_measures(tractography, ['length mean (mm)', 'length std (mm^2)'])
 
 
 @tract_math_operation('<volume unit>: calculates the volume of a tract based on voxel occupancy of a certain voxel volume')
 def tract_volume(optional_flags, tractography, resolution):
-    return compute_all_measures(tractography, ['tract volume'])
+    return tensor_operations.compute_all_measures(tractography, ['tract volume'])
 
 
 @tract_math_operation('<scalar>: calculates mean and std of a scalar quantity that has been averaged along each tract', needs_one_tract=False)
@@ -302,11 +58,11 @@ def scalar_per_tract_mean_std(optional_flags, tractographies, scalar):
     try:
         for default_tract_name, (tract_name, tract) in enumerate(tractographies):
 
-            measurement_dict = compute_all_measures(tract,
+            measurement_dict = tensor_operations.compute_all_measures(tract,
                                                     ['per tract distance weighted mean %s',
                                                      'per tract distance weighted std %s'],
                                                     scalars=[scalar])
-            results = _set_dictionary_from_use_file_names_as_index(optional_flags,
+            results = set_dictionary_from_use_filenames_as_index(optional_flags,
                                                                    tract_name, default_tract_name,
                                                                    results, measurement_dict)
     except KeyError:
@@ -330,15 +86,15 @@ def scalar_compute_most(optional_flags, tractographies, scalar):
         for default_tract_name, (tract_name, tract) in enumerate(tractographies):
             # First_decorate_tract
             if 'tensor1' in tract.tracts_data().keys():
-                tract = decorate_tract_with_measures(tract, 'tensor1')
+                tract = tensor_operations.decorate_tract_with_measures(tract, 'tensor1')
                 scalars.extend(
                     ['FA_tensor1', 'MD_tensor1', 'AX_tensor1', 'RD_tensor1', 'GA_tensor1'])
             if 'tensor2' in tract.tracts_data().keys():
-                tract = decorate_tract_with_measures(tract, 'tensor2')
+                tract = tensor_operations.decorate_tract_with_measures(tract, 'tensor2')
                 scalars.extend(
                     ['FA_tensor2', 'MD_tensor2', 'AX_tensor2', 'RD_tensor2', 'GA_tensor2'])
 
-            measurement_dict = compute_all_measures(tract,
+            measurement_dict = tensor_operations.compute_all_measures(tract,
                                                     ['per tract distance weighted mean %s',
                                                      'per tract distance weighted std %s',
                                                      'tract volume',
@@ -346,7 +102,7 @@ def scalar_compute_most(optional_flags, tractographies, scalar):
                                                      'number of tracts'
                                                      ],
                                                     scalars=scalars, resolution=1.)
-            results = _set_dictionary_from_use_file_names_as_index(optional_flags,
+            results = set_dictionary_from_use_filenames_as_index(optional_flags,
                                                                    tract_name, default_tract_name,
                                                                    results, measurement_dict)
     except KeyError:
@@ -474,7 +230,7 @@ def tract_point_distance_min_max(optional_flags, tractography):
     dist_min = numpy.empty(len(tractography.tracts()))
     dist_max = numpy.empty(len(tractography.tracts()))
     for i, tract in enumerate(tractography.tracts()):
-        dist = tract_length(tract)
+        dist = tract_operations.tract_length(tract)
         dist_min[i] = dist.min()
         dist_max[i] = dist.max()
     print dist_min.min(), dist_max.max()
@@ -500,7 +256,7 @@ def tract_remove_short_tracts(optional_flags, tractography, min_tract_length, fi
 
     tract_ix_to_keep = [
         i for i, tract in enumerate(tractography.tracts())
-        if tract_length(tract) > min_tract_length
+        if tract_operations.tract_length(tract) > min_tract_length
     ]
 
     selected_tracts = [tracts[i] for i in tract_ix_to_keep]
@@ -526,7 +282,7 @@ def tract_map_image(optional_flags, tractography, image, quantity_name, file_out
 
     image = nibabel.load(image)
 
-    ijk_points = tract_in_ijk(image, tractography)
+    ijk_points = tract_operations.tract_in_ijk(image, tractography)
     image_data = image.get_data()
 
     if image_data.ndim > 3:
@@ -570,7 +326,7 @@ def tract_deform(optional_flags, tractography, image, file_output=None):
 
     image = nibabel.load(image)
     coord_adjustment = numpy.sign(numpy.diag(image.get_affine())[:-1])
-    ijk_points = tract_in_ijk(image, tractography)
+    ijk_points = tract_operations.tract_in_ijk(image, tractography)
     image_data = image.get_data().squeeze()
 
     if image_data.ndim != 4 and image_data.shape[-1] != 3:
@@ -650,7 +406,7 @@ def tract_tract_confidence(optional_flags, tractography, bins, qty, file_output=
     tracts_prob_data = []
     tracts_length_bin = []
     for i, tract in enumerate(tracts):
-        lengths[i] = tract_length(tract)
+        lengths[i] = tract_operations.tract_length(tract)
         tracts_prob_data.append(numpy.zeros(len(tract)))
         tracts_length_bin.append(numpy.zeros(len(tract)))
 
@@ -687,7 +443,7 @@ def tract_tract_confidence(optional_flags, tractography, bins, qty, file_output=
 @tract_math_operation('<image> <mask_out>: calculates the mask image from a tract on the space of the given image')
 def tract_generate_mask(optional_flags, tractography, image, file_output):
     image = nibabel.load(image)
-    mask = tract_mask(image, tractography)
+    mask = tract_operations.tract_mask(image, tractography)
 
     return SpatialImage(mask, image.get_affine())
 
@@ -703,12 +459,12 @@ def tract_generate_population_probability_map(optional_flags, tractographies, im
     if isinstance(tractographies[1], Tractography):
         tractographies = [tractographies]
 
-    prob_map = tract_mask(image, tractographies[0][1]).astype(float)
+    prob_map = tract_operations.tract_mask(image, tractographies[0][1]).astype(float)
     if smoothing > 0:
         prob_map = ndimage.gaussian_filter(prob_map, smoothing)
 
     for tract in tractographies[1:]:
-        aux_map = tract_mask(image, tract[1])
+        aux_map = tract_operations.tract_mask(image, tract[1])
         if smoothing > 0:
             aux_map = ndimage.gaussian_filter(aux_map, smoothing)
         prob_map += aux_map
@@ -722,12 +478,12 @@ def tract_generate_population_probability_map(optional_flags, tractographies, im
 def tract_generate_probability_map(optional_flags, tractographies, image, file_output):
     image = nibabel.load(image)
 
-    prob_map = tract_probability_map(image, tractographies[0][1]).astype(float)
+    prob_map = tract_operations.tract_probability_map(image, tractographies[0][1]).astype(float)
 
     for tract in tractographies[1:]:
         if len(tract[1].tracts()) == 0:
             continue
-        new_prob_map = tract_mask(image, tract[1])
+        new_prob_map = tract_operations.tract_mask(image, tract[1])
         prob_map = prob_map + new_prob_map - (prob_map * new_prob_map)
 
     return SpatialImage(prob_map, image.get_affine())
@@ -778,7 +534,7 @@ def tract_merge(optional_flags, tractographies, file_output):
 def tract_kappa(optional_flags, tractography, resolution, *other_tracts):
     resolution = float(resolution)
 
-    voxels = voxelized_tract(tractography, resolution)
+    voxels = tract_operations.voxelized_tract(tractography, resolution)
 
     result = OrderedDict((
         ('tract file', []),
@@ -786,7 +542,7 @@ def tract_kappa(optional_flags, tractography, resolution, *other_tracts):
     ))
 
     for tract in other_tracts:
-        voxels1 = voxelized_tract(
+        voxels1 = tract_operations.voxelized_tract(
             tractography_from_files(tract),
             resolution
         )
@@ -815,7 +571,7 @@ def tract_kappa_volume(optional_flags, tractography, volume, threshold, resoluti
 
     volume = nibabel.load(volume)
     mask = (volume.get_data() > threshold).astype(int)
-    voxels = tract_mask(mask, tractography)
+    voxels = tract_operations.tract_mask(mask, tractography)
 
     result = OrderedDict((
         ('tract file', []),
@@ -823,7 +579,7 @@ def tract_kappa_volume(optional_flags, tractography, volume, threshold, resoluti
     ))
 
     for tract in other_tracts:
-        voxels1 = voxelized_tract(
+        voxels1 = tract_operations.voxelized_tract(
             tractography_from_files(tract), resolution)
 
         all_voxels = numpy.array(list(voxels.union(voxels1)))
@@ -848,7 +604,7 @@ def tract_kappa_volume(optional_flags, tractography, volume, threshold, resoluti
 def tract_dice(optional_flags, tractography, resolution, *other_tracts):
     resolution = float(resolution)
 
-    voxels = voxelized_tract(tractography, resolution)
+    voxels = tract_operations.voxelized_tract(tractography, resolution)
 
     result = OrderedDict((
         ('tract file', []),
@@ -856,7 +612,7 @@ def tract_dice(optional_flags, tractography, resolution, *other_tracts):
     ))
 
     for tract in other_tracts:
-        voxels1 = voxelized_tract(
+        voxels1 = tract_operations.voxelized_tract(
             tractography_from_files(tract),
             resolution
         )
@@ -938,71 +694,6 @@ def tract_smooth(optional_flags, tractography, var, file_output):
         tractography.original_tracts_data(),
         **tractography.extra_args
     )
-
-
-def voxelized_tract(tractography, resolution):
-    from itertools import izip
-    all_points = numpy.vstack(tractography.tracts())
-    all_points /= resolution
-    all_points = all_points.round(0).astype(int)
-    return set(izip(*(all_points.T)))
-
-
-def tract_mask(image, tractography):
-    ijk_points = tract_in_ijk(image, tractography)
-    image_data = image.get_data()
-
-    ijk_clipped = ijk_points.clip(
-        (0, 0, 0), numpy.array(image_data.shape) - 1
-    ).astype(int)
-
-    mask = numpy.zeros_like(image_data, dtype=float)
-    mask[tuple(ijk_clipped.T)] = 1
-    return mask
-
-
-def tract_probability_map(image, tractography):
-    ijk_tracts = each_tract_in_ijk(image, tractography)
-    image_data = image.get_data()
-
-    probability_map = numpy.zeros_like(image_data, dtype=float)
-    for ijk_points in ijk_tracts:
-        ijk_clipped = ijk_points.clip(
-            (0, 0, 0), numpy.array(image_data.shape) - 1
-        ).astype(int)
-
-        probability_map[tuple(ijk_clipped.T)] += 1
-
-    probability_map /= len(ijk_tracts)
-    return probability_map
-
-
-def each_tract_in_ijk(image, tractography):
-    ijk_tracts = []
-    for tract in tractography.tracts():
-        ijk_tracts.append(numpy.dot(numpy.linalg.inv(image.get_affine()), numpy.hstack((
-            tract,
-            numpy.ones((len(tract), 1))
-        )).T).T[:, :-1])
-    return ijk_tracts
-
-
-def tract_in_ijk(image, tractography):
-    ras_points = numpy.vstack(tractography.tracts())
-    ijk_points = numpy.linalg.solve(image.get_affine(), numpy.hstack((
-        ras_points,
-        numpy.ones((len(ras_points), 1))
-    )).T).T[:, :-1]
-    return ijk_points
-
-
-def tract_in_ras(image, tract_ijk):
-    ijk_points = tract_ijk
-    ras_points = numpy.dot(image.get_affine(), numpy.hstack((
-        ijk_points,
-        numpy.ones((len(ijk_points), 1))
-    )).T).T[:, :-1]
-    return ras_points
 
 
 @tract_math_operation('<tract_out>: compute the protoype tract')
@@ -1130,7 +821,7 @@ def tract_flip_endpoints_in_label(
     tractography, image, label, file_output=None
 ):
     image = nibabel.load(image)
-    tracts_ijk = each_tract_in_ijk(image, tractography)
+    tracts_ijk = tract_operations.each_tract_in_ijk(image, tractography)
     image_data = image.get_data()
     label = int(label)
     print image_data.sum()
