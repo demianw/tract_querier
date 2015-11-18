@@ -23,7 +23,7 @@ def tractography_to_trackvis_file(filename, tractography, affine=None, image_dim
     if image_dimensions is not None:
         trk_header['dim'] = image_dimensions
     elif hasattr(tractography, 'image_dimensions'):
-        trk_header['dim'] = image_dimensions
+        trk_header['dim'] = tractography.image_dimensions
     else:
         raise ValueError("Image dimensions needed to save a trackvis file")
 
