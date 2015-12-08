@@ -54,7 +54,7 @@ class Box2D:
 
         self._set_variables(
             bounding_box_corners, center, orientation,
-            labels, points, vectors, volume,
+            labels, points, point_ids, vectors, volume,
             None, None, None, level
         )
 
