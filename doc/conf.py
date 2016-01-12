@@ -216,7 +216,7 @@ latex_documents = [('index', 'user_guide.tex', u'tract_querier user guide',
 
 # The name of an image file (relative to this directory) to place at the top of
 # the title page.
-latex_logo = "logos/tract_querier-logo.png"
+# latex_logo = "logos/tract_querier-logo.png"
 
 # For "manual" documents, if this is true, then toplevel headings are parts,
 # not chapters.
