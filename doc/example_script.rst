@@ -18,7 +18,8 @@ Once all of these files are setup, the tract bundles are obtained by issuing the
 
 where **tractography_file.vtk** is the full-brain tractography, **wmparc.nii.gz** is the brain parcellation, **wmql_script.qry** is the WMQL script and **tract_output** is the prefix for the output bundles.
 
-There is an `example dataset <http://midas.kitware.com/item/view/859>`_ located in the Midas website.
+There is an `example dataset available for download <_static/wmql_example_dataset.zip>`_ which you can use after following the :ref:`installation_instructions`.
+
 
 WMQL Terms
 ----------
