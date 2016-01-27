@@ -129,7 +129,7 @@ def decorate_tract_with_measures(tractography, tensor_name):
             fa_by_point[index] = scalar_measures.fractional_anisotropy_from_eigenvalues(eigenvals)
             md_by_point[index] = scalar_measures.mean_diffusivity(eigenvals)
             ax_by_point[index] = scalar_measures.axial_diffusivity(eigenvals)
-            rd_by_point[index] = scalar_measures.axial_diffusivity(eigenvals)
+            rd_by_point[index] = scalar_measures.radial_diffusivity(eigenvals)
             ga_by_point[index] = scalar_measures.geodesic_anisotropy(eigenvals)
             index = index + 1
         fa_fiber_list.append(fa_by_point)
