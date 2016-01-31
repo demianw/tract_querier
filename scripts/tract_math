@@ -53,7 +53,7 @@ def main():
 
         tract_math call:
         ================
-        tract_math PROJ_XX/SUBJ_01/SESSION_AB/*.vtp count test.csv --useFileNamesAsIndex proj:4 subj:3 sess:2 tract:1
+        tract_math PROJ_XX/SUBJ_01/SESSION_AB/*.vtp count test.csv --use_file_names_as_index proj:4 subj:3 sess:2 tract:1
 
         result:
         =======
