@@ -6,6 +6,8 @@ from itertools import takewhile
 import fnmatch
 
 from .code_util import DocStringInheritor
+from six import add_metaclass
+
 
 __all__ = [
     'keywords', 'EvaluateQueries', 'eval_queries',
@@ -93,7 +95,7 @@ class FiberQueryInfo(object):
                     tract_query_info.tracts_endpoints[1]
                 )
             )
-
+            
             if name.endswith('update'):
                 return self
             else:
@@ -105,6 +107,7 @@ class FiberQueryInfo(object):
         return operation
 
 
+@add_metaclass(DocStringInheritor)
 class EvaluateQueries(ast.NodeVisitor):
 
     r"""
@@ -130,7 +133,6 @@ class EvaluateQueries(ast.NodeVisitor):
         the tracts resulting from this query
 
     """
-    __metaclass__ = DocStringInheritor
 
     relative_terms = [
         'anterior_of',
@@ -282,14 +284,8 @@ class EvaluateQueries(ast.NodeVisitor):
                 )
             elif (node.func.id.lower() == 'endpoints_in'):
                 query_info = self.visit(node.args[0])
-                new_tracts = (
-                    query_info.tracts_endpoints[0].
-                    union(query_info.tracts_endpoints[1])
-                )
-                return FiberQueryInfo(
-                    new_tracts, query_info.labels,
-                    query_info.tracts_endpoints
-                )
+                new_tracts = query_info.tracts_endpoints[0].union(query_info.tracts_endpoints[1])
+                return FiberQueryInfo(new_tracts, query_info.labels, query_info.tracts_endpoints)
             elif (node.func.id.lower() == 'both_endpoints_in'):
                 query_info = self.visit(node.args[0])
                 new_tracts = (
