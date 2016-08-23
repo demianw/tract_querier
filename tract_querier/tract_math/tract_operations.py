@@ -59,11 +59,11 @@ def tract_mask(image, tractography):
 
 
 def voxelized_tract(tractography, resolution):
-    from itertools import izip
+    
     all_points = numpy.vstack(tractography.tracts())
     all_points /= resolution
     all_points = all_points.round(0).astype(int)
-    return set(izip(*(all_points.T)))
+    return set(zip(*(all_points.T)))
 
 
 def tract_count(tract):

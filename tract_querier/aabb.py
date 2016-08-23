@@ -230,7 +230,7 @@ class AABBTree:
             boxes = allboxes[indices, :]
 
         if verbose:
-            print '*******************************************'
+            print('*******************************************')
 
         dimensions = len(boxes[0]) / 2
 
@@ -265,8 +265,8 @@ class AABBTree:
             rightIndices = indices[n:]
 
         if verbose:
-            print "Left: ", leftIndices
-            print "Right: ", rightIndices
+            print(("Left: ", leftIndices))
+            print(("Right: ", rightIndices))
         n = self.node(box, indices.copy(), parent=parent)
         n.left = self.buildTree(
             allboxes, leftIndices, parent=n, leafPointers=leafPointers)

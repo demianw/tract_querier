@@ -1,7 +1,7 @@
 import ast
 import cmd
 import fnmatch
-from query_processor import (
+from .query_processor import (
     EvaluateQueries, queries_preprocess,
     TractQuerierSyntaxError, keywords
 )
@@ -137,7 +137,7 @@ class TractQuerierCmd(cmd.Cmd):
         else:
             keys = k
         for k in keys:
-            print k
+            print(k)
 
     @safe_method
     def do_save(self, line):
@@ -147,17 +147,17 @@ class TractQuerierCmd(cmd.Cmd):
                 filename='shell', include_folders=self.include_folders
             )
             self.save_query_visitor.visit(ast.Module(body=body))
-        except SyntaxError, e:
-            print e.value
-        except TractQuerierSyntaxError, e:
-            print e.value
-        except KeyError, e:
-            print "Query name not recognized: %s" % e
+        except SyntaxError as e:
+            print(e.value)
+        except TractQuerierSyntaxError as e:
+            print(e.value)
+        except KeyError as e:
+            print("Query name not recognized: %s" % e)
 
         return False
 
     def do_help(self, line):
-        print '''WMQL Help
+        print('''WMQL Help
 
         Commands:
             dir <pattern>: list the available queries according to the pattern
@@ -168,7 +168,7 @@ class TractQuerierCmd(cmd.Cmd):
             <query name> |= <query>: execute a query without saving its result
 
         Exit pressing Ctrl+D
-        '''
+        ''')
         return
 
     def emptyline(self):
@@ -176,7 +176,7 @@ class TractQuerierCmd(cmd.Cmd):
 
     @safe_method
     def default(self, line):
-        print line
+        print(line)
         if len(line) == 0:
             return False
 
@@ -188,10 +188,10 @@ class TractQuerierCmd(cmd.Cmd):
             body = ast.Module(body=body)
             self.querier.visit(body)
             self.save_query_visitor.visit(body)
-        except SyntaxError, e:
-            print e.value
-        except TractQuerierSyntaxError, e:
-            print e.value
+        except SyntaxError as e:
+            print(e.value)
+        except TractQuerierSyntaxError as e:
+            print(e.value)
 
         return False
 
@@ -235,7 +235,7 @@ class TractQuerierCmd(cmd.Cmd):
         return self.completenames(text, *ignored)
 
     def do_EOF(self, line):
-        s = raw_input("\nSure you want to leave (y/n)? ")
+        s = eval(input("\nSure you want to leave (y/n)? "))
         if s.lower() == 'y':
             return True
         else:

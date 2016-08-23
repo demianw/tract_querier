@@ -1,3 +1,6 @@
+from six import add_metaclass
+
+
 class DocStringInheritor(type):
 
     '''A variation on
@@ -33,8 +36,9 @@ class Test(unittest.TestCase):
             def frobnicate(self):
                 pass
 
+        @add_metaclass(DocStringInheritor)
         class Bar(Foo):
-            __metaclass__ = DocStringInheritor
+            pass
         self.assertEqual(Bar.__doc__, object.__doc__)
         self.assertEqual(Bar().__doc__, object.__doc__)
         self.assertEqual(Bar.frobnicate.__doc__, None)
@@ -46,8 +50,10 @@ class Test(unittest.TestCase):
 
             def frobnicate(self):
                 'Frobnicate this gonk.'
+
+        @add_metaclass(DocStringInheritor)
         class Bar(Foo):
-            __metaclass__ = DocStringInheritor
+            pass
         self.assertEqual(Foo.__doc__, 'Foo')
         self.assertEqual(Foo().__doc__, 'Foo')
         self.assertEqual(Bar.__doc__, 'Foo')
@@ -64,8 +70,9 @@ class Test(unittest.TestCase):
         class Bar(Foo):
             pass
 
+        @add_metaclass(DocStringInheritor)
         class Baz(Bar):
-            __metaclass__ = DocStringInheritor
+            pass
         self.assertEqual(Baz.__doc__, 'Foo')
         self.assertEqual(Baz().__doc__, 'Foo')
         self.assertEqual(Baz.frobnicate.__doc__, 'Frobnicate this gonk.')
@@ -77,8 +84,10 @@ class Test(unittest.TestCase):
 
             def frobnicate(self):
                 'Frobnicate this gonk.'
+
+        @add_metaclass(DocStringInheritor)
         class Bar(Foo):
-            __metaclass__ = DocStringInheritor
+            pass
 
         class Baz(Bar):
             pass

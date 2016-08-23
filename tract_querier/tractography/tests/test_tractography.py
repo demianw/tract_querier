@@ -7,7 +7,7 @@ from .. import (
 
 from nose.tools import with_setup
 import copy
-from itertools import izip, chain
+from itertools import chain
 
 from numpy import all, eye, ones, allclose
 from numpy.random import randint, randn
@@ -22,7 +22,7 @@ n_tracts = 50
 
 
 def equal_tracts(a, b):
-    for t1, t2 in izip(a, b):
+    for t1, t2 in zip(a, b):
         if not (len(t1) == len(t2) and allclose(t1, t2)):
             return False
 
@@ -39,7 +39,7 @@ def equal_tracts_data(a, b):
         if isinstance(v1, str) and isinstance(v2, str) and v1 == v2:
             continue
         elif not isinstance(v1, str) and not isinstance(v2, str):
-            for t1, t2 in izip(a[k], b[k]):
+            for t1, t2 in zip(a[k], b[k]):
                 if not (len(t1) == len(t2) and allclose(t1, t2)):
                     return False
         else:
@@ -65,14 +65,14 @@ def setup(*args, **kwargs):
     else:
         test_active_data = False
 
-    dimensions = [(randint(5, max_tract_length), 3) for _ in xrange(n_tracts)]
+    dimensions = [(randint(5, max_tract_length), 3) for _ in range(n_tracts)]
     tracts = [randn(*d) for d in dimensions]
     tracts_data = {
         'a%d' % i: [
             randn(d[0], k)
             for d in dimensions
         ]
-        for i, k in zip(xrange(4), randint(1, 3, 9))
+        for i, k in zip(range(4), randint(1, 3, 9))
     }
 
     if test_active_data:
@@ -130,7 +130,7 @@ def test_subsample_tracts():
 def test_append():
     old_tracts = copy.deepcopy(tractography.tracts())
     new_data = {}
-    for k, v in tracts_data.iteritems():
+    for k, v in tracts_data.items():
         new_data[k] = v + v
 
     tractography.append(tracts, tracts_data)
@@ -177,7 +177,7 @@ def test_saveload_trk():
 
     tract_data_new = {
         k: v
-        for k, v in tractography.tracts_data().iteritems()
+        for k, v in tractography.tracts_data().items()
         if (v[0].ndim == 1) or (v[0].ndim == 2 and v[0].shape[1] == 1)
     }
 
@@ -214,7 +214,7 @@ def test_saveload():
 
             tract_data_new = {
                 k: v
-                for k, v in tractography.tracts_data().iteritems()
+                for k, v in tractography.tracts_data().items()
                 if (v[0].ndim == 1) or (v[0].ndim == 2 and v[0].shape[1] == 1)
             }
 

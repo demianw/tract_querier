@@ -344,7 +344,7 @@ class Box3DRich(Box2D):
 
             points = points[z < cutoff]
             point_ids = point_ids[z < cutoff]
-            print 'Discarded', (len(original_points) - len(points)) * 1. / len(points)
+            print(('Discarded', (len(original_points) - len(points)) * 1. / len(points)))
             vectors = vectors[z < cutoff]
             if labels is not None:
                 labels = labels[z < cutoff]
@@ -768,7 +768,7 @@ def all_obb_3d(points, vectors, labels, tol=1e-8, level=0, intersection_threshol
         }
 
     new_results = [box_center]
-    print level
+    print(level)
     if (
             orientation == 'orientation' and
             (len(labels_both) <= len(unique_labels) * intersection_threshold)  # and
@@ -847,7 +847,7 @@ def all_obb_3d_nr(points_, vectors_, labels_, tol=1e-8, level_=0, intersection_t
             if len(labels_both) == 0:
                 break
 
-        print level, len(unique_labels), len(box.points), total_points - points_done
+        print((level, len(unique_labels), len(box.points), total_points - points_done))
         if (
                 orientation == 'orientation' and
                 (len(labels_both) <= len(unique_labels) * intersection_threshold)  # and
@@ -869,7 +869,7 @@ def all_obb_3d_nr(points_, vectors_, labels_, tol=1e-8, level_=0, intersection_t
                     setattr(box, side, new_box)
                     getattr(box, side).parent = box
 
-                    print "\tAdded to stack ", side
+                    print(("\tAdded to stack ", side))
                     stack.append(new_box)
                 else:
                     points_done += len(new_points)
@@ -1019,7 +1019,7 @@ def draw_box_3d(obbs, tube_radius=1, color=None, **kwargs):
             box = obb.box
             b1 = vstack([box[:4], box[0]]).T
             b2 = vstack([box[4:], box[4]]).T
-            es = [vstack([b1.T[i], b2.T[i]]).T for i in xrange(4)]
+            es = [vstack([b1.T[i], b2.T[i]]).T for i in range(4)]
             plot3d(b1[0], b1[1], b1[
                    2], tube_radius=tube_radius, color=color_, **kwargs)
             plot3d(b2[0], b2[1], b2[

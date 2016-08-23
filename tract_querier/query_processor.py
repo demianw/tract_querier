@@ -322,7 +322,7 @@ class EvaluateQueries(ast.NodeVisitor):
         labels = query_info.labels
 
         labels_generator = (l for l in labels)
-        bounding_box = self.tractography_spatial_indexing.label_bounding_boxes[labels_generator.next()]
+        bounding_box = self.tractography_spatial_indexing.label_bounding_boxes[next(labels_generator)]
         for label in labels_generator:
             bounding_box = bounding_box.union(self.tractography_spatial_indexing.label_bounding_boxes[label])
 
@@ -683,7 +683,7 @@ class RewritePreprocess(ast.NodeTransformer):
                         'Imported file not found: %s' % file_name
                     )
             imported_modules = [
-                ast.parse(file(module_name).read(), filename=module_name)
+                ast.parse(open(module_name).read(), filename=module_name)
                 for module_name in module_names
             ]
         except SyntaxError:

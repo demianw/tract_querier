@@ -1,6 +1,8 @@
 import warnings
 import numpy as np
 
+from six.moves import range
+
 from .aabb import BoundingBox
 
 __all__ = ['TractographySpatialIndexing']
@@ -155,7 +157,7 @@ def compute_tract_bounding_boxes(tracts, affine_transform=None):
 
 def compute_label_crossings(tract_cumulative_lengths, point_labels, threshold):
     tracts_labels = {}
-    for i in xrange(len(tract_cumulative_lengths) - 1):
+    for i in range(len(tract_cumulative_lengths) - 1):
         start = tract_cumulative_lengths[i]
         end = tract_cumulative_lengths[i + 1]
         label_crossings = np.asanyarray(point_labels[start:end], dtype=int)
@@ -175,7 +177,7 @@ def compute_label_crossings(tract_cumulative_lengths, point_labels, threshold):
 
 def compute_label_endings(tract_cumulative_lengths, point_labels):
     tracts_labels = {}
-    for i in xrange(len(tract_cumulative_lengths) - 1):
+    for i in range(len(tract_cumulative_lengths) - 1):
         start = tract_cumulative_lengths[i]
         end = tract_cumulative_lengths[i + 1]
         tracts_labels[i] = set((int(point_labels[
@@ -194,7 +196,7 @@ def compute_label_endings(tract_cumulative_lengths, point_labels):
 def compute_label_endings_start_end(tract_cumulative_lengths, point_labels):
     tracts_labels_start = {}
     tracts_labels_end = {}
-    for i in xrange(len(tract_cumulative_lengths) - 1):
+    for i in range(len(tract_cumulative_lengths) - 1):
         start = tract_cumulative_lengths[i]
         end = tract_cumulative_lengths[i + 1]
         tracts_labels_start[i] = int(point_labels[start])
@@ -230,12 +232,12 @@ def compute_tract_label_indices(
     all_points_ijk_rounded = np.round(all_points_ijk).astype(int)
 
     if (
-        any(((all_points_ijk_rounded[:, i] >= img.shape[i]).any() for i in xrange(3))) or
+        any(((all_points_ijk_rounded[:, i] >= img.shape[i]).any() for i in range(3))) or
         (all_points_ijk_rounded < 0).any()
     ):
         warnings.warn("Warning tract points fall outside the image")
 
-    for i in xrange(3):
+    for i in range(3):
         all_points_ijk_rounded[:, i] = all_points_ijk_rounded[
             :,
             i

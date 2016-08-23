@@ -1,9 +1,12 @@
-from itertools import izip
+
 import vtk
 from vtk.util import numpy_support as ns
 import numpy as np
 
-from tractography import Tractography
+from six.moves import range
+
+from .tractography import Tractography
+from functools import reduce
 
 
 def tractography_from_vtk_files(vtk_file_names):
@@ -93,7 +96,7 @@ def vtkPolyData_to_tracts(polydata, return_tractography_object=True):
     if polydata.GetPointData().GetTensors():
         data['ActiveTensors'] = polydata.GetPointData().GetTensors().GetName()
 
-    for i in xrange(polydata.GetPointData().GetNumberOfArrays()):
+    for i in range(polydata.GetPointData().GetNumberOfArrays()):
         array = polydata.GetPointData().GetArray(i)
         np_array = ns.vtk_to_numpy(array)
         if np_array.ndim == 1:
@@ -155,7 +158,7 @@ def vtkPolyData_dictionary_to_tracts_and_data(dictionary):
     actual_line_index = 0
     number_of_tracts = dictionary['numberOfLines']
     original_lines = []
-    for l in xrange(number_of_tracts):
+    for l in range(number_of_tracts):
         tracts.append(
             points[
                 lines[
@@ -205,7 +208,7 @@ def vtkPolyData_to_lines(polydata):
     lines = []
     lines_indices = []
     actual_line_index = 0
-    for i in xrange(polydata.GetNumberOfLines()):
+    for i in range(polydata.GetNumberOfLines()):
         next_line_index = actual_line_index + lines_ids[actual_line_index] + 1
 
         lines_indices.append(lines_ids[actual_line_index + 1: next_line_index])
@@ -214,7 +217,7 @@ def vtkPolyData_to_lines(polydata):
         actual_line_index = next_line_index
 
     point_data = {}
-    for i in xrange(polydata.GetPointData().GetNumberOfArrays()):
+    for i in range(polydata.GetPointData().GetNumberOfArrays()):
         vtk_array = polydata.GetPointData().GetArray(i)
         array_data = ns.vtk_to_numpy(vtk_array)
         if array_data.ndim == 1:
@@ -254,12 +257,12 @@ def tracts_to_vtkPolyData(tracts, tracts_data={}, lines_indices=None):
     if lines_indices is None:
         lines_indices = [
             ns.numpy.arange(length) + line_start
-            for length, line_start in izip(lengths, line_starts)
+            for length, line_start in zip(lengths, line_starts)
         ]
 
     ids = ns.numpy.hstack([
         ns.numpy.r_[c[0], c[1]]
-        for c in izip(lengths, lines_indices)
+        for c in zip(lengths, lines_indices)
     ])
     vtk_ids = ns.numpy_to_vtkIdTypeArray(ids, deep=True)
 
@@ -356,7 +359,7 @@ def writeLinesToVtkPolyData_pure_python(filename, lines, point_data={}):
                 len(line),
                 reduce(
                     lambda x, y: x + ' %d' % (y + points_for_line_saved),
-                    xrange(len(line)), ''
+                    range(len(line)), ''
                 )
             ))
         points_for_line_saved += len(line)

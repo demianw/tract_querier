@@ -7,7 +7,7 @@ import ast
 # Ten tracts traversing random labels
 another_set = True
 while (another_set):
-    tracts_labels = dict([(i, set(random.randint(100, size=2))) for i in xrange(100)])
+    tracts_labels = dict([(i, set(random.randint(100, size=2))) for i in range(100)])
     labels_tracts = query_processor.labels_for_tracts(tracts_labels)
     another_set = 0 not in labels_tracts.keys() or 1 not in labels_tracts.keys()
 
@@ -87,8 +87,8 @@ a.side = b.side or c.opposite
 
     query_evaluator.visit(ast.parse(query))
 
-    assert_equal({k: v.labels for k, v in query_evaluator.evaluated_queries_info.iteritems()}, queries_labels)
-    assert_equal({k: v.tracts for k, v in query_evaluator.evaluated_queries_info.iteritems()}, queries_tracts)
+    assert_equal({k: v.labels for k, v in query_evaluator.evaluated_queries_info.items()}, queries_labels)
+    assert_equal({k: v.tracts for k, v in query_evaluator.evaluated_queries_info.items()}, queries_tracts)
 
 
 def test_assign_str():
@@ -120,8 +120,8 @@ h = '*left'
 
     query_evaluator.visit(ast.parse(query))
 
-    assert_equal({k: v.labels for k, v in query_evaluator.evaluated_queries_info.iteritems()}, queries_labels)
-    assert_equal({k: v.tracts for k, v in query_evaluator.evaluated_queries_info.iteritems()}, queries_tracts)
+    assert_equal({k: v.labels for k, v in query_evaluator.evaluated_queries_info.items()}, queries_labels)
+    assert_equal({k: v.tracts for k, v in query_evaluator.evaluated_queries_info.items()}, queries_tracts)
 
 
 def test_for_list():
@@ -151,7 +151,7 @@ for i in [a,b,c,d,e]: i.right = i.left
 
     query_evaluator.visit(ast.parse(query))
 
-    assert_equal({k: v.tracts for k, v in query_evaluator.evaluated_queries_info.iteritems()}, queries_tracts)
+    assert_equal({k: v.tracts for k, v in query_evaluator.evaluated_queries_info.items()}, queries_tracts)
 
 
 def test_for_str():
@@ -181,7 +181,7 @@ for i in '*left': i.right = i
 
     query_evaluator.visit(ast.parse(query))
 
-    assert_equal({k: v.tracts for k, v in query_evaluator.evaluated_queries_info.iteritems()}, queries_tracts)
+    assert_equal({k: v.tracts for k, v in query_evaluator.evaluated_queries_info.items()}, queries_tracts)
 
 
 def test_add():

@@ -1,10 +1,10 @@
 import os
 import sysconfig
 
-from query_processor import *
-from tract_label_indices import *
-from shell import *
-import tractography
+from .query_processor import *
+from .tract_label_indices import *
+from .shell import *
+from . import tractography
 
 
 def find_queries_path():
