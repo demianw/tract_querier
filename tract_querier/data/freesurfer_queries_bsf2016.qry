@@ -18,15 +18,13 @@ orbitofrontalgyrus.side |= (
 )
 
 superior_parietal_lobule.side |= (
-    postcentral.side or
     precuneus.side or
     superiorparietal.side
 )
 inferior_parietal_lobule.side |= supramarginal.side or inferiorparietal.side
 posterior_parietal_lobule.side |= (
-    precuneus.side or
     supramarginal.side or
-    superiorparietal.side
+    inferioriorparietal.side 
 )
 
 superior_temporal_lobule.side |= (
@@ -95,67 +93,19 @@ prefrontal.side |= (
     parsorbitalis.side or
     superiorfrontal.side or
     rostralmiddlefrontal.side or
-    frontalpole.side
+    frontalpole.side or
+    lateralorbitofrontal.side
 )
 
-motor.side |= postcentral.side
+motor.side |= precentral.side
 
 premotor.side |= (
     rostralanteriorcingulate.side or
-    caudalanteriorcingulate.side or
-    caudalmiddlefrontal.side or
-    parsopercularis.side
+    parsopercularis.side or
+    (superiorfrontal.side and posterior_of(caudalmiddlefrontal.side)) 
 )
 
 striatum.side |= putamen.side or pallidum.side or caudate.side
-
-# Not used in BSF 2016
-#
-#corpus_callosum |= '*orpus_callosum*'
-#
-#cerebellum |= 'Cerebellum_*'
-#
-#ventricles |= (
-#    choroid_plexus.left or
-#    choroid_plexus.right or
-#    '*Ventricle*' or
-#    '*ventricle*'
-#)
-#
-#cingular_cortex.side |= (
-#    ctx_caudalanteriorcingulate.side or
-#    ctx_isthmuscingulate.side or
-#    ctx_posteriorcingulate.side or
-#    ctx_rostralanteriorcingulate.side or
-#    ctx_corpuscallosum.side
-#)
-#
-#temporal_frontal.side |= (
-#    entorhinal.side or
-#    temporalpole.side or
-#    fusiform.side or
-#    superiortemporal.side or
-#    middletemporal.side or
-#    inferiortemporal.side
-#)
-#
-#subcortical.side |= (
-#    VentralDC.side or
-#    Thalamus_Proper.side or
-#    Pallidum.side or
-#    Putamen.side or
-#    Amygdala.side or
-#    Brain_Stem or
-#    choroid_plexus.side
-#)
-#
-#frontal_frontal_section.side |= medialorbitofrontal.side or parsorbitalis.side
-#
-#precentral_postcentral.side |= only(
-#    precentral.side and
-#    postcentral.side and
-#    centrum_semiovale.side
-#)
 
 # Queries from Brain Struct Funct 2016
 
