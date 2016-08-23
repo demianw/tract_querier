@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from distutils.core import setup
+from setuptools import setup
 
 DISTNAME = 'tract_querier'
 DESCRIPTION = \
@@ -51,5 +51,6 @@ if __name__ == "__main__":
             'scripts/tract_querier',
             'scripts/tract_math'
         ],
+        test_suite='nose.collector',
         **(configuration().todict())
     )

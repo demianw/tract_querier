@@ -10,6 +10,6 @@ before_install:
     - "pip install coveralls"
     - "pip install -r requirements.txt --use-mirrors"
 install: python setup.py build_ext --inplace
-script: coverage run --source=tract_querier make test
+script: coverage run --source=tract_querier setup.py test
 after_success: coveralls
 
