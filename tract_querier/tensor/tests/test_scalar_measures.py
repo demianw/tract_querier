@@ -57,7 +57,7 @@ def test_tensor_contraction(N=10, random=numpy.random.RandomState(0)):
     tensors2 = random.randn(N, 3, 3)
 
     res = numpy.empty(N)
-    for i in xrange(N):
+    for i in range(N):
         t1 = tensors1[i]
         t2 = tensors2[i]
         tt1 = numpy.dot(t1, t1.T)

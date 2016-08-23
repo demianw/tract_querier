@@ -41,7 +41,7 @@ def compute_all_measures(tractography, desired_keys_list, scalars=None, resoluti
         dilated_voxels.update(voxels)
         eroded_voxels = set()
         for voxel in voxels:
-            neighbors_list = zip(*(neighbors + voxel).T)
+            neighbors_list = list(zip(*(neighbors + voxel).T))
             dilated_voxels.update(neighbors_list)
             if len(voxels.intersection(neighbors_list)) == len(neighbors):
                 eroded_voxels.add(voxel)

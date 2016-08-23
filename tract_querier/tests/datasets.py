@@ -2,7 +2,7 @@ import hashlib
 import os
 from os import path
 import tempfile
-import urllib2
+from six.moves import urllib
 
 import unittest
 
@@ -40,14 +40,14 @@ class TestDataSet(unittest.TestCase):
         if not path.exists(self.dirname):
             os.mkdir(self.dirname)
 
-        for k, v in FILES.iteritems():
+        for k, v in FILES.items():
             dst_filename = path.join(self.dirname, v[1])
 
             if (
                 not path.exists(dst_filename) or
                 hashlib.md5(open(dst_filename).read()).digest() != v[2]
             ):
-                dl_file = urllib2.urlopen(v[0])
+                dl_file = urllib.request.urlopen(v[0])
                 dst_file = open(dst_filename, 'wb')
                 dst_file.write(dl_file.read())
                 dst_file.close()

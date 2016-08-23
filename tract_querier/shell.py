@@ -242,7 +242,7 @@ class TractQuerierCmd(cmd.Cmd):
         return self.completenames(text, *ignored)
 
     def do_EOF(self, line):
-        s = raw_input("\nSure you want to leave (y/n)? ")
+        s = eval(input("\nSure you want to leave (y/n)? "))
         if s.lower() == 'y':
             return True
         else:

@@ -360,7 +360,7 @@ class EvaluateQueries(ast.NodeVisitor):
         try:
             bounding_box = (
                 self.tractography_spatial_indexing.
-                label_bounding_boxes[labels_generator.next()]
+                label_bounding_boxes[next(labels_generator)]
             )
             for label in labels_generator:
                 bounding_box = bounding_box.union(
@@ -371,7 +371,6 @@ class EvaluateQueries(ast.NodeVisitor):
             raise TractQuerierLabelNotFound(
                 "Label %s not found in atlas file" % e
             )
-
         function_name = node.func.id.lower()
 
         name = function_name.replace('_of', '')
@@ -760,7 +759,7 @@ class RewritePreprocess(ast.NodeTransformer):
                         'Imported file not found: %s' % file_name
                     )
             imported_modules = [
-                ast.parse(file(module_name).read(), filename=module_name)
+                ast.parse(open(module_name).read(), filename=module_name)
                 for module_name in module_names
             ]
         except SyntaxError:
