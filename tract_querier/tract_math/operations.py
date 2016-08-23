@@ -49,7 +49,7 @@ def length_mean_std(optional_flags, tractography):
 
 @tract_math_operation('<volume unit>: calculates the volume of a tract based on voxel occupancy of a certain voxel volume')
 def tract_volume(optional_flags, tractography, resolution):
-    return tensor_operations.compute_all_measures(tractography, ['tract volume'])
+    return tensor_operations.compute_all_measures(tractography, ['tract volume'], resolution=resolution)
 
 
 @tract_math_operation('<scalar>: calculates mean and std of a scalar quantity that has been averaged along each tract', needs_one_tract=False)
