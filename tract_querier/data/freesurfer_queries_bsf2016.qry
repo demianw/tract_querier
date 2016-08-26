@@ -24,7 +24,7 @@ superior_parietal_lobule.side |= (
 inferior_parietal_lobule.side |= supramarginal.side or inferiorparietal.side
 posterior_parietal_lobule.side |= (
     supramarginal.side or
-    inferioriorparietal.side 
+    inferiorparietal.side
 )
 
 superior_temporal_lobule.side |= (
@@ -99,11 +99,9 @@ prefrontal.side |= (
 
 motor.side |= precentral.side
 
-premotor.side |= (
-    rostralanteriorcingulate.side or
-    parsopercularis.side or
-    (superiorfrontal.side and posterior_of(caudalmiddlefrontal.side)) 
-)
+premotor.side |= caudalmiddlefrontal.side or ctx_parsopercularis.side
+
+thalamus.side |= thalamus.side or thalamus_proper.side
 
 striatum.side |= putamen.side or pallidum.side or caudate.side
 
@@ -228,6 +226,7 @@ MdLF.side = (
 
 #Uncinate fascicle
 UF.side = (
+    (
     insula.side
     and (
         inferiorfrontalgyrus.side or
@@ -235,6 +234,12 @@ UF.side = (
         orbitofrontalgyrus.side
     )
     and endpoints_in(temporal.side and anterior_of(amygdala.side))
+    )
+    not in occipital.side
+    not in parietal.side
+    not in cingular.side
+    not in posterior_of(putamen.side)
+    not in hemisphere.opposite
 )
 
 #Rostrum
@@ -294,9 +299,10 @@ CC_7 = (
 
 #Cortico-spinal tract
 cortico_spinal.side = (
-    endpoints_in(brain_stem)
+    (endpoints_in(brain_stem)
     and endpoints_in(precentral.side or postcentral.side)
-)
+    )
+not in hemisphere.opposite)
 
 #Thalamo-prefrontal
 thalamo_prefrontal.side = (
