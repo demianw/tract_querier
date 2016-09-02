@@ -1,5 +1,8 @@
 import FreeSurfer.qry
 
+# Author: Christophe Bedetti
+# Co-Authors: Catherine Vien, Arnaud Boré
+
 HEMISPHERE.left |= '*.left'
 HEMISPHERE.right |= '*.right'
 
