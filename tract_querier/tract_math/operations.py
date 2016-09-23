@@ -745,7 +745,7 @@ def tract_prototype_mean(optional_flags, tractography, smooth_order, file_output
             from scipy import interpolate
 
             tck, u = interpolate.splprep(mean_tract.T)
-            mean_tract = numpy.transpose(interpolate.splev(u, tck))
+            mean_tract = numpy.ascontiguousarray(numpy.transpose(interpolate.splev(u, tck)))
         except ImportError:
             warn("A smooth order larger than 0 needs scipy installed")
 
