@@ -1,6 +1,12 @@
 language: python
-python:
-    - "2.7"
+matrix:
+  include:
+    python:
+      - "2.7"
+  allow_failures:
+    - python: "3.5"
+    - python: "3.5"
+  
 before_install:
     - deactivate
     - sudo apt-get update -qq
