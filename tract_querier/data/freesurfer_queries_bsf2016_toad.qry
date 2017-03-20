@@ -1,0 +1,33 @@
+import FreeSurfer.qry
+import freesurfer_queries_bsf2016.qry
+
+# 2016-09-01
+# Author: Christophe Bedetti
+# Co-Authors: Catherine Vien, Arnaud Boré
+# Exclusion queries added to perform with algorithms used in
+# TOAD (https://github.com/UNFmontreal/toad)
+
+#Uncinate fascicle
+UF.side = (
+    (
+    insula.side
+    and (
+        inferiorfrontalgyrus.side or
+        middlefrontalgyrus.side or
+        orbitofrontalgyrus.side
+    )
+    and endpoints_in(temporal.side and anterior_of(amygdala.side))
+    )
+    not in occipital.side
+    not in parietal.side
+    not in cingular.side
+    not in posterior_of(putamen.side)
+    not in hemisphere.opposite
+)
+
+#Cortico-spinal tract
+cortico_spinal.side = (
+    (endpoints_in(brain_stem)
+    and endpoints_in(precentral.side or postcentral.side)
+    )
+not in hemisphere.opposite)

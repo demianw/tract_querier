@@ -3,7 +3,8 @@ import cmd
 import fnmatch
 from .query_processor import (
     EvaluateQueries, queries_preprocess,
-    TractQuerierSyntaxError, keywords
+    TractQuerierSyntaxError, TractQuerierLabelNotFound,
+    keywords
 )
 
 
@@ -15,7 +16,9 @@ def safe_method(f):
         except:
             import traceback
             import sys
-            sys.stderr.write("Uncaught exception, please contact the development team\n")
+            sys.stderr.write(
+                "Uncaught exception, please contact the development team\n"
+            )
             traceback.print_exc()
     return newfunc
 
@@ -151,6 +154,8 @@ class TractQuerierCmd(cmd.Cmd):
             print(e.value)
         except TractQuerierSyntaxError as e:
             print(e.value)
+        except TractQuerierLabelNotFound as e:
+            print(e.value)
         except KeyError as e:
             print("Query name not recognized: %s" % e)
 
@@ -191,6 +196,8 @@ class TractQuerierCmd(cmd.Cmd):
         except SyntaxError as e:
             print(e.value)
         except TractQuerierSyntaxError as e:
+            print(e.value)
+        except TractQuerierLabelNotFound as e:
             print(e.value)
 
         return False

@@ -129,7 +129,9 @@ def main():
         )
 
         tract_querier.queries_syntax_check(query_file_body)
-    except tract_querier.TractQuerierSyntaxError, e:
+    except tract_querier.TractQuerierSyntaxError as e:
+        parser.error(e.value)
+    except tract_querier.TractographySpatialIndexing as e:
         parser.error(e.value)
 
     labels_nii = nibabel.load(options.atlas_file_name)

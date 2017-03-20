@@ -8,8 +8,11 @@ import fnmatch
 from .code_util import DocStringInheritor
 from six import add_metaclass
 
-
-__all__ = ['keywords', 'EvaluateQueries', 'eval_queries', 'queries_syntax_check', 'queries_preprocess']
+__all__ = [
+    'keywords', 'EvaluateQueries', 'eval_queries',
+    'queries_syntax_check', 'queries_preprocess',
+    'TractQuerierSyntaxError', 'TractQuerierLabelNotFound'
+]
 
 keywords = [
     'and',
@@ -322,9 +325,21 @@ class EvaluateQueries(ast.NodeVisitor):
         labels = query_info.labels
 
         labels_generator = (l for l in labels)
-        bounding_box = self.tractography_spatial_indexing.label_bounding_boxes[next(labels_generator)]
-        for label in labels_generator:
-            bounding_box = bounding_box.union(self.tractography_spatial_indexing.label_bounding_boxes[label])
+
+        try:
+            bounding_box = (
+                self.tractography_spatial_indexing.
+                label_bounding_boxes[labels_generator.next()]
+            )
+            for label in labels_generator:
+                bounding_box = bounding_box.union(
+                    self.tractography_spatial_indexing.
+                    label_bounding_boxes[label]
+                )
+        except KeyError as e:
+            raise TractQuerierLabelNotFound(
+                "Label %s not found in atlas file" % e
+            )
 
         function_name = node.func.id.lower()
 
@@ -578,6 +593,14 @@ class TractQuerierSyntaxError(ValueError):
     def __str__(self):
         return repr(self.value)
 
+
+class TractQuerierLabelNotFound(ValueError):
+
+    def __init__(self, value):
+        self.value = value
+
+    def __str__(self):
+        return repr(self.value)
 
 class RewriteChangeNotInPrescedence(ast.NodeTransformer):
 

@@ -33,6 +33,4 @@ def find_queries_path():
 
 default_queries_folder = find_queries_path()
 
-#import tract_metrics
-
 __version__ = 0.1
