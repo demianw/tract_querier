@@ -4,7 +4,7 @@ matrix:
     python: "2.7"
   allow_failures:
     - python: "3.5"
-    - python: "3.5"
+    - python: "3.6"
   
 before_install:
     - deactivate
@@ -12,9 +12,12 @@ before_install:
     - sudo apt-get install -qq python-numpy python-nose python-vtk
     - virtualenv --system-site-packages ~/virtualenv/this
     - source ~/virtualenv/this/bin/activate
-    - "pip install coveralls"
+    - "pip install codecov"
     - "pip install -r requirements.txt --use-mirrors"
 install: python setup.py build_ext --inplace
-script: coverage run --source=tract_querier setup.py test
-after_success: coveralls
+script: 
+  - coverage run nosetests
+  #coverage run --source=tract_querier setup.py test
+after_success: 
+  - codecov
 
