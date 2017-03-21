@@ -19,5 +19,5 @@ script:
   - nosetests -v --with-coverage
   #coverage run --source=tract_querier setup.py test
 after_success: 
-  - codecov
+  - codecov -t 08147902-b78a-44fc-bb10-9b5ee0b2ad7b
 
