@@ -87,9 +87,14 @@ class FiberQueryInfo(object):
             new_labels = labels_op(tract_query_info.labels)
 
             new_tracts_endpoints = (
-                getattr(self.tracts_endpoints[0], name)(tract_query_info.tracts_endpoints[0]),
-                getattr(self.tracts_endpoints[1], name)(tract_query_info.tracts_endpoints[1])
+                getattr(self.tracts_endpoints[0], name)(
+                    tract_query_info.tracts_endpoints[0]
+                ),
+                getattr(self.tracts_endpoints[1], name)(
+                    tract_query_info.tracts_endpoints[1]
+                )
             )
+
             if name.endswith('update'):
                 return self
             else:
@@ -101,7 +106,6 @@ class FiberQueryInfo(object):
         return operation
 
 
-@add_metaclass(DocStringInheritor)
 class EvaluateQueries(ast.NodeVisitor):
 
     r"""
@@ -204,17 +208,28 @@ class EvaluateQueries(ast.NodeVisitor):
             return FiberQueryInfo(
                 set(
                     tract for tract in query_info.tracts
-                    if self.tractography_spatial_indexing.crossing_tracts_labels[tract].issubset(query_info.labels)
+                    if (
+                        self.tractography_spatial_indexing.
+                        crossing_tracts_labels[tract].
+                        issubset(query_info.labels)
+                    )
                 ),
                 query_info.labels
             )
         elif isinstance(node.op, ast.UAdd):
             return query_info
         elif isinstance(node.op, ast.USub) or isinstance(node.op, ast.Not):
-            all_labels = set(self.tractography_spatial_indexing.crossing_labels_tracts.keys())
+            all_labels = set(
+                self.tractography_spatial_indexing.
+                crossing_labels_tracts.keys()
+            )
             all_labels.difference_update(query_info.labels)
             all_tracts = set().union(*tuple(
-                (self.tractography_spatial_indexing.crossing_labels_tracts[label] for label in all_labels)
+                (
+                    self.tractography_spatial_indexing.
+                    crossing_labels_tracts[label]
+                    for label in all_labels
+                )
             ))
 
             new_info = FiberQueryInfo(all_tracts, all_labels)
@@ -244,12 +259,19 @@ class EvaluateQueries(ast.NodeVisitor):
 
                 only_tracts = set(
                     tract for tract in query_info.tracts
-                    if self.tractography_spatial_indexing.crossing_tracts_labels[tract].issubset(query_info.labels)
+                    if (
+                        self.tractography_spatial_indexing.
+                        crossing_tracts_labels[tract].
+                        issubset(query_info.labels)
+                    )
                 )
                 only_endpoints = tuple((
                     set(
                         tract for tract in query_info.tracts_endpoints[i]
-                        if self.tractography_spatial_indexing.ending_tracts_labels[i][tract] in query_info.labels
+                        if (
+                            self.tractography_spatial_indexing.
+                            ending_tracts_labels[i][tract] in query_info.labels
+                        )
                     )
                     for i in (0, 1)
                 ))
@@ -260,15 +282,28 @@ class EvaluateQueries(ast.NodeVisitor):
                 )
             elif (node.func.id.lower() == 'endpoints_in'):
                 query_info = self.visit(node.args[0])
-                new_tracts = query_info.tracts_endpoints[0].union(query_info.tracts_endpoints[1])
-                return FiberQueryInfo(new_tracts, query_info.labels, query_info.tracts_endpoints)
+                new_tracts = (
+                    query_info.tracts_endpoints[0].
+                    union(query_info.tracts_endpoints[1])
+                )
+                return FiberQueryInfo(
+                    new_tracts, query_info.labels,
+                    query_info.tracts_endpoints
+                )
             elif (node.func.id.lower() == 'both_endpoints_in'):
                 query_info = self.visit(node.args[0])
                 new_tracts = (
-                    query_info.tracts_endpoints[0].intersection(query_info.tracts_endpoints[1])
+                    query_info.tracts_endpoints[0].
+                    intersection(query_info.tracts_endpoints[1])
                 )
-                return FiberQueryInfo(new_tracts, query_info.labels, query_info.tracts_endpoints)
-            elif (node.func.id.lower() == 'save' and isinstance(node.args, ast.Str)):
+                return FiberQueryInfo(
+                    new_tracts, query_info.labels,
+                    query_info.tracts_endpoints
+                )
+            elif (
+                node.func.id.lower() == 'save' and
+                isinstance(node.args, ast.Str)
+            ):
                 self.queries_to_save.add(node.args[0].s)
                 return
             elif node.func.id.lower() in self.relative_terms:
@@ -368,7 +403,8 @@ class EvaluateQueries(ast.NodeVisitor):
         tract_bounding_box_coordinate =\
             self.tractography_spatial_indexing.tract_bounding_boxes[name]
 
-        tract_endpoints_pos = self.tractography_spatial_indexing.tract_endpoints_pos
+        tract_endpoints_pos =\
+            self.tractography_spatial_indexing.tract_endpoints_pos
 
         bounding_box_coordinate = getattr(bounding_box, name)
 
@@ -380,7 +416,10 @@ class EvaluateQueries(ast.NodeVisitor):
             column = 2
 
         tracts = set(
-            operator(tract_bounding_box_coordinate, bounding_box_coordinate).nonzero()[0]
+            operator(
+                tract_bounding_box_coordinate,
+                bounding_box_coordinate
+            ).nonzero()[0]
         )
 
         endpoints = tuple((
@@ -459,7 +498,8 @@ class EvaluateQueries(ast.NodeVisitor):
             isinstance(target.value, ast.Name)
         ):
             queries_to_evaluate[
-                target.value.id.lower() + '.' + target.attr.lower()] = node.value
+                target.value.id.lower() + '.'
+                + target.attr.lower()] = node.value
         else:
             raise TractQuerierSyntaxError(
                 "Invalid assignment in line %d" % node.lineno)
@@ -479,7 +519,8 @@ class EvaluateQueries(ast.NodeVisitor):
         -------
 
         node_left, node_right: nodes
-            two AST nodes, one for the query instantiated on the left hemisphere
+            two AST nodes, one for the query
+            instantiated on the left hemisphere
             one for the query instantiated on the right hemisphere
 
         """
@@ -519,11 +560,19 @@ class EvaluateQueries(ast.NodeVisitor):
             return self.evaluated_queries_info[query_name]
         else:
             raise TractQuerierSyntaxError(
-                "Invalid query name in line %d: %s" % (node.lineno, query_name))
+                "Invalid query name in line %d: %s" %
+                (node.lineno, query_name)
+            )
 
     def visit_Num(self, node):
-        if node.n in self.tractography_spatial_indexing.crossing_labels_tracts:
-            tracts = self.tractography_spatial_indexing.crossing_labels_tracts[node.n]
+        if (
+            node.n in
+            self.tractography_spatial_indexing.crossing_labels_tracts
+        ):
+            tracts = (
+                self.tractography_spatial_indexing.
+                crossing_labels_tracts[node.n]
+            )
         else:
             tracts = set()
 
@@ -547,7 +596,9 @@ class EvaluateQueries(ast.NodeVisitor):
                 self.queries_to_save.add(node.value.id)
             else:
                 raise TractQuerierSyntaxError(
-                    "Query %s not known line: %d" % (node.value.id, node.lineno))
+                    "Query %s not known line: %d" %
+                    (node.value.id, node.lineno)
+                )
         elif isinstance(node.value, ast.Module):
             self.visit(node.value)
         else:
@@ -572,14 +623,20 @@ class EvaluateQueries(ast.NodeVisitor):
                     list_items.append(item.id.lower())
                 else:
                     raise TractQuerierSyntaxError(
-                        'Error in FOR statement in line %d, elements in the list must be query names' % node.lineno)
+                        'Error in FOR statement in line %d,'
+                        ' elements in the list must be query names' %
+                        node.lineno
+                    )
 
         original_body = ast.Module(body=node.body)
 
         for item in list_items:
             aux_body = deepcopy(original_body)
             for node_ in ast.walk(aux_body):
-                if isinstance(node_, ast.Name) and node_.id.lower() == id_to_replace:
+                if (
+                    isinstance(node_, ast.Name) and
+                    node_.id.lower() == id_to_replace
+                ):
                     node_.id = item
 
             self.visit(aux_body)
@@ -601,6 +658,7 @@ class TractQuerierLabelNotFound(ValueError):
 
     def __str__(self):
         return repr(self.value)
+
 
 class RewriteChangeNotInPrescedence(ast.NodeTransformer):
 
@@ -772,7 +830,10 @@ def eval_queries(
     else:
         eq.visit(query_file_body)
 
-    return dict([(key, eq.evaluated_queries_info[key].tracts) for key in eq.queries_to_save])
+    return dict([
+        (key, eq.evaluated_queries_info[key].tracts)
+        for key in eq.queries_to_save
+    ])
 
 
 def queries_syntax_check(query_file_body):
