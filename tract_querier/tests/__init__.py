@@ -1,2 +1,2 @@
-import tests_query_eval
+import test_query_eval
 import test_query_files
