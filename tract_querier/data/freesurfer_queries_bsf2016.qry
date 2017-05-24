@@ -360,6 +360,6 @@ striato_parietal.side = (
 )
 
 #Striato-occipital
-striato_parietal.side = (
+striato_occipital.side = (
     endpoints_in(striatum.side) and endpoints_in(occipital.side)
 )
