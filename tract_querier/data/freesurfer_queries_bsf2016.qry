@@ -218,7 +218,7 @@ ILF.side = (
 )
 
 #Middle longitudinal fascicle
-MdLF.side = (
+dLF.side = (
     (
         (temporal.side and anterior_of(amygdala.side)) or
         superiortemporal.side
