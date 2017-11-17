@@ -13,13 +13,11 @@ before_install:
     - virtualenv --system-site-packages ~/virtualenv/this
     - source ~/virtualenv/this/bin/activate
     - pip install codecov --user
-    
 install:
     - pip install -r requirements.txt --user
     - python setup.py build_ext --inplace
 script: 
-  - nosetests -v 
-    #--with-coverage
+  - nosetests -v --with-coverage
   #coverage run --source=tract_querier setup.py test
 after_success: 
   - codecov -t 08147902-b78a-44fc-bb10-9b5ee0b2ad7b
