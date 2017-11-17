@@ -218,7 +218,7 @@ ILF.side = (
 )
 
 #Middle longitudinal fascicle
-MdLF.side = (
+dLF.side = (
     (
         (temporal.side and anterior_of(amygdala.side)) or
         superiortemporal.side
@@ -360,6 +360,6 @@ striato_parietal.side = (
 )
 
 #Striato-occipital
-striato_parietal.side = (
+striato_occipital.side = (
     endpoints_in(striatum.side) and endpoints_in(occipital.side)
 )
