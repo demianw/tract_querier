@@ -8,8 +8,11 @@ from . import tractography
 
 
 def find_queries_path():
-    default_path = sysconfig.get_path(name='data')
-    possible_paths = [os.path.join(default_path, 'tract_querier', 'queries')]
+    possible_paths = []
+    # Try all possible schemes where python expects data to stay.
+    for scheme in sysconfig.get_scheme_names():
+        default_path = sysconfig.get_path(name='data', scheme=scheme)
+        possible_paths.append(os.path.join(default_path, 'tract_querier', 'queries'))
 
     # Try to manage Virtual Environments on some OSes,
     # where data is not put the 'local' subdirectory,
