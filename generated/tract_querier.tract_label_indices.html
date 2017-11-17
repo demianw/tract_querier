@@ -1,0 +1,214 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>tract_querier.tract_label_indices &#8212; WMQL 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">WMQL</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/generated/tract_querier.tract_label_indices.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="tract-querier-tract-label-indices">
+<h1>tract_querier.tract_label_indices<a class="headerlink" href="#tract-querier-tract-label-indices" title="Permalink to this headline">¶</a></h1>
+<p class="rubric">Classes</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">tract_querier.tract_label_indices.BoundingBox</span></code></td>
+<td>Bounding box assuming RAS coordinate system</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#tract_querier.tract_label_indices.TractographySpatialIndexing" title="tract_querier.tract_label_indices.TractographySpatialIndexing"><code class="xref py py-obj docutils literal"><span class="pre">tract_querier.tract_label_indices.TractographySpatialIndexing</span></code></a>(...)</td>
+<td>This class implements a mutual spatial indexing of</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Functions</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">tract_querier.tract_label_indices.compute_label_bounding_boxes</span></code>(...)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">tract_querier.tract_label_indices.compute_label_crossings</span></code>(...)</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">tract_querier.tract_label_indices.compute_label_endings</span></code>(...)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">tract_querier.tract_label_indices.compute_label_endings_start_end</span></code>(...)</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">tract_querier.tract_label_indices.compute_tract_bounding_boxes</span></code>(tracts)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">tract_querier.tract_label_indices.compute_tract_label_indices</span></code>(...)</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<span class="target" id="module-tract_querier.tract_label_indices"></span><dl class="class">
+<dt id="tract_querier.tract_label_indices.TractographySpatialIndexing">
+<em class="property">class </em><code class="descclassname">tract_querier.tract_label_indices.</code><code class="descname">TractographySpatialIndexing</code><span class="sig-paren">(</span><em>tractography</em>, <em>image</em>, <em>affine_ijk_2_ras</em>, <em>length_threshold</em>, <em>crossing_threshold</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tract_querier/tract_label_indices.html#TractographySpatialIndexing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tract_querier.tract_label_indices.TractographySpatialIndexing" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class implements a mutual spatial indexing of
+an labeled image and a tractography</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>tractography</strong> : <a class="reference internal" href="tract_querier.tractography.html#tract_querier.tractography.Tractography" title="tract_querier.tractography.Tractography"><code class="xref py py-class docutils literal"><span class="pre">Tractography</span></code></a></p>
+<blockquote>
+<div><p>Tractography object</p>
+</div></blockquote>
+<p><strong>image</strong> : array_like, 3-dimensional</p>
+<blockquote>
+<div><p>a piecewise constant 3D image or image of labels</p>
+</div></blockquote>
+<p><strong>affine_ijk_2_ras</strong> : array_like, <img class="math" src="../_images/math/6c5b5c94072ff28c1562e626e7e729717017584c.png" alt="4 \times 4"/></p>
+<blockquote>
+<div><p>the affine transform of each IJK coordinate on the image to RAS space</p>
+</div></blockquote>
+<p><strong>length_threshold</strong> : float</p>
+<blockquote>
+<div><p>minimum length in mm of a tract to be considered in the indexing</p>
+</div></blockquote>
+<p><strong>crossing_threshold</strong> : float</p>
+<blockquote class="last">
+<div><p>the ratio of a tract that needs to be inside a label to be considered
+that it crosses it</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="12%" />
+<col width="88%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>tractography</td>
+<td>(<a class="reference internal" href="tract_querier.tractography.html#tract_querier.tractography.Tractography" title="tract_querier.tractography.Tractography"><code class="xref py py-class docutils literal"><span class="pre">Tractography</span></code></a>) Tractography object</td>
+</tr>
+<tr class="row-even"><td>image</td>
+<td>(array_like, 3-dimensional) a piecewise constant 3D image or image of labels</td>
+</tr>
+<tr class="row-odd"><td>affine_ijk_2_ras</td>
+<td>(array_like, <img class="math" src="../_images/math/6c5b5c94072ff28c1562e626e7e729717017584c.png" alt="4 \times 4"/>) the affine transform of each IJK coordinate on the image to RAS space</td>
+</tr>
+<tr class="row-even"><td>length_threshold</td>
+<td>(float) minimum length in mm of a tract to be considered in the indexing</td>
+</tr>
+<tr class="row-odd"><td>crossing_threshold</td>
+<td>(float) the ratio of a tract that needs to be inside a label to be considered that it crosses it</td>
+</tr>
+<tr class="row-even"><td>crossing_tracts_labels</td>
+<td>(dict of sets) Dictionary indexed by tract number of the labels traversed by the tract</td>
+</tr>
+<tr class="row-odd"><td>crossing_labels_tracts</td>
+<td>(dict of sets) Dictionary indexed by label number of the tracts traversing the labels</td>
+</tr>
+<tr class="row-even"><td>ending_tracts_labels</td>
+<td>((dict of int, dict of int)) Dictionary of each endpoint of the tracts indexed by tract number and containing the label at which the endpoint is</td>
+</tr>
+<tr class="row-odd"><td>ending_labels_tracts</td>
+<td>((dict of sets, dict of sets)) Dictionary of each endpoint of the tracts indexed by label number and containing the tracts at which the endpoint in the label is</td>
+</tr>
+<tr class="row-even"><td>tract_endpoints_pos</td>
+<td>(array_like of <img class="math" src="../_images/math/319d334918e44832499f1b453818350da78c2212.png" alt="N\times 2 \times 3"/> where) <img class="math" src="../_images/math/f4170ed8938b79490d8923857962695514a8e4cb.png" alt="N"/> is the number of tracts Contains the position of both endpoints of each tract</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">WMQL</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2013, Demian Wassermann (Modified BSD License).
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.3.
+    </div>
+  </body>
+</html>

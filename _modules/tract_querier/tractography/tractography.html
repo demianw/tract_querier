@@ -1,0 +1,406 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>tract_querier.tractography.tractography &#8212; WMQL 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">WMQL</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../tractography.html" accesskey="U">tract_querier.tractography</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for tract_querier.tractography.tractography</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Tractography&#39;</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="Tractography"><a class="viewcode-back" href="../../../generated/tract_querier.tractography.html#tract_querier.tractography.Tractography">[docs]</a><span class="k">class</span> <span class="nc">Tractography</span><span class="p">:</span>
+
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class to represent a tractography dataset</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tracts : list of float array :math:`N_i\times 3`</span>
+<span class="sd">        Each element of the list is a tract represented as point array,</span>
+<span class="sd">        the length of the i-th tract is :math:`N_i`</span>
+<span class="sd">    tracts_data : dict of &lt;data name&gt;= list of float array of :math:`N_i\times M`</span>
+<span class="sd">        Each element in the list corresponds to a tract,</span>
+<span class="sd">        :math:`N_i` is the length of the i-th tract and M is the</span>
+<span class="sd">        number of components of that data type.</span>
+<span class="sd">    validate : bool</span>
+<span class="sd">        Check that tracts and tracts_data are valid</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tracts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tracts_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">tracts</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">tracts_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">tracts_data</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tracts</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_quantity_of_points_per_tract</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tract_map</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_subsampled_tracts</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_subsampled_data</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_extra_args</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">k</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;_&#39;</span><span class="p">:</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_extra_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">tracts</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tracts</span><span class="p">,</span> <span class="n">tracts_data</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="n">validate</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">extra_args</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extra_args</span><span class="p">:</span>
+            <span class="n">ret</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ret</span>
+
+<div class="viewcode-block" id="Tractography.append"><a class="viewcode-back" href="../../../generated/tract_querier.tractography.html#tract_querier.tractography.Tractography.append">[docs]</a>    <span class="k">def</span> <span class="nf">append</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tracts</span><span class="p">,</span> <span class="n">tracts_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Append tracts and corresponding data to the current set</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        tracts : list of float array :math:`N_i\times 3`</span>
+<span class="sd">            Each element of the list is a tract represented as point array,</span>
+<span class="sd">            the length of the i-th tract is :math:`N_i`</span>
+<span class="sd">        tracts_data : dict of &lt;data name&gt;= list of float array of :math:`N_i\times M`</span>
+<span class="sd">            Each element in the list corresponds to a tract,</span>
+<span class="sd">            :math:`N_i` is the length of the i-th tract and M is the</span>
+<span class="sd">            number of components of that data type.</span>
+<span class="sd">        validate : bool</span>
+<span class="sd">            Check that tracts and tracts_data are valid</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">tracts_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">tracts_data</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tracts</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_tracts</span> <span class="o">=</span> <span class="n">tracts</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_tracts_data</span> <span class="o">=</span> <span class="n">tracts_data</span>
+            <span class="n">appending</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">appending</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="n">validate</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">tracts</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span>
+                        <span class="ow">not</span> <span class="p">(</span>
+                            <span class="n">t</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span>
+                            <span class="n">t</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span>
+                        <span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tracts</span>
+                    <span class="p">):</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                            <span class="s1">&#39;First argument is not a list of tracts&#39;</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;First argument is not a list of tracts&#39;</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">tracts_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">tracts_data</span><span class="p">,</span> <span class="s1">&#39;iteritems&#39;</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">tracts_data</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+                        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                            <span class="k">continue</span>
+                        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tracts</span><span class="p">):</span>
+                            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                                <span class="s1">&#39;Number of elements in attribute </span><span class="si">%s</span><span class="s1"> must &#39;</span>
+                                <span class="s1">&#39;be the same as the number of tracts&#39;</span> <span class="o">%</span> <span class="n">k</span>
+                            <span class="p">)</span>
+                        <span class="n">_</span><span class="p">,</span> <span class="n">M</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+                        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">tract_v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+                            <span class="n">N</span><span class="p">,</span> <span class="n">tract_M</span> <span class="o">=</span> <span class="n">tract_v</span><span class="o">.</span><span class="n">shape</span>
+                            <span class="k">if</span> <span class="p">(</span>
+                                <span class="p">(</span><span class="n">N</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tracts</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span> <span class="ow">or</span>
+                                <span class="p">(</span><span class="n">tract_M</span> <span class="o">!=</span> <span class="n">M</span><span class="p">)</span>
+                            <span class="p">):</span>
+                                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                                    <span class="s2">&quot;Data for tract </span><span class="si">%s</span><span class="s2">: </span><span class="si">%d</span><span class="s2"> is inconsistent&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                                        <span class="n">k</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+                                <span class="p">)</span>
+        <span class="k">if</span> <span class="n">appending</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">tracts_data</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tracts_data</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Tract data to append not compatible&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_tracts_data</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">tracts_data</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+            <span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Tract data to append not compatible&quot;</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">tracts_data</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_tracts_data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">+=</span> <span class="n">v</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_tracts</span> <span class="o">+=</span> <span class="n">tracts</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">are_tracts_subsampled</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">subsample_tracts</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_quantity_of_points_per_tract</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">are_tracts_filtered</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">filter_tracts</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_criterium</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Tractography.unsubsample_tracts"><a class="viewcode-back" href="../../../generated/tract_querier.tractography.html#tract_querier.tractography.Tractography.unsubsample_tracts">[docs]</a>    <span class="k">def</span> <span class="nf">unsubsample_tracts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reset any subsampling applied to the tracts</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_subsampled_tracts</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_subsampled_data</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="Tractography.unfilter_tracts"><a class="viewcode-back" href="../../../generated/tract_querier.tractography.html#tract_querier.tractography.Tractography.unfilter_tracts">[docs]</a>    <span class="k">def</span> <span class="nf">unfilter_tracts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reset any filtering applied to the tracts</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tract_map</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="Tractography.subsample_tracts"><a class="viewcode-back" href="../../../generated/tract_querier.tractography.html#tract_querier.tractography.Tractography.subsample_tracts">[docs]</a>    <span class="k">def</span> <span class="nf">subsample_tracts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points_per_tract</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Subsample the tracts in the dataset to a maximum number of</span>
+<span class="sd">        points per tract</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        points_per_tract: int</span>
+<span class="sd">            Maximum number of points per tract after the operation</span>
+<span class="sd">            is executed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_quantity_of_points_per_tract</span> <span class="o">=</span> <span class="n">points_per_tract</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_subsampled_tracts</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_subsampled_data</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tracts_data</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_subsampled_data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tracts</span><span class="p">)):</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tracts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span>
+                <span class="mi">0</span><span class="p">,</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="nb">min</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quantity_of_points_per_tract</span><span class="p">)</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_subsampled_tracts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="n">s</span><span class="p">,</span> <span class="p">:])</span>
+
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tracts_data</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_subsampled_data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">s</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_interpolated</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="Tractography.filter_tracts"><a class="viewcode-back" href="../../../generated/tract_querier.tractography.html#tract_querier.tractography.Tractography.filter_tracts">[docs]</a>    <span class="k">def</span> <span class="nf">filter_tracts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">criterium</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Filter the tracts in the set according to a criterium function</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        criterium : function of array :math:`N\times 3` -&gt; Bool</span>
+<span class="sd">            A function taking a tract as an array of</span>
+<span class="sd">            3D points and returning True or False with</span>
+<span class="sd">            specifying if it should be included</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_subsampled_tracts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">tracts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subsampled_tracts</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subsampled_data</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">tracts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tracts</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tract_map</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">i</span><span class="p">:</span> <span class="n">criterium</span><span class="p">(</span><span class="n">tracts</span><span class="p">),</span>
+            <span class="n">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tracts</span><span class="p">))</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filtered_tracts</span> <span class="o">=</span> <span class="p">[</span><span class="n">tracts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tract_map</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filtered_data</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_filtered_data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tract_map</span>
+            <span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_criterium</span> <span class="o">=</span> <span class="n">criterium</span></div>
+
+<div class="viewcode-block" id="Tractography.are_tracts_filtered"><a class="viewcode-back" href="../../../generated/tract_querier.tractography.html#tract_querier.tractography.Tractography.are_tracts_filtered">[docs]</a>    <span class="k">def</span> <span class="nf">are_tracts_filtered</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tract_map</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="Tractography.are_tracts_subsampled"><a class="viewcode-back" href="../../../generated/tract_querier.tractography.html#tract_querier.tractography.Tractography.are_tracts_subsampled">[docs]</a>    <span class="k">def</span> <span class="nf">are_tracts_subsampled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subsampled_tracts</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="Tractography.original_tracts"><a class="viewcode-back" href="../../../generated/tract_querier.tractography.html#tract_querier.tractography.Tractography.original_tracts">[docs]</a>    <span class="k">def</span> <span class="nf">original_tracts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Tract set used to original construct this</span>
+<span class="sd">        tractography object, no subsampling or filtering</span>
+<span class="sd">        applied</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tracts : list of float array :math:`N_i\times3`</span>
+<span class="sd">            Each element of the list is a tract represented as point array,</span>
+<span class="sd">            the length of the i-th tract is :math:`N_i`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tracts</span></div>
+
+<div class="viewcode-block" id="Tractography.original_tracts_data"><a class="viewcode-back" href="../../../generated/tract_querier.tractography.html#tract_querier.tractography.Tractography.original_tracts_data">[docs]</a>    <span class="k">def</span> <span class="nf">original_tracts_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Tract data contained of the original dataset of this tractography object</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tract data : dict of &lt;data name&gt;= list of float array of :math:`N_i\times M`</span>
+<span class="sd">                     Each element in the list corresponds to a tract,</span>
+<span class="sd">                     :math:`N_i` is the length of the i-th tract and M is the</span>
+<span class="sd">                     number of components of that data type.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tracts_data</span></div>
+
+<div class="viewcode-block" id="Tractography.filtered_tracts_map"><a class="viewcode-back" href="../../../generated/tract_querier.tractography.html#tract_querier.tractography.Tractography.filtered_tracts_map">[docs]</a>    <span class="k">def</span> <span class="nf">filtered_tracts_map</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Tract indices included after the filtering</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        List of tract indices included after the filtering</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tract_map</span></div>
+
+<div class="viewcode-block" id="Tractography.tracts"><a class="viewcode-back" href="../../../generated/tract_querier.tractography.html#tract_querier.tractography.Tractography.tracts">[docs]</a>    <span class="k">def</span> <span class="nf">tracts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Tracts contained in this tractography object after filtering and</span>
+<span class="sd">        subsampling if these operations have been applied</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tracts : list of float array :math:`N_i\times 3`</span>
+<span class="sd">            Each element of the list is a tract represented as point array,</span>
+<span class="sd">            the length of the i-th tract is :math:`N_i`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tract_map</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filtered_tracts</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subsampled_tracts</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subsampled_tracts</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tracts</span></div>
+
+<div class="viewcode-block" id="Tractography.tracts_data"><a class="viewcode-back" href="../../../generated/tract_querier.tractography.html#tract_querier.tractography.Tractography.tracts_data">[docs]</a>    <span class="k">def</span> <span class="nf">tracts_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Tract data contained in this tractography object after filtering and</span>
+<span class="sd">        subsampling if these operations have been applied</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tract data : dict of &lt;data name&gt;= list of float array of :math:`N_i\times M`</span>
+<span class="sd">                     Each element in the list corresponds to a tract,</span>
+<span class="sd">                     :math:`N_i` is the length of the i-th tract and M is the</span>
+<span class="sd">                     number of components of that data type.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tract_map</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filtered_data</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subsampled_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subsampled_data</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tracts_data</span></div>
+
+<div class="viewcode-block" id="Tractography.add_tract_data_from_array"><a class="viewcode-back" href="../../../generated/tract_querier.tractography.html#tract_querier.tractography.Tractography.add_tract_data_from_array">[docs]</a>    <span class="k">def</span> <span class="nf">add_tract_data_from_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">array</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add a new data element reproducing a constant data</span>
+<span class="sd">        value for each of the :math:`$M$` tracts.</span>
+
+<span class="sd">        After execution, the tract data will have a new set</span>
+<span class="sd">        original_tracts_data()[name][i][:] == array[i]</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name : str</span>
+<span class="sd">            Name of the new data element</span>
+<span class="sd">        array : array of length :math:`$M$`</span>
+<span class="sd">            Data value for each tract</span>
+<span class="sd">       &quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">original_tracts</span><span class="p">()[</span><span class="n">i</span><span class="p">]),</span> <span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="n">array</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tracts</span><span class="p">()))</span>
+        <span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">original_tracts_data</span><span class="p">()[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subsampled_tracts</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">subsample_tracts</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_quantity_of_points_per_tract</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">WMQL</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../tractography.html" >tract_querier.tractography</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2013, Demian Wassermann (Modified BSD License).
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.3.
+    </div>
+  </body>
+</html>

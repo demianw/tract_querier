@@ -1,0 +1,40 @@
+tract_querier.tensor.scalar_measures
+====================================
+
+
+
+
+
+
+
+.. rubric:: Functions
+
+.. autosummary::
+  
+    tract_querier.tensor.scalar_measures.axial_diffusivity
+    tract_querier.tensor.scalar_measures.eigenvalues
+    tract_querier.tensor.scalar_measures.fractional_anisotropy
+    tract_querier.tensor.scalar_measures.fractional_anisotropy_from_eigenvalues
+    tract_querier.tensor.scalar_measures.geodesic_anisotropy
+    tract_querier.tensor.scalar_measures.mean_diffusivity
+    tract_querier.tensor.scalar_measures.radial_diffusivity
+    tract_querier.tensor.scalar_measures.tensor_contraction
+    tract_querier.tensor.scalar_measures.tensor_det
+    tract_querier.tensor.scalar_measures.tensor_trace
+    tract_querier.tensor.scalar_measures.volume_fraction
+
+
+
+
+
+
+
+
+
+.. automodule:: tract_querier.tensor.scalar_measures
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+

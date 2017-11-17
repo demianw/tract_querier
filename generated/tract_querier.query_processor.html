@@ -1,0 +1,466 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>tract_querier.query_processor &#8212; WMQL 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">WMQL</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/generated/tract_querier.query_processor.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="tract-querier-query-processor">
+<h1>tract_querier.query_processor<a class="headerlink" href="#tract-querier-query-processor" title="Permalink to this headline">¶</a></h1>
+<p class="rubric">Classes</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">tract_querier.query_processor.DocStringInheritor</span></code></td>
+<td>A variation on</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">tract_querier.query_processor.EndpointQueryInfo</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#tract_querier.query_processor.EvaluateQueries" title="tract_querier.query_processor.EvaluateQueries"><code class="xref py py-obj docutils literal"><span class="pre">tract_querier.query_processor.EvaluateQueries</span></code></a></td>
+<td>This class implements the parser to process White Matter Query Language modules.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">tract_querier.query_processor.FiberQueryInfo</span></code>([...])</td>
+<td>Information about a processed query</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">tract_querier.query_processor.RewriteChangeNotInPrescedence</span></code></td>
+<td><p class="rubric">Methods</p>
+</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">tract_querier.query_processor.RewritePreprocess</span></code>(...)</td>
+<td><p class="rubric">Methods</p>
+</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">tract_querier.query_processor.takewhile</span></code></td>
+<td>takewhile(predicate, iterable) &#8211;&gt; takewhile object</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Functions</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">tract_querier.query_processor.deepcopy</span></code>(x[,&nbsp;...])</td>
+<td>Deep copy operation on arbitrary Python objects.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#tract_querier.query_processor.eval_queries" title="tract_querier.query_processor.eval_queries"><code class="xref py py-obj docutils literal"><span class="pre">tract_querier.query_processor.eval_queries</span></code></a>(...)</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">tract_querier.query_processor.gt</span></code></td>
+<td>gt(a, b) &#8211; Same as a&gt;b.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">tract_querier.query_processor.labels_for_tracts</span></code>(...)</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">tract_querier.query_processor.lt</span></code></td>
+<td>lt(a, b) &#8211; Same as a&lt;b.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#tract_querier.query_processor.queries_preprocess" title="tract_querier.query_processor.queries_preprocess"><code class="xref py py-obj docutils literal"><span class="pre">tract_querier.query_processor.queries_preprocess</span></code></a>(...)</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#tract_querier.query_processor.queries_syntax_check" title="tract_querier.query_processor.queries_syntax_check"><code class="xref py py-obj docutils literal"><span class="pre">tract_querier.query_processor.queries_syntax_check</span></code></a>(...)</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Exceptions</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#tract_querier.query_processor.TractQuerierSyntaxError" title="tract_querier.query_processor.TractQuerierSyntaxError"><code class="xref py py-obj docutils literal"><span class="pre">tract_querier.query_processor.TractQuerierSyntaxError</span></code></a>(value)</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<span class="target" id="module-tract_querier.query_processor"></span><dl class="class">
+<dt id="tract_querier.query_processor.EvaluateQueries">
+<em class="property">class </em><code class="descclassname">tract_querier.query_processor.</code><code class="descname">EvaluateQueries</code><a class="reference internal" href="../_modules/tract_querier/query_processor.html#EvaluateQueries"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tract_querier.query_processor.EvaluateQueries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">ast.NodeVisitor</span></code></p>
+<p>This class implements the parser to process
+White Matter Query Language modules. By inheriting from
+<code class="xref py py-mod docutils literal"><span class="pre">ast.NodeVisitor</span></code> it uses a syntax close to the
+python language.</p>
+<p>Every node expression visitor has the following signature</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>node</strong> : ast.Node</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>tracts</strong> : set</p>
+<blockquote>
+<div><p>numbers of the tracts that result of this
+query</p>
+</div></blockquote>
+<p><strong>labels</strong> : set</p>
+<blockquote class="last">
+<div><p>numbers of the labels that are traversed by
+the tracts resulting from this query</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#tract_querier.query_processor.EvaluateQueries.generic_visit" title="tract_querier.query_processor.EvaluateQueries.generic_visit"><code class="xref py py-obj docutils literal"><span class="pre">generic_visit</span></code></a>(node)</td>
+<td>Called if no explicit visitor function exists for a node.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#tract_querier.query_processor.EvaluateQueries.process_assignment" title="tract_querier.query_processor.EvaluateQueries.process_assignment"><code class="xref py py-obj docutils literal"><span class="pre">process_assignment</span></code></a>(node)</td>
+<td>Processes the assignment operations</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#tract_querier.query_processor.EvaluateQueries.process_relative_term" title="tract_querier.query_processor.EvaluateQueries.process_relative_term"><code class="xref py py-obj docutils literal"><span class="pre">process_relative_term</span></code></a>(node)</td>
+<td>Processes the relative terms</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#tract_querier.query_processor.EvaluateQueries.rewrite_side_query" title="tract_querier.query_processor.EvaluateQueries.rewrite_side_query"><code class="xref py py-obj docutils literal"><span class="pre">rewrite_side_query</span></code></a>(node)</td>
+<td>Processes the side suffixes in a query</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">visit</span></code>(node)</td>
+<td>Visit a node.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#tract_querier.query_processor.EvaluateQueries.visit_Assign" title="tract_querier.query_processor.EvaluateQueries.visit_Assign"><code class="xref py py-obj docutils literal"><span class="pre">visit_Assign</span></code></a>(node)</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#tract_querier.query_processor.EvaluateQueries.visit_Attribute" title="tract_querier.query_processor.EvaluateQueries.visit_Attribute"><code class="xref py py-obj docutils literal"><span class="pre">visit_Attribute</span></code></a>(node)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#tract_querier.query_processor.EvaluateQueries.visit_AugAssign" title="tract_querier.query_processor.EvaluateQueries.visit_AugAssign"><code class="xref py py-obj docutils literal"><span class="pre">visit_AugAssign</span></code></a>(node)</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#tract_querier.query_processor.EvaluateQueries.visit_BinOp" title="tract_querier.query_processor.EvaluateQueries.visit_BinOp"><code class="xref py py-obj docutils literal"><span class="pre">visit_BinOp</span></code></a>(node)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#tract_querier.query_processor.EvaluateQueries.visit_BoolOp" title="tract_querier.query_processor.EvaluateQueries.visit_BoolOp"><code class="xref py py-obj docutils literal"><span class="pre">visit_BoolOp</span></code></a>(node)</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#tract_querier.query_processor.EvaluateQueries.visit_Call" title="tract_querier.query_processor.EvaluateQueries.visit_Call"><code class="xref py py-obj docutils literal"><span class="pre">visit_Call</span></code></a>(node)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#tract_querier.query_processor.EvaluateQueries.visit_Compare" title="tract_querier.query_processor.EvaluateQueries.visit_Compare"><code class="xref py py-obj docutils literal"><span class="pre">visit_Compare</span></code></a>(node)</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#tract_querier.query_processor.EvaluateQueries.visit_Expr" title="tract_querier.query_processor.EvaluateQueries.visit_Expr"><code class="xref py py-obj docutils literal"><span class="pre">visit_Expr</span></code></a>(node)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#tract_querier.query_processor.EvaluateQueries.visit_For" title="tract_querier.query_processor.EvaluateQueries.visit_For"><code class="xref py py-obj docutils literal"><span class="pre">visit_For</span></code></a>(node)</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#tract_querier.query_processor.EvaluateQueries.visit_Module" title="tract_querier.query_processor.EvaluateQueries.visit_Module"><code class="xref py py-obj docutils literal"><span class="pre">visit_Module</span></code></a>(node)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#tract_querier.query_processor.EvaluateQueries.visit_Name" title="tract_querier.query_processor.EvaluateQueries.visit_Name"><code class="xref py py-obj docutils literal"><span class="pre">visit_Name</span></code></a>(node)</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#tract_querier.query_processor.EvaluateQueries.visit_Num" title="tract_querier.query_processor.EvaluateQueries.visit_Num"><code class="xref py py-obj docutils literal"><span class="pre">visit_Num</span></code></a>(node)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#tract_querier.query_processor.EvaluateQueries.visit_Str" title="tract_querier.query_processor.EvaluateQueries.visit_Str"><code class="xref py py-obj docutils literal"><span class="pre">visit_Str</span></code></a>(node)</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#tract_querier.query_processor.EvaluateQueries.visit_UnaryOp" title="tract_querier.query_processor.EvaluateQueries.visit_UnaryOp"><code class="xref py py-obj docutils literal"><span class="pre">visit_UnaryOp</span></code></a>(node)</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="tract_querier.query_processor.EvaluateQueries.relative_terms">
+<code class="descname">relative_terms</code><em class="property"> = ['anterior_of', 'posterior_of', 'medial_of', 'lateral_of', 'inferior_of', 'superior_of']</em><a class="headerlink" href="#tract_querier.query_processor.EvaluateQueries.relative_terms" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tract_querier.query_processor.EvaluateQueries.visit_Module">
+<code class="descname">visit_Module</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tract_querier/query_processor.html#EvaluateQueries.visit_Module"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tract_querier.query_processor.EvaluateQueries.visit_Module" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tract_querier.query_processor.EvaluateQueries.visit_Compare">
+<code class="descname">visit_Compare</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tract_querier/query_processor.html#EvaluateQueries.visit_Compare"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tract_querier.query_processor.EvaluateQueries.visit_Compare" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tract_querier.query_processor.EvaluateQueries.visit_BoolOp">
+<code class="descname">visit_BoolOp</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tract_querier/query_processor.html#EvaluateQueries.visit_BoolOp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tract_querier.query_processor.EvaluateQueries.visit_BoolOp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tract_querier.query_processor.EvaluateQueries.visit_BinOp">
+<code class="descname">visit_BinOp</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tract_querier/query_processor.html#EvaluateQueries.visit_BinOp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tract_querier.query_processor.EvaluateQueries.visit_BinOp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tract_querier.query_processor.EvaluateQueries.visit_UnaryOp">
+<code class="descname">visit_UnaryOp</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tract_querier/query_processor.html#EvaluateQueries.visit_UnaryOp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tract_querier.query_processor.EvaluateQueries.visit_UnaryOp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tract_querier.query_processor.EvaluateQueries.visit_Str">
+<code class="descname">visit_Str</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tract_querier/query_processor.html#EvaluateQueries.visit_Str"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tract_querier.query_processor.EvaluateQueries.visit_Str" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tract_querier.query_processor.EvaluateQueries.visit_Call">
+<code class="descname">visit_Call</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tract_querier/query_processor.html#EvaluateQueries.visit_Call"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tract_querier.query_processor.EvaluateQueries.visit_Call" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tract_querier.query_processor.EvaluateQueries.process_relative_term">
+<code class="descname">process_relative_term</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tract_querier/query_processor.html#EvaluateQueries.process_relative_term"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tract_querier.query_processor.EvaluateQueries.process_relative_term" title="Permalink to this definition">¶</a></dt>
+<dd><p>Processes the relative terms</p>
+<ul class="simple">
+<li>anterior_of</li>
+<li>posterior_of</li>
+<li>superior_of</li>
+<li>inferior_of</li>
+<li>medial_of</li>
+<li>lateral_of</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>node</strong> :  <code class="xref py py-class docutils literal"><span class="pre">ast.Node</span></code></p>
+<blockquote>
+<div><p>Parsed tree</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">tracts, labels</p>
+<p><strong>tracts</strong> :  set</p>
+<blockquote>
+<div><p>Numbers of the tracts that result of this
+query</p>
+</div></blockquote>
+<p><strong>labels</strong> :  set</p>
+<blockquote class="last">
+<div><p>Numbers of the labels that are traversed by
+the tracts resulting from this query</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tract_querier.query_processor.EvaluateQueries.visit_Assign">
+<code class="descname">visit_Assign</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tract_querier/query_processor.html#EvaluateQueries.visit_Assign"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tract_querier.query_processor.EvaluateQueries.visit_Assign" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tract_querier.query_processor.EvaluateQueries.visit_AugAssign">
+<code class="descname">visit_AugAssign</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tract_querier/query_processor.html#EvaluateQueries.visit_AugAssign"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tract_querier.query_processor.EvaluateQueries.visit_AugAssign" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tract_querier.query_processor.EvaluateQueries.process_assignment">
+<code class="descname">process_assignment</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tract_querier/query_processor.html#EvaluateQueries.process_assignment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tract_querier.query_processor.EvaluateQueries.process_assignment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Processes the assignment operations</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>node</strong> :  <code class="xref py py-class docutils literal"><span class="pre">ast.Node</span></code></p>
+<blockquote>
+<div><p>Parsed tree</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">queries_to_evaluate: dict</p>
+<blockquote class="last">
+<div><p>A dictionary or pairs &#8216;&lt;name of the query&gt;&#8217;= &lt;node to evaluate&gt;</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tract_querier.query_processor.EvaluateQueries.rewrite_side_query">
+<code class="descname">rewrite_side_query</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tract_querier/query_processor.html#EvaluateQueries.rewrite_side_query"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tract_querier.query_processor.EvaluateQueries.rewrite_side_query" title="Permalink to this definition">¶</a></dt>
+<dd><p>Processes the side suffixes in a query</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>node</strong> :  <code class="xref py py-class docutils literal"><span class="pre">ast.Node</span></code></p>
+<blockquote>
+<div><p>Parsed tree</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">node_left, node_right: nodes</p>
+<blockquote class="last">
+<div><p>two AST nodes, one for the query
+instantiated on the left hemisphere
+one for the query instantiated on the right hemisphere</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="tract_querier.query_processor.EvaluateQueries.visit_Name">
+<code class="descname">visit_Name</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tract_querier/query_processor.html#EvaluateQueries.visit_Name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tract_querier.query_processor.EvaluateQueries.visit_Name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tract_querier.query_processor.EvaluateQueries.visit_Attribute">
+<code class="descname">visit_Attribute</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tract_querier/query_processor.html#EvaluateQueries.visit_Attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tract_querier.query_processor.EvaluateQueries.visit_Attribute" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tract_querier.query_processor.EvaluateQueries.visit_Num">
+<code class="descname">visit_Num</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tract_querier/query_processor.html#EvaluateQueries.visit_Num"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tract_querier.query_processor.EvaluateQueries.visit_Num" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tract_querier.query_processor.EvaluateQueries.visit_Expr">
+<code class="descname">visit_Expr</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tract_querier/query_processor.html#EvaluateQueries.visit_Expr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tract_querier.query_processor.EvaluateQueries.visit_Expr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="tract_querier.query_processor.EvaluateQueries.generic_visit">
+<code class="descname">generic_visit</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tract_querier/query_processor.html#EvaluateQueries.generic_visit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tract_querier.query_processor.EvaluateQueries.generic_visit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called if no explicit visitor function exists for a node.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="tract_querier.query_processor.EvaluateQueries.visit_For">
+<code class="descname">visit_For</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tract_querier/query_processor.html#EvaluateQueries.visit_For"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tract_querier.query_processor.EvaluateQueries.visit_For" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="tract_querier.query_processor.TractQuerierSyntaxError">
+<em class="property">exception </em><code class="descclassname">tract_querier.query_processor.</code><code class="descname">TractQuerierSyntaxError</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tract_querier/query_processor.html#TractQuerierSyntaxError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tract_querier.query_processor.TractQuerierSyntaxError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">exceptions.ValueError</span></code></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="tract_querier.query_processor.TractQuerierLabelNotFound">
+<em class="property">exception </em><code class="descclassname">tract_querier.query_processor.</code><code class="descname">TractQuerierLabelNotFound</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tract_querier/query_processor.html#TractQuerierLabelNotFound"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tract_querier.query_processor.TractQuerierLabelNotFound" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">exceptions.ValueError</span></code></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tract_querier.query_processor.queries_preprocess">
+<code class="descclassname">tract_querier.query_processor.</code><code class="descname">queries_preprocess</code><span class="sig-paren">(</span><em>query_file</em>, <em>filename='&lt;unknown&gt;'</em>, <em>include_folders=[]</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tract_querier/query_processor.html#queries_preprocess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tract_querier.query_processor.queries_preprocess" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="tract_querier.query_processor.eval_queries">
+<code class="descclassname">tract_querier.query_processor.</code><code class="descname">eval_queries</code><span class="sig-paren">(</span><em>query_file_body</em>, <em>tractography_spatial_indexing</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tract_querier/query_processor.html#eval_queries"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tract_querier.query_processor.eval_queries" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="tract_querier.query_processor.queries_syntax_check">
+<code class="descclassname">tract_querier.query_processor.</code><code class="descname">queries_syntax_check</code><span class="sig-paren">(</span><em>query_file_body</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tract_querier/query_processor.html#queries_syntax_check"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tract_querier.query_processor.queries_syntax_check" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">WMQL</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2013, Demian Wassermann (Modified BSD License).
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.3.
+    </div>
+  </body>
+</html>

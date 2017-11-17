@@ -1,0 +1,238 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>tract_querier.tensor.scalar_measures &#8212; WMQL 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">WMQL</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for tract_querier.tensor.scalar_measures</h1><div class="highlight"><pre>
+<span></span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Anisotropy measures from tensor operations</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+
+
+<span class="k">def</span> <span class="nf">fractional_anisotropy_from_eigenvalues</span><span class="p">(</span><span class="n">evals</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Taken from dipy/reconst/dti.py</span>
+<span class="sd">    see for documentation</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ev1</span><span class="p">,</span> <span class="n">ev2</span><span class="p">,</span> <span class="n">ev3</span> <span class="o">=</span> <span class="n">evals</span>
+    <span class="n">denom</span> <span class="o">=</span> <span class="p">(</span><span class="n">evals</span> <span class="o">*</span> <span class="n">evals</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">denom</span> <span class="o">&gt;</span> <span class="mf">1e-9</span><span class="p">:</span>
+        <span class="n">fa</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+            <span class="mf">0.5</span> <span class="o">*</span>
+            <span class="p">((</span><span class="n">ev1</span> <span class="o">-</span> <span class="n">ev2</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">ev2</span> <span class="o">-</span> <span class="n">ev3</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">ev3</span> <span class="o">-</span> <span class="n">ev1</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span>
+            <span class="p">(</span><span class="n">denom</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fa</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">return</span> <span class="n">fa</span>
+
+
+<span class="k">def</span> <span class="nf">mean_diffusivity</span><span class="p">(</span><span class="n">evals</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Taken from dipy/reconst/dti.py</span>
+<span class="sd">    see for documentation</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">evals</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">radial_diffusivity</span><span class="p">(</span><span class="n">evals</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Taken from dipy/reconst/dti.py</span>
+<span class="sd">    see for documentation</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">evals</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">axial_diffusivity</span><span class="p">(</span><span class="n">evals</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Taken from dipy/reconst/dti.py</span>
+<span class="sd">    see for documentation</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ev1</span><span class="p">,</span> <span class="n">ev2</span><span class="p">,</span> <span class="n">ev3</span> <span class="o">=</span> <span class="n">evals</span>
+    <span class="k">return</span> <span class="n">ev1</span>
+
+
+<span class="k">def</span> <span class="nf">geodesic_anisotropy</span><span class="p">(</span><span class="n">evals</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Taken from dipy/reconst/dti.py</span>
+<span class="sd">    see for documentation</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ev1</span><span class="p">,</span> <span class="n">ev2</span><span class="p">,</span> <span class="n">ev3</span> <span class="o">=</span> <span class="n">evals</span>
+
+    <span class="c1"># this is the definition in [1]_</span>
+    <span class="n">detD</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">ev1</span> <span class="o">*</span> <span class="n">ev2</span> <span class="o">*</span> <span class="n">ev3</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="mf">3.</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">detD</span> <span class="o">&gt;</span> <span class="mf">1e-9</span><span class="p">:</span>
+        <span class="n">log1</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">ev1</span> <span class="o">/</span> <span class="n">detD</span><span class="p">)</span>
+        <span class="n">log2</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">ev2</span> <span class="o">/</span> <span class="n">detD</span><span class="p">)</span>
+        <span class="n">log3</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">ev3</span> <span class="o">/</span> <span class="n">detD</span><span class="p">)</span>
+
+        <span class="n">ga</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">log1</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">log2</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">log3</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ga</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">return</span> <span class="n">ga</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;fractional_anisotropy&#39;</span><span class="p">,</span> <span class="s1">&#39;volume_fraction&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;eigenvalues&#39;</span><span class="p">,</span> <span class="s1">&#39;tensor_trace&#39;</span><span class="p">,</span> <span class="s1">&#39;tensor_contraction&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;tensor_det&#39;</span>
+<span class="p">]</span>
+
+
+<div class="viewcode-block" id="fractional_anisotropy"><a class="viewcode-back" href="../../../generated/tract_querier.tensor.scalar_measures.html#tract_querier.tensor.scalar_measures.fractional_anisotropy">[docs]</a><span class="k">def</span> <span class="nf">fractional_anisotropy</span><span class="p">(</span><span class="n">tensor_array</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Fractional Anisotropy (Basser et al.) measure computed as</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        FA = \sqrt{\frac {3(mn \cdot I - T) : (mn \cdot I - T)} {2(T : T)}}</span>
+
+<span class="sd">        mn = Tr(T) / 3</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">mean_diffusion</span> <span class="o">=</span> <span class="n">tensor_trace</span><span class="p">(</span><span class="n">tensor_array</span><span class="p">)</span> <span class="o">/</span> <span class="mf">3.</span>
+    <span class="n">denominator</span> <span class="o">=</span> <span class="mf">2.</span> <span class="o">*</span> <span class="n">tensor_contraction</span><span class="p">(</span><span class="n">tensor_array</span><span class="p">,</span> <span class="n">tensor_array</span><span class="p">)</span>
+    <span class="n">deviation</span> <span class="o">=</span> <span class="p">(</span><span class="n">tensor_array</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">mean_diffusion</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">deviation</span> <span class="o">+=</span> <span class="p">(</span><span class="n">tensor_array</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">mean_diffusion</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">deviation</span> <span class="o">+=</span> <span class="p">(</span><span class="n">tensor_array</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">mean_diffusion</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">deviation</span> <span class="o">+=</span> <span class="n">tensor_array</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="mi">2</span>
+    <span class="n">deviation</span> <span class="o">+=</span> <span class="n">tensor_array</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="mi">2</span>
+    <span class="n">deviation</span> <span class="o">+=</span> <span class="n">tensor_array</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="mi">2</span>
+
+    <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">3.</span> <span class="o">*</span> <span class="n">deviation</span> <span class="o">/</span> <span class="n">denominator</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="volume_fraction"><a class="viewcode-back" href="../../../generated/tract_querier.tensor.scalar_measures.html#tract_querier.tensor.scalar_measures.volume_fraction">[docs]</a><span class="k">def</span> <span class="nf">volume_fraction</span><span class="p">(</span><span class="n">tensor_array</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Volume Fraction (Basser et al.) measure computed as:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        VF = 1 - \frac{|T|} {(Tr(T) / 3.)^3}</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">mean_diffusion</span> <span class="o">=</span> <span class="n">tensor_trace</span><span class="p">(</span><span class="n">tensor_array</span><span class="p">)</span> <span class="o">/</span> <span class="mf">3.</span>
+    <span class="n">det_</span> <span class="o">=</span> <span class="n">tensor_det</span><span class="p">(</span><span class="n">tensor_array</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="mf">1.</span> <span class="o">-</span> <span class="n">det_</span> <span class="o">/</span> <span class="p">(</span><span class="n">mean_diffusion</span> <span class="o">**</span> <span class="mi">3</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="eigenvalues"><a class="viewcode-back" href="../../../generated/tract_querier.tensor.scalar_measures.html#tract_querier.tensor.scalar_measures.eigenvalues">[docs]</a><span class="k">def</span> <span class="nf">eigenvalues</span><span class="p">(</span><span class="n">tensor_array</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Eigenvalues of the tensors</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">tensor_array</span><span class="p">),</span> <span class="mi">3</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tensor_array</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tensor_array</span><span class="p">):</span>
+        <span class="n">res</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigvalsh</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">res</span></div>
+
+
+<div class="viewcode-block" id="tensor_det"><a class="viewcode-back" href="../../../generated/tract_querier.tensor.scalar_measures.html#tract_querier.tensor.scalar_measures.tensor_det">[docs]</a><span class="k">def</span> <span class="nf">tensor_det</span><span class="p">(</span><span class="n">tensor_array</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Determinant of a tensor array</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">tensor_array</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">tensor_array</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">tensor_array</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">+</span>
+        <span class="n">tensor_array</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">tensor_array</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">tensor_array</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+</span>
+        <span class="n">tensor_array</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">tensor_array</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">tensor_array</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span>
+        <span class="n">tensor_array</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">tensor_array</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">tensor_array</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span>
+        <span class="n">tensor_array</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">tensor_array</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">tensor_array</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">-</span>
+        <span class="n">tensor_array</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">tensor_array</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">tensor_array</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="tensor_trace"><a class="viewcode-back" href="../../../generated/tract_querier.tensor.scalar_measures.html#tract_querier.tensor.scalar_measures.tensor_trace">[docs]</a><span class="k">def</span> <span class="nf">tensor_trace</span><span class="p">(</span><span class="n">tensor_array</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Trace of each tensor</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">diag</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">tensor_array</span><span class="p">[:,</span> <span class="n">diag</span><span class="p">,</span> <span class="n">diag</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="tensor_contraction"><a class="viewcode-back" href="../../../generated/tract_querier.tensor.scalar_measures.html#tract_querier.tensor.scalar_measures.tensor_contraction">[docs]</a><span class="k">def</span> <span class="nf">tensor_contraction</span><span class="p">(</span><span class="n">tensor_array_1</span><span class="p">,</span> <span class="n">tensor_array_2</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Return the contraction of each tensor pair</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">tensor_array_1</span> <span class="o">*</span> <span class="n">tensor_array_2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">WMQL</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2013, Demian Wassermann (Modified BSD License).
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.3.
+    </div>
+  </body>
+</html>
