@@ -9,12 +9,12 @@ import unittest
 
 FILES = {
     'tract_file': (
-        'http://midas.kitware.com/bitstream/view/17631',
+        'http://slicer.kitware.com/midas3/download/item/347269/IIT3mean_left_hemisphere_small.trk',
         'IIT3mean_left_hemisphere_small.trk',
         '\xe7\xec\xfd+\xd2n\xff\x96\xae\xb4\xdf+\x194\xdf\x81'
     ),
     'atlas_file': (
-        'http://midas.kitware.com/bitstream/view/17622',
+        'http://slicer.kitware.com/midas3/download/item/347267/IIT3mean_desikan_2009.nii.gz',
         'IIT3mean_desikan_2009.nii.gz',
         'vx\x13\xbaE\x1dR\t\xcd\xc9EF\x17\xa66\xb7'
     ),
