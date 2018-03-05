@@ -19,7 +19,7 @@ FILES = {
         'vx\x13\xbaE\x1dR\t\xcd\xc9EF\x17\xa66\xb7'
     ),
     'query_uf_file': (
-        'http://midas.kitware.com/bitstream/view/17627',
+        'http://slicer.kitware.com/midas3/download/item/347272/wmql_2_uf.qry',
         'wmql_2_uf.qry',
         '\\+R\x8c<B#\xea\xfc\x9aE\xbd\xb0(\xbdn'
     )
