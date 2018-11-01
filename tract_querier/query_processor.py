@@ -6,7 +6,6 @@ from itertools import takewhile
 import fnmatch
 
 from .code_util import DocStringInheritor
-from six import add_metaclass
 
 __all__ = [
     'keywords', 'EvaluateQueries', 'eval_queries',
@@ -131,6 +130,7 @@ class EvaluateQueries(ast.NodeVisitor):
         the tracts resulting from this query
 
     """
+    __metaclass__ = DocStringInheritor
 
     relative_terms = [
         'anterior_of',
@@ -246,14 +246,21 @@ class EvaluateQueries(ast.NodeVisitor):
 
     def visit_Call(self, node):
         # Single string argument function
+
+        additional = []
+        if getattr(node, 'starargs', None):
+            additional.append(node.starargs)
+        if getattr(node, 'kwargs', None):
+            additional.append(node.kwargs)
+
         if (
             isinstance(node.func, ast.Name) and
             len(node.args) == 1 and
             len(node.args) == 1 and
-            node.starargs is None and
+            additional is None and
             node.keywords == [] and
             node.kwargs is None
-        ):
+            ):
             if (node.func.id.lower() == 'only'):
                 query_info = self.visit(node.args[0])
 
@@ -793,19 +800,22 @@ class RewritePreprocess(ast.NodeTransformer):
 def queries_preprocess(query_file, filename='<unknown>', include_folders=[]):
 
     try:
-        query_file_module = ast.parse(query_file, filename='<unknown>')
+        query_file_module = ast.parse(query_file) # , filename='<unknown>')
     except SyntaxError:
         import sys
         import traceback
+        filename= query_file # This was missing in interpreting error
         exc_type, exc_value, exc_traceback = sys.exc_info()
         formatted_lines = traceback.format_exc().splitlines()
         raise TractQuerierSyntaxError(
-            'syntax error in line %s line %d: \n%s\n%s' %
+            'syntax error in line %s line %d: \n%s' %
             (
                 filename,
-                exc_value[1][1],
-                formatted_lines[-3],
-                formatted_lines[-2]
+                exc_value.lineno,
+                # The offset should not be necessary
+                # If you really need that, use
+                # exc_value.offset
+                exc_value.text
             )
         )
 
