@@ -363,7 +363,7 @@ class EvaluateQueries(ast.NodeVisitor):
         try:
             bounding_box = (
                 self.tractography_spatial_indexing.
-                label_bounding_boxes[labels_generator.next()]
+                label_bounding_boxes[next(labels_generator)]
             )
             for label in labels_generator:
                 bounding_box = bounding_box.union(

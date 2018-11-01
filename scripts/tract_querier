@@ -192,7 +192,7 @@ def main():
             tractography_spatial_indexing,
         )
 
-        query_names = evaluated_queries.keys()
+        query_names = list(evaluated_queries.keys())
         if options.query_selection != '':
             selected_queries = set(options.query_selection.lower().split(','))
             query_names = list(set(query_names) & set(selected_queries))
