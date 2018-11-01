@@ -8,16 +8,15 @@ import ast
 import parser
 import token
 import symbol
-from types import ListType, TupleType
 
 
 def match(pattern, data, vars=None):
     if vars is None:
         vars = {}
-    if type(pattern) is ListType:
+    if type(pattern) is list:
         vars[pattern[0]] = data
         return 1, vars
-    if type(pattern) is not TupleType:
+    if type(pattern) is not tuple:
         return (pattern == data), vars
     if len(data) != len(pattern):
         return 0, vars
