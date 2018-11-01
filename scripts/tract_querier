@@ -66,14 +66,14 @@ def main():
             bounding_box_affine_transform = np.fromstring(
                 options.bounding_box_affine_transform, sep=','
             ).reshape(4, 4)
-            print "Affine transform:"
-            print bounding_box_affine_transform
+            print("Affine transform:")
+            print(bounding_box_affine_transform)
         except ValueError:
             parser.error("Matrix format not valid")
     else:
         bounding_box_affine_transform = None
 
-    print "Loading files"
+    print("Loading files")
 
     # Search order precidence for .qry files
     # 1. Command line options specified are respected first
@@ -106,7 +106,7 @@ def main():
 
     try:
         if os.path.exists(options.queries_string):
-            query_script = file(options.queries_string).read()
+            query_script = open(options.queries_string).read()
             query_filename = options.queries_string
         else:
             found = False
@@ -116,7 +116,7 @@ def main():
                     found = True
                     break
             if found:
-                query_script = file(file_).read()
+                query_script = open(file_).read()
                 query_filename = file_
             else:
                 query_script = options.queries_string
@@ -129,10 +129,10 @@ def main():
         )
 
         tract_querier.queries_syntax_check(query_file_body)
-    except tract_querier.TractQuerierSyntaxError as e:
+    except tract_querier.TractQuerierSyntaxError or tract_querier.TractographySpatialIndexing as e:
         parser.error(e.value)
-    except tract_querier.TractographySpatialIndexing as e:
-        parser.error(e.value)
+    # except tract_querier.TractographySpatialIndexing as e:
+    #     parser.error(e.value)
 
     labels_nii = nibabel.load(options.atlas_file_name)
     img = labels_nii.get_data()
@@ -169,7 +169,7 @@ def main():
     else:
         tractography_extra_kwargs = {}
 
-    print "Calculating labels and crossings"
+    print("Calculating labels and crossings")
     affine_ijk_2_ras = labels_nii.get_affine()
     tracts = tr.tracts()
 
@@ -186,7 +186,7 @@ def main():
     )
 
     if not options.interactive:
-        print "Computing queries"
+        print("Computing queries")
         evaluated_queries = tract_querier.eval_queries(
             query_file_body,
             tractography_spatial_indexing,
@@ -225,7 +225,7 @@ def main():
 
 def save_query(query_name, tractography, options, evaluated_queries, extension='.vtk', extra_kwargs={}):
     tract_numbers = evaluated_queries[query_name]
-    print "\tQuery %s: %.6d" % (query_name, len(tract_numbers))
+    print("\tQuery %s: %.6d" % (query_name, len(tract_numbers)))
     if tract_numbers:
         filename = options.output_file_name + "_" + query_name + extension
         save_tractography_file(
