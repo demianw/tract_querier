@@ -246,20 +246,12 @@ class EvaluateQueries(ast.NodeVisitor):
 
     def visit_Call(self, node):
         # Single string argument function
-
-        additional = []
-        if getattr(node, 'starargs', None):
-            additional.append(node.starargs)
-        if getattr(node, 'kwargs', None):
-            additional.append(node.kwargs)
-
         if (
             isinstance(node.func, ast.Name) and
             len(node.args) == 1 and
-            len(node.args) == 1 and
-            additional is None and
-            node.keywords == [] and
-            node.kwargs is None
+            len(node.keywords) == 0 and
+            not hasattr(node, 'starargs') and
+            not hasattr(node, 'kwargs')
             ):
             if (node.func.id.lower() == 'only'):
                 query_info = self.visit(node.args[0])
