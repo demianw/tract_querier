@@ -61,11 +61,12 @@ def tractography_to_trackvis_file(filename, tractography, affine=None, image_dim
         dtype='|S20'
     )
     trk_tracts = []
+
     for i, sl in enumerate(tractography.tracts()):
         scalars = None
         if len(data) > 0:
             scalars = numpy.vstack([
-                data[k][i].squeeze()
+                data[k.decode('utf8')][i].squeeze()
                 for k in trk_header['scalar_name'][:len(data)]
             ]).T
 
