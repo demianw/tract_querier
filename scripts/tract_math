@@ -11,13 +11,6 @@ import os, sys
 # sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 
-def custom_formatwarning(msg, *a):
-    # ignore everything except the message
-    return '\nWarning: ' + str(msg) + '\n'
-
-warnings.formatwarning = custom_formatwarning
-
-
 def tract_math_operation(help_text, needs_one_tract=True):
     '''
     Decorator to identify tract_math functionalities the name of the
