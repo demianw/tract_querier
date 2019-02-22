@@ -106,7 +106,7 @@ class FiberQueryInfo(object):
         return operation
 
 
-@add_metaclass(DocStringInheritor)
+# @add_metaclass(DocStringInheritor)
 class EvaluateQueries(ast.NodeVisitor):
 
     r"""
