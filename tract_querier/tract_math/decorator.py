@@ -167,7 +167,7 @@ def process_output(output, file_output=None):
         return
 
     if file_output is not None and path.exists(file_output):
-        in_key = eval(input("Overwrite file %s (y/N)? " % file_output))
+        in_key = input("Overwrite file %s (y/N)? " % file_output)
         if in_key.lower().strip() != 'y':
             return
 
