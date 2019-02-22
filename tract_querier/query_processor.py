@@ -7,6 +7,7 @@ import fnmatch
 
 from .code_util import DocStringInheritor
 
+
 __all__ = [
     'keywords', 'EvaluateQueries', 'eval_queries',
     'queries_syntax_check', 'queries_preprocess',
@@ -93,7 +94,7 @@ class FiberQueryInfo(object):
                     tract_query_info.tracts_endpoints[1]
                 )
             )
-
+            
             if name.endswith('update'):
                 return self
             else:
@@ -105,6 +106,7 @@ class FiberQueryInfo(object):
         return operation
 
 
+@add_metaclass(DocStringInheritor)
 class EvaluateQueries(ast.NodeVisitor):
 
     r"""
@@ -281,14 +283,8 @@ class EvaluateQueries(ast.NodeVisitor):
                 )
             elif (node.func.id.lower() == 'endpoints_in'):
                 query_info = self.visit(node.args[0])
-                new_tracts = (
-                    query_info.tracts_endpoints[0].
-                    union(query_info.tracts_endpoints[1])
-                )
-                return FiberQueryInfo(
-                    new_tracts, query_info.labels,
-                    query_info.tracts_endpoints
-                )
+                new_tracts = query_info.tracts_endpoints[0].union(query_info.tracts_endpoints[1])
+                return FiberQueryInfo(new_tracts, query_info.labels, query_info.tracts_endpoints)
             elif (node.func.id.lower() == 'both_endpoints_in'):
                 query_info = self.visit(node.args[0])
                 new_tracts = (
@@ -374,7 +370,6 @@ class EvaluateQueries(ast.NodeVisitor):
             raise TractQuerierLabelNotFound(
                 "Label %s not found in atlas file" % e
             )
-
         function_name = node.func.id.lower()
 
         name = function_name.replace('_of', '')
