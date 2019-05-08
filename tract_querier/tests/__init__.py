@@ -1,2 +1,2 @@
-import test_query_eval
-import test_query_files
+from . import test_query_eval
+from . import test_query_files

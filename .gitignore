@@ -13,3 +13,4 @@ htmlcov
 ## The Pycharm internal directory.
 .idea
 build
+cover

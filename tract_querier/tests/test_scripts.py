@@ -7,6 +7,7 @@ import subprocess
 import sys
 
 from tract_querier.tests import datasets
+from functools import reduce
 
 
 PACKAGE_ROOT_DIR = path.dirname(path.dirname(path.dirname(__file__)))

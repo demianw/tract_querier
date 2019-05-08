@@ -7,6 +7,7 @@ import fnmatch
 
 from .code_util import DocStringInheritor
 
+
 __all__ = [
     'keywords', 'EvaluateQueries', 'eval_queries',
     'queries_syntax_check', 'queries_preprocess',
@@ -93,7 +94,7 @@ class FiberQueryInfo(object):
                     tract_query_info.tracts_endpoints[1]
                 )
             )
-
+            
             if name.endswith('update'):
                 return self
             else:
@@ -105,6 +106,7 @@ class FiberQueryInfo(object):
         return operation
 
 
+# @add_metaclass(DocStringInheritor)
 class EvaluateQueries(ast.NodeVisitor):
 
     r"""
@@ -249,10 +251,9 @@ class EvaluateQueries(ast.NodeVisitor):
         if (
             isinstance(node.func, ast.Name) and
             len(node.args) == 1 and
-            len(node.args) == 1 and
-            node.starargs is None and
-            node.keywords == [] and
-            node.kwargs is None
+            len(node.keywords) == 0 and
+            (not hasattr(node, 'starargs') or node.starargs is None) and
+            (not hasattr(node, 'kwargs') or node.kwargs is None)
         ):
             if (node.func.id.lower() == 'only'):
                 query_info = self.visit(node.args[0])
@@ -282,14 +283,8 @@ class EvaluateQueries(ast.NodeVisitor):
                 )
             elif (node.func.id.lower() == 'endpoints_in'):
                 query_info = self.visit(node.args[0])
-                new_tracts = (
-                    query_info.tracts_endpoints[0].
-                    union(query_info.tracts_endpoints[1])
-                )
-                return FiberQueryInfo(
-                    new_tracts, query_info.labels,
-                    query_info.tracts_endpoints
-                )
+                new_tracts = query_info.tracts_endpoints[0].union(query_info.tracts_endpoints[1])
+                return FiberQueryInfo(new_tracts, query_info.labels, query_info.tracts_endpoints)
             elif (node.func.id.lower() == 'both_endpoints_in'):
                 query_info = self.visit(node.args[0])
                 new_tracts = (
@@ -364,7 +359,7 @@ class EvaluateQueries(ast.NodeVisitor):
         try:
             bounding_box = (
                 self.tractography_spatial_indexing.
-                label_bounding_boxes[labels_generator.next()]
+                label_bounding_boxes[next(labels_generator)]
             )
             for label in labels_generator:
                 bounding_box = bounding_box.union(
@@ -375,7 +370,6 @@ class EvaluateQueries(ast.NodeVisitor):
             raise TractQuerierLabelNotFound(
                 "Label %s not found in atlas file" % e
             )
-
         function_name = node.func.id.lower()
 
         name = function_name.replace('_of', '')
@@ -764,7 +758,7 @@ class RewritePreprocess(ast.NodeTransformer):
                         'Imported file not found: %s' % file_name
                     )
             imported_modules = [
-                ast.parse(file(module_name).read(), filename=module_name)
+                ast.parse(open(module_name).read(), filename=module_name)
                 for module_name in module_names
             ]
         except SyntaxError:
@@ -793,19 +787,22 @@ class RewritePreprocess(ast.NodeTransformer):
 def queries_preprocess(query_file, filename='<unknown>', include_folders=[]):
 
     try:
-        query_file_module = ast.parse(query_file, filename='<unknown>')
+        query_file_module = ast.parse(query_file) # , filename='<unknown>')
     except SyntaxError:
         import sys
         import traceback
+        filename= query_file # This was missing in interpreting error
         exc_type, exc_value, exc_traceback = sys.exc_info()
         formatted_lines = traceback.format_exc().splitlines()
         raise TractQuerierSyntaxError(
-            'syntax error in line %s line %d: \n%s\n%s' %
+            'syntax error in line %s line %d: \n%s' %
             (
                 filename,
-                exc_value[1][1],
-                formatted_lines[-3],
-                formatted_lines[-2]
+                exc_value.lineno,
+                # The offset should not be necessary
+                # If you really need that, use
+                # exc_value.offset
+                exc_value.text
             )
         )
 

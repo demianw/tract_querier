@@ -7,12 +7,8 @@ import traceback
 
 import warnings
 
-
-def custom_formatwarning(msg, *a):
-    # ignore everything except the message
-    return '\nWarning: ' + str(msg) + '\n'
-
-warnings.formatwarning = custom_formatwarning
+import os, sys
+# sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 
 def tract_math_operation(help_text, needs_one_tract=True):
@@ -66,7 +62,7 @@ def main():
     """
 
     operations_names = operations.keys()
-    operations_names.sort()
+    operations_names = sorted(operations_names)
     for f in operations_names:
         usage += '\t%s %s\n' % (f, operations[f].help_text)
 
@@ -103,19 +99,19 @@ def main():
                 # filename, tractography instance) to tractography list.
                 tractography.append((f.name, tractography_from_files(f.name)))
         except IOError as e:
-            print >>sys.stderr, "Error reading file ", f.name, "(%s)" % repr(e)
+            # print >>sys.stderr, "Error reading file ", f.name, "(%s)" % repr(e)
+            print(sys.stderr, "Error reading file ", f.name, "(%s)" % repr(e))
 
     if args.operation in operations:
         try:
             operations[args.operation](
                 tractography, *args.operation_parameters)
-        except TractMathWrongArgumentsError, e:
+        except TractMathWrongArgumentsError as e:
             traceback.print_exc(file=sys.stdout)
             parser.error('\n\n' + str(e))
         except TypeError:
             traceback.print_exc(file=sys.stdout)
-            parser.error(
-                "\n\nError: Wrong number of parameters for the operation")
+            parser.error("\n\nError: Wrong number of parameters for the operation")
 
     else:
         parser.error("\n\nOperation not found")

@@ -4,7 +4,7 @@
 
 import os
 import glob
-from itertools import izip
+
 
 from nipype.interfaces.base import (TraitedSpec, traits)
 from nipype.interfaces.ants import utils
@@ -218,7 +218,7 @@ class GenWarpFields(utils.ANTSCommand):
                         'must be 1 or the same as '
                         'input images'
                     )
-                for template, reference, weight in izip(
+                for template, reference, weight in zip(
                     self._internal['reference_images'],
                     self._internal['input_images'],
                     self._internal['metric_weights'],

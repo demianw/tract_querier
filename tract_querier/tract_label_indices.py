@@ -4,6 +4,8 @@ from six.moves import range
 
 import numpy as np
 
+from six.moves import range
+
 from .aabb import BoundingBox
 
 __all__ = ['TractographySpatialIndexing']
