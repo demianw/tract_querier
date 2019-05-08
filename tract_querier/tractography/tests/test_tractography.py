@@ -1,9 +1,16 @@
 from .. import Tractography
 from .. import (
-    tractography_from_vtk_files, tractography_to_vtk_file,
     tractography_from_trackvis_file, tractography_to_trackvis_file,
     tractography_from_files, tractography_to_file
 )
+
+try:
+    VTK = True
+    from ..vtkInterface import (
+        tractography_from_vtk_files, tractography_to_vtk_file,
+    )
+except ImportError:
+    VTK = False
 
 from nose.tools import with_setup
 import copy
@@ -139,34 +146,37 @@ def test_append():
     assert(equal_tracts_data(tractography.tracts_data(), new_data))
 
 
-@with_setup(setup)
-def test_saveload_vtk():
-    import tempfile
-    import os
-    fname = tempfile.mkstemp('.vtk')[1]
-    tractography_to_vtk_file(fname, tractography)
+if VTK:
+    @with_setup(setup)
+    def test_saveload_vtk():
+        import tempfile
+        import os
+        fname = tempfile.mkstemp('.vtk')[1]
+        tractography_to_vtk_file(fname, tractography)
 
-    new_tractography = tractography_from_vtk_files(fname)
+        new_tractography = tractography_from_vtk_files(fname)
 
-    assert(equal_tracts(tractography.tracts(), new_tractography.tracts()))
-    assert(equal_tracts_data(tractography.tracts_data(), new_tractography.tracts_data()))
+        assert(equal_tracts(tractography.tracts(), new_tractography.tracts()))
+        assert(equal_tracts_data(
+            tractography.tracts_data(),
+            new_tractography.tracts_data())
+        )
 
-    os.remove(fname)
+        os.remove(fname)
 
+    @with_setup(setup)
+    def test_saveload_vtp():
+        import tempfile
+        import os
+        fname = tempfile.mkstemp('.vtp')[1]
+        tractography_to_vtk_file(fname, tractography)
 
-@with_setup(setup)
-def test_saveload_vtp():
-    import tempfile
-    import os
-    fname = tempfile.mkstemp('.vtp')[1]
-    tractography_to_vtk_file(fname, tractography)
+        new_tractography = tractography_from_vtk_files(fname)
 
-    new_tractography = tractography_from_vtk_files(fname)
+        assert(equal_tracts(tractography.tracts(), new_tractography.tracts()))
+        assert(equal_tracts_data(tractography.tracts_data(), new_tractography.tracts_data()))
 
-    assert(equal_tracts(tractography.tracts(), new_tractography.tracts()))
-    assert(equal_tracts_data(tractography.tracts_data(), new_tractography.tracts_data()))
-
-    os.remove(fname)
+        os.remove(fname)
 
 
 @with_setup(setup)
@@ -203,7 +213,11 @@ def test_saveload():
     import tempfile
     import os
 
-    for ext in ('.vtk', '.vtp', '.trk'):
+    extensions = ('.trk',)
+    if VTK:
+        extensions += ('.vtk', '.vtp')
+
+    for ext in extensions:
         fname = tempfile.mkstemp(ext)[1]
 
         kwargs = {}
@@ -230,6 +244,9 @@ def test_saveload():
         new_tractography = tractography_from_files(fname)
 
         assert(equal_tracts(tractography_.tracts(), new_tractography.tracts()))
-        assert(equal_tracts_data(tractography_.tracts_data(), new_tractography.tracts_data()))
+        assert(equal_tracts_data(
+            tractography_.tracts_data(),
+            new_tractography.tracts_data()
+        ))
 
         os.remove(fname)

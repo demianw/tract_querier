@@ -1,7 +1,7 @@
 from .. import query_processor
 
 from nose.tools import assert_equal, assert_not_equal
-from unittest import expectedFailure
+from unittest import expectedFailure, skip
 
 import ast
 
@@ -27,7 +27,7 @@ def match(pattern, data, vars=None):
     return same, vars
 
 
-@expectedFailure
+@skip
 def test_rewrite_notin_precedence():
     code1 = "a and b not in c"
     code2 = "(a and b) not in c"

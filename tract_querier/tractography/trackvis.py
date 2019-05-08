@@ -96,6 +96,8 @@ def tractography_from_trackvis_file(filename):
 
     tracts_data = {}
     for i, sn in enumerate(scalar_names):
+        if hasattr(sn, 'decode'):
+            sn = sn.decode()
         tracts_data[sn] = [scalar[:, i][:, None] for scalar in scalars]
 
     affine = header['vox_to_ras']

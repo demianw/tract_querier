@@ -252,9 +252,9 @@ class EvaluateQueries(ast.NodeVisitor):
             isinstance(node.func, ast.Name) and
             len(node.args) == 1 and
             len(node.keywords) == 0 and
-            not hasattr(node, 'starargs') and
-            not hasattr(node, 'kwargs')
-            ):
+            (not hasattr(node, 'starargs') or node.starargs is None) and
+            (not hasattr(node, 'kwargs') or node.kwargs is None)
+        ):
             if (node.func.id.lower() == 'only'):
                 query_info = self.visit(node.args[0])
 
