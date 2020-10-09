@@ -12,7 +12,7 @@ MAINTAINER_EMAIL = 'demian@bwh.harvard.edu'
 URL = 'http://demianw.github.io/tract_querier'
 LICENSE = open('license.rst').read()
 DOWNLOAD_URL = 'https://github.com/demianw/tract_querier'
-VERSION = '0.1'
+VERSION = '0.2'
 
 
 def configuration(parent_package='', top_path=None):
@@ -49,7 +49,8 @@ if __name__ == "__main__":
         ],
         scripts=[
             'scripts/tract_querier',
-            'scripts/tract_math'
+            'scripts/tract_math',
+            'scripts/roi_querier'
         ],
         test_suite='nose.collector',
         **(configuration().todict())

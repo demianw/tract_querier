@@ -22,6 +22,11 @@ TRACT_MATH_SCRIPT = path.join(
     'scripts', 'tract_math'
 )
 
+ROI_QUERIER_SCRIPT = path.join(
+    PACKAGE_ROOT_DIR,
+    'scripts', 'roi_querier'
+)
+
 PYTHON = sys.executable
 
 ENVIRON = os.environ.copy()
@@ -29,6 +34,7 @@ sys.path.insert(0, PACKAGE_ROOT_DIR)
 ENVIRON['PYTHONPATH'] = reduce(lambda x, y: '%s:%s' % (x, y), sys.path)
 
 TEST_DATA = datasets.TestDataSet()
+
 
 def test_tract_querier_help():
     popen = subprocess.Popen(
@@ -41,6 +47,19 @@ def test_tract_querier_help():
     assert_in('error: incorrect number of arguments', stderr_text)
     assert_greater(popen.returncode, 0)
 
+
+def test_roi_querier_help():
+    popen = subprocess.Popen(
+        [PYTHON, ROI_QUERIER_SCRIPT],
+        shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        env=ENVIRON
+    )
+    popen.wait()
+    stderr_text = ''.join(popen.stderr.readlines())
+    assert_in('error: incorrect number of arguments', stderr_text)
+    assert_greater(popen.returncode, 0)
+
+
 def test_tract_math_help():
     popen = subprocess.Popen(
         [PYTHON, TRACT_MATH_SCRIPT],
@@ -52,6 +71,7 @@ def test_tract_math_help():
     assert_in('error: too few arguments', stderr_text)
     assert_greater(popen.returncode, 0)
 
+
 def test_tract_math_count():
     popen = subprocess.Popen(
         [PYTHON, TRACT_MATH_SCRIPT, TEST_DATA.files['tract_file'], 'count'],
@@ -62,6 +82,7 @@ def test_tract_math_count():
     stdout_text = ''.join(popen.stdout.readlines())
     assert_is_not_none(re.search('[^0-9]6783[^0-9]', stdout_text))
     assert_equal(popen.returncode, 0)
+
 
 def test_tract_querier_query():
     output_prefix = '%s/test' % TEST_DATA.dirname
