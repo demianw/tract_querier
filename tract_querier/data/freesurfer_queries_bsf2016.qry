@@ -1,7 +1,7 @@
 import FreeSurfer.qry
 
 # Author: Demian Wassermann and Christophe Bedetti
-# Co-Authors: Catherine Vien, Arnaud Boré
+# Co-Authors: Catherine Vien, Arnaud Bore
 
 HEMISPHERE.left |= '*.left'
 HEMISPHERE.right |= '*.right'

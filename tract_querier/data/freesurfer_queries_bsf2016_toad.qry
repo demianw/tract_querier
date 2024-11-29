@@ -3,7 +3,7 @@ import freesurfer_queries_bsf2016.qry
 
 # 2016-09-01
 # Author: Christophe Bedetti
-# Co-Authors: Catherine Vien, Arnaud Boré
+# Co-Authors: Catherine Vien, Arnaud Bore
 # Exclusion queries added to perform with algorithms used in
 # TOAD (https://github.com/UNFmontreal/toad)
 
