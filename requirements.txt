@@ -1,6 +1,6 @@
 numpy>=1.6,<1.20
-nose>=1.2
 nibabel>=2.0,<3.0
+nose>1.2
 six>=1.10
 numpydoc
 vtk
