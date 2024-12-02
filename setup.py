@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from distutils.core import setup
+from setuptools import setup, find_packages
 
 DISTNAME = 'tract_querier'
 DESCRIPTION = \
@@ -13,14 +13,6 @@ URL = 'http://demianw.github.io/tract_querier'
 LICENSE = open('license.rst').read()
 DOWNLOAD_URL = 'https://github.com/demianw/tract_querier'
 VERSION = '0.1'
-
-
-def configuration(parent_package='', top_path=None):
-    from numpy.distutils.misc_util import Configuration
-    config = Configuration(None, parent_package, top_path)
-    config.set_options(quiet=True)
-    config.add_subpackage('tract_querier')
-    return config
 
 
 if __name__ == "__main__":
@@ -52,5 +44,17 @@ if __name__ == "__main__":
             'scripts/tract_math'
         ],
         test_suite='nose.collector',
-        **(configuration().todict())
+        data_files=[
+            ('data',
+             [
+                 'data/FreeSurfer.qry',
+                 'data/JHU_MNI_SS_WMPM_Type_I.qry',
+                 'data/JHU_MNI_SS_WMPM_Type_II.qry',
+                 'data/freesurfer_queries.qry',
+                 'data/mori_queries.qry',
+             ]
+             )
+        ],
+        include_package_data=True,
+        packages=find_packages(),
     )
