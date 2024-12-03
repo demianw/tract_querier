@@ -1,0 +1,44 @@
+#!/usr/bin/env python
+import argparse
+import tract_querier
+
+import nibabel
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="""Creates volumetric ROIs to be used as seed, waypoint and
+                       exclusion masks in different tractography software"""
+    )
+    parser.add_argument("atlas", help="volume file representing the atlas",
+                        type=str)
+    parser.add_argument("queries_string", help="query to run", type=str)
+    parser.add_argument("outdir", help="directory where to output files",
+                        type=str)
+
+    # Make the interface compatible with tract_querier
+    parser.add_argument("-a", "--atlas", dest="atlas",
+                        help="name of the atlas file")
+    parser.add_argument("-q", "--queries", dest="queries_string",
+                        help="query to run")
+    parser.add_argument('-o', "--output", dest="outdir",
+                        help="folder in which to output the ROIs")
+
+    args = parser.parse_args()
+
+    query_file_body, _, _ = tract_querier.search_file_and_create_query_body(
+            args.queries_string
+    )
+
+    # TODO:
+    # eval_queries_roi
+    # save results
+    return
+
+
+def save_query(query_name, reference, outdir, evaluated_queries):
+    raise NotImplementedError()
+
+
+if __name__ == "__main__":
+    main()
