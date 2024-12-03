@@ -265,8 +265,8 @@ class AABBTree:
             rightIndices = indices[n:]
 
         if verbose:
-            print(("Left: ", leftIndices))
-            print(("Right: ", rightIndices))
+            print(f"Left: {leftIndices}")
+            print(f"Right: {rightIndices}")
         n = self.node(box, indices.copy(), parent=parent)
         n.left = self.buildTree(
             allboxes, leftIndices, parent=n, leafPointers=leafPointers)

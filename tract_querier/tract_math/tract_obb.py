@@ -344,7 +344,7 @@ class Box3DRich(Box2D):
 
             points = points[z < cutoff]
             point_ids = point_ids[z < cutoff]
-            print(('Discarded', (len(original_points) - len(points)) * 1. / len(points)))
+            print(f'Discarded {(len(original_points) - len(points)) * 1. / len(points)}')
             vectors = vectors[z < cutoff]
             if labels is not None:
                 labels = labels[z < cutoff]
@@ -869,7 +869,7 @@ def all_obb_3d_nr(points_, vectors_, labels_, tol=1e-8, level_=0, intersection_t
                     setattr(box, side, new_box)
                     getattr(box, side).parent = box
 
-                    print(("\tAdded to stack ", side))
+                    print(f"\tAdded to stack {side}")
                     stack.append(new_box)
                 else:
                     points_done += len(new_points)
