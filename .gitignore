@@ -14,3 +14,6 @@ htmlcov
 .idea
 build
 cover
+
+# Version file
+tract_querier/_version.py
