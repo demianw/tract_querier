@@ -93,8 +93,8 @@ class Tractography:
                             continue
                         if len(v) != len(tracts):
                             raise ValueError(
-                                'Number of elements in attribute %s must '
-                                'be the same as the number of tracts' % k
+                                f'Number of elements in attribute {k} must '
+                                'be the same as the number of tracts'
                             )
                         _, M = v[0].shape
                         for i, tract_v in enumerate(v):
@@ -104,9 +104,7 @@ class Tractography:
                                 (tract_M != M)
                             ):
                                 raise ValueError(
-                                    "Data for tract %s: %d is inconsistent" % (
-                                        k, i)
-                                )
+                                    f"Data for tract {k}: {i} is inconsistent")
         if appending:
             if tracts_data.keys() != self._tracts_data.keys():
                 raise ValueError("Tract data to append not compatible")
