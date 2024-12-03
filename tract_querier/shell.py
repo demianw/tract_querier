@@ -157,7 +157,7 @@ class TractQuerierCmd(cmd.Cmd):
         except TractQuerierLabelNotFound as e:
             print(e.value)
         except KeyError as e:
-            print("Query name not recognized: %s" % e)
+            print(f"Query name not recognized: {e}")
 
         return False
 

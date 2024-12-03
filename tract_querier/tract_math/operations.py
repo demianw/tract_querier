@@ -842,7 +842,7 @@ def tract_flip_endpoints_in_label(
 
     tracts = list(tractography.tracts())
     tracts_data = tractography.tracts_data()
-    print("Flipped %d tracts" % len(needs_flip))
+    print(f"Flipped {len(needs_flip)} tracts")
     for i in needs_flip:
         tracts[i] = tracts[i][::-1]
         for data_key, data_points in tracts_data:

@@ -45,7 +45,7 @@ def compute_all_measures(tractography, desired_keys_list, scalars=None, resoluti
             dilated_voxels.update(neighbors_list)
             if len(voxels.intersection(neighbors_list)) == len(neighbors):
                 eroded_voxels.add(voxel)
-        # print len(dilated_voxels), len(voxels), len(eroded_voxels)
+        # print(f"{len(dilated_voxels)}, {len(voxels)}, {len(eroded_voxels)}")
         approx_voxels = (len(dilated_voxels) - len(eroded_voxels)) / 2.
         approx_volume = approx_voxels * (resolution ** 3)
         unordered_results['tract volume'] = approx_volume
