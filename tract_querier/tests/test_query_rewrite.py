@@ -4,10 +4,6 @@ import pytest
 
 import ast
 
-import parser
-import token
-import symbol
-
 
 def match(pattern, data, vars=None):
     if vars is None:
