@@ -12,7 +12,7 @@ try:
 except ImportError:
     VTK = False
 
-from nose.tools import with_setup
+import pytest
 import copy
 from itertools import chain
 
@@ -61,7 +61,7 @@ def equal_tractography(a, b):
     )
 
 
-def setup(*args, **kwargs):
+def setup_module(*args, **kwargs):
     global dimensions
     global tracts
     global tracts_data
@@ -100,7 +100,6 @@ def setup(*args, **kwargs):
     tractography = Tractography(tracts, tracts_data)
 
 
-@with_setup(setup)
 def test_creation():
     assert(equal_tracts(tractography.tracts(), tracts))
     assert(equal_tracts_data(tractography.tracts_data(), tracts_data))
@@ -108,7 +107,6 @@ def test_creation():
     assert(not tractography.are_tracts_filtered())
 
 
-@with_setup(setup)
 def test_subsample_tracts():
     tractography.subsample_tracts(5)
 
@@ -133,7 +131,6 @@ def test_subsample_tracts():
     assert(not tractography.are_tracts_filtered())
 
 
-@with_setup(setup)
 def test_append():
     old_tracts = copy.deepcopy(tractography.tracts())
     new_data = {}
@@ -147,7 +144,6 @@ def test_append():
 
 
 if VTK:
-    @with_setup(setup)
     def test_saveload_vtk():
         import tempfile
         import os
@@ -164,7 +160,7 @@ if VTK:
 
         os.remove(fname)
 
-    @with_setup(setup)
+
     def test_saveload_vtp():
         import tempfile
         import os
@@ -179,7 +175,6 @@ if VTK:
         os.remove(fname)
 
 
-@with_setup(setup)
 def test_saveload_trk():
     import tempfile
     import os
@@ -208,7 +203,6 @@ def test_saveload_trk():
     os.remove(fname)
 
 
-@with_setup(setup)
 def test_saveload():
     import tempfile
     import os

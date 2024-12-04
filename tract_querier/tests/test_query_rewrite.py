@@ -1,7 +1,6 @@
 from .. import query_processor
 
-from nose.tools import assert_equal, assert_not_equal
-from unittest import expectedFailure, skip
+import pytest
 
 import ast
 
@@ -27,7 +26,7 @@ def match(pattern, data, vars=None):
     return same, vars
 
 
-@skip
+@pytest.mark.skip()
 def test_rewrite_notin_precedence():
     code1 = "a and b not in c"
     code2 = "(a and b) not in c"
@@ -48,10 +47,10 @@ def test_rewrite_notin_precedence():
     rw.visit(tree2_rw)
     rw.visit(tree3_rw)
 
-    assert_not_equal(ast.dump(tree1), ast.dump(tree2))
-    assert_equal(ast.dump(tree2), ast.dump(tree2_rw))
-    assert_equal(ast.dump(tree1_rw), ast.dump(tree2))
+    assert ast.dump(tree1) != ast.dump(tree2)
+    assert ast.dump(tree2) == ast.dump(tree2_rw)
+    assert ast.dump(tree1_rw) == ast.dump(tree2)
 
-    assert_equal(ast.dump(tree3), ast.dump(tree3_rw))
+    assert ast.dump(tree3) == ast.dump(tree3_rw)
 
-    assert_equal(ast.dump(tree1), ast.dump(tree3_rw))
+    assert ast.dump(tree1) == ast.dump(tree3_rw)

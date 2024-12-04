@@ -1,5 +1,3 @@
-from nose.tools import assert_equal, assert_greater, assert_in, assert_is_not_none, assert_true
-
 import os
 from os import path
 import re
@@ -38,8 +36,8 @@ def test_tract_querier_help():
     )
     popen.wait()
     stderr_text = ''.join(popen.stderr.readlines())
-    assert_in('error: incorrect number of arguments', stderr_text)
-    assert_greater(popen.returncode, 0)
+    assert 'error: incorrect number of arguments' in stderr_text
+    assert popen.returncode > 0
 
 def test_tract_math_help():
     popen = subprocess.Popen(
@@ -49,8 +47,8 @@ def test_tract_math_help():
     )
     popen.wait()
     stderr_text = ''.join(popen.stderr.readlines())
-    assert_in('error: too few arguments', stderr_text)
-    assert_greater(popen.returncode, 0)
+    assert 'error: too few arguments' in stderr_text
+    assert popen.returncode > 0
 
 def test_tract_math_count():
     popen = subprocess.Popen(
@@ -60,8 +58,8 @@ def test_tract_math_count():
     )
     popen.wait()
     stdout_text = ''.join(popen.stdout.readlines())
-    assert_is_not_none(re.search('[^0-9]6783[^0-9]', stdout_text))
-    assert_equal(popen.returncode, 0)
+    assert re.search('[^0-9]6783[^0-9]', stdout_text) is not None
+    assert popen.returncode == 0
 
 def test_tract_querier_query():
     output_prefix = '%s/test' % TEST_DATA.dirname
@@ -74,9 +72,9 @@ def test_tract_querier_query():
     )
     popen.wait()
     stdout_text = ''.join(popen.stdout.readlines())
-    assert_in('uncinate.left: 000102', stdout_text)
-    assert_in('uncinate.right: 000000', stdout_text)
-    assert_true(path.exists(output_prefix + '_uncinate.left.trk'))
-    assert_equal(popen.returncode, 0)
+    assert 'uncinate.left: 000102' in stdout_text
+    assert 'uncinate.right: 000000' in stdout_text
+    assert path.exists(output_prefix + '_uncinate.left.trk')
+    assert popen.returncode == 0
     if path.exists(output_prefix + '_uncinate.left.trk'):
         os.remove(output_prefix + '_uncinate.left.trk')

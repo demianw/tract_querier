@@ -38,7 +38,7 @@ doc = [
 ]
 test = [
     "coverage",
-    "nose",
+    "pytest",
 ]
 
 [project.urls]
