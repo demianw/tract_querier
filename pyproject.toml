@@ -24,8 +24,8 @@ classifiers = [
     "Operating System :: MacOS"
 ]
 dependencies = [
-    "numpy>=1.19.5,<2.0.0",
-    "nibabel>=2.0,<3.0",
+    "numpy>=1.23.0,<2.0.0",
+    "nibabel>=3.0.0",
     "six>=1.10",
     "vtk"
 ]
