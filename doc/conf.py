@@ -223,7 +223,7 @@ latex_documents = [('index', 'user_guide.tex', u'tract_querier user guide',
 #latex_use_parts = False
 
 # Additional stuff for the LaTeX preamble.
-latex_preamble = """
+latex_preamble = r"""
 \usepackage{amsmath}\usepackage{amsfonts}\usepackage{bm}\usepackage{morefloats}
 \usepackage{enumitem} \setlistdepth{10} \renewcommand{\Re}{\ensuremath{\mathbb R}}
 """
