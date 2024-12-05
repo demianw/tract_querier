@@ -59,4 +59,4 @@ jobs:
 
     - name: Run tests
       run: |
-        nosetests -v
+        pytest -v
