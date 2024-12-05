@@ -26,7 +26,6 @@ classifiers = [
 dependencies = [
     "numpy>=1.23.0,<2.0.0",
     "nibabel>=3.0.0",
-    "six>=1.10",
     "vtk"
 ]
 dynamic = ["version"]

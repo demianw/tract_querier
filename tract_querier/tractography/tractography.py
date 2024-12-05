@@ -1,5 +1,4 @@
 import numpy as np
-from six.moves import range
 
 __all__ = ['Tractography']
 

@@ -1,5 +1,4 @@
 from warnings import warn
-from six.moves import range
 
 import numpy
 
@@ -43,7 +42,7 @@ def tractography_to_trackvis_file(filename, tractography, affine=None, image_dim
     #data_new = {}
     # for k, v in data.iteritems():
     #    if (v[0].ndim > 1 and v[0].shape[1] > 1):
-    #        for i in xrange(v[0].shape[1]):
+    #        for i in range(v[0].shape[1]):
     #            data_new['%s_%02d' % (k, i)] = [
     #                v_[:, i] for v_ in v
     #            ]

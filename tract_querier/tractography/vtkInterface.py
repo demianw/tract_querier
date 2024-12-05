@@ -3,8 +3,6 @@ import vtk
 from vtk.util import numpy_support as ns
 import numpy as np
 
-from six.moves import range
-
 from .tractography import Tractography
 from functools import reduce
 
