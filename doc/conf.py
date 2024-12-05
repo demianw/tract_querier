@@ -259,5 +259,4 @@ def setup(app):
                     yield index, Keyword.Pseudo, value
                 else:
                     yield index, token, value
-    wmql_lexer = WMQLLexer()
-    app.add_lexer('wmql', wmql_lexer)
+    app.add_lexer('wmql', WMQLLexer)
