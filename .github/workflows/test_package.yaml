@@ -19,8 +19,11 @@ jobs:
       # max-parallel: 6
       matrix:
         os: [ubuntu-latest]
-        python-version: ['3.9', '3.10', '3.11']
+        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
         requires: ['minimal', 'latest']
+        exclude:
+          - python-version: '3.13'
+            requires: 'minimal'
 
     steps:
     - name: Check out repository
