@@ -1007,13 +1007,14 @@ def draw_box_2d(obbs, **args):
 
 
 def draw_box_3d(obbs, tube_radius=1, color=None, **kwargs):
+        import numpy as np
         from mayavi.mlab import plot3d
-        from numpy.random import rand
+        rng = np.random.default_rng(1234)
         if isinstance(obbs, Box2D):
             obbs = [obbs]
         for obb in obbs:
             if color is None:
-                color_ = tuple(rand(3))
+                color_ = tuple(rng.random(3))
             else:
                 color_ = color
             box = obb.box
