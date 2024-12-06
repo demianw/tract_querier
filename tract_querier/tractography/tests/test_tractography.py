@@ -16,8 +16,8 @@ import pytest
 import copy
 from itertools import chain
 
+import numpy as np
 from numpy import all, eye, ones, allclose
-from numpy.random import randint, randn
 from numpy.testing import assert_array_equal
 
 dimensions = None
@@ -72,14 +72,15 @@ def setup_module(*args, **kwargs):
     else:
         test_active_data = False
 
-    dimensions = [(randint(5, max_tract_length), 3) for _ in range(n_tracts)]
-    tracts = [randn(*d) for d in dimensions]
+    rng = np.random.default_rng(1234)
+    dimensions = [(rng.integers(5, max_tract_length), 3) for _ in range(n_tracts)]
+    tracts = [rng.standard_normal(d) for d in dimensions]
     tracts_data = {
         'a%d' % i: [
-            randn(d[0], k)
+            rng.standard_normal((d[0], k))
             for d in dimensions
         ]
-        for i, k in zip(range(4), randint(1, 3, 9))
+        for i, k in zip(range(4), rng.integers(1, 3, 9))
     }
 
     if test_active_data:

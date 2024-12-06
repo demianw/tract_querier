@@ -1,12 +1,14 @@
 from .. import query_processor
 
-from numpy import random
 import ast
+import numpy as np
+
 
 # Ten tracts traversing random labels
 another_set = True
 while (another_set):
-    tracts_labels = dict([(i, set(random.randint(100, size=2))) for i in range(100)])
+    rng = np.random.default_rng()
+    tracts_labels = dict([(i, set(rng.integers(100, size=2))) for i in range(100)])
     labels_tracts = query_processor.labels_for_tracts(tracts_labels)
     another_set = 0 not in labels_tracts.keys() or 1 not in labels_tracts.keys()
 
