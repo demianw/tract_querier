@@ -1,7 +1,5 @@
 from .decorator import tract_math_operation, set_dictionary_from_use_filenames_as_index
 
-from six.moves import range
-
 from warnings import warn
 
 import numpy

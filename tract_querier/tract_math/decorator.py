@@ -5,8 +5,6 @@ import io
 import csv
 from os import path
 
-from six.moves import range
-
 import nibabel
 
 from ..tractography import (
