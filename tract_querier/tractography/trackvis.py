@@ -4,11 +4,12 @@ import numpy
 
 from .tractography import Tractography
 
-from nibabel import trackvis
+import nibabel as nib
 
 
 def tractography_to_trackvis_file(filename, tractography, affine=None, image_dimensions=None):
-    trk_header = trackvis.empty_header()
+
+    trk_header = nib.streamlines.TrkFile.create_empty_header()
 
     if affine is not None:
         pass
@@ -17,17 +18,16 @@ def tractography_to_trackvis_file(filename, tractography, affine=None, image_dim
     else:
         raise ValueError("Affine transform has to be provided")
 
-    trackvis.aff_to_hdr(affine, trk_header, True, True)
-    trk_header['origin'] = 0.
+    trk_header['voxel_to_rasmm'] = affine
     if image_dimensions is not None:
-        trk_header['dim'] = image_dimensions
+        trk_header["dimensions"] = image_dimensions
     elif hasattr(tractography, 'image_dimensions'):
-        trk_header['dim'] = tractography.image_dimensions
+        trk_header["dimensions"] = tractography.image_dimensions
     else:
         raise ValueError("Image dimensions needed to save a trackvis file")
 
     orig_data = tractography.tracts_data()
-    data = {}
+    data_per_point = {}
     for k, v in orig_data.items():
         if not isinstance(v[0], numpy.ndarray):
             continue
@@ -37,10 +37,10 @@ def tractography_to_trackvis_file(filename, tractography, affine=None, image_dim
                 "format does not handle multivalued data" % k
             )
         else:
-            data[k] = v
+            data_per_point[k] = v
 
     #data_new = {}
-    # for k, v in data.iteritems():
+    # for k, v in data_per_point.iteritems():
     #    if (v[0].ndim > 1 and v[0].shape[1] > 1):
     #        for i in range(v[0].shape[1]):
     #            data_new['%s_%02d' % (k, i)] = [
@@ -48,38 +48,46 @@ def tractography_to_trackvis_file(filename, tractography, affine=None, image_dim
     #            ]
     #    else:
     #       data_new[k] = v
-    trk_header['n_count'] = len(tractography.tracts())
-    trk_header['n_properties'] = 0
-    trk_header['n_scalars'] = len(data)
+    trk_header['nb_streamlines'] = len(tractography.tracts())
+    trk_header['nb_properties_per_streamline'] = 0
+    trk_header['nb_scalars_per_point'] = len(data_per_point)
 
-    if len(data) > 10:
+    if len(data_per_point) > 10:
         raise ValueError('At most 10 scalars permitted per point')
 
-    trk_header['scalar_name'][:len(data)] = numpy.array(
-        [n[:20] for n in data],
+    trk_header['scalar_name'][:len(data_per_point)] = numpy.array(
+        [n[:20] for n in data_per_point],
         dtype='|S20'
     )
-    trk_tracts = []
 
-    for i, sl in enumerate(tractography.tracts()):
-        scalars = None
-        if len(data) > 0:
-            scalars = numpy.vstack([
-                data[k.decode('utf8')][i].squeeze()
-                for k in trk_header['scalar_name'][:len(data)]
-            ]).T
+    data_per_streamline = None
+    tractogram = nib.streamlines.Tractogram(
+        streamlines=tractography.tracts(),
+        data_per_streamline=data_per_streamline,
+        data_per_point=data_per_point,
+        affine_to_rasmm=numpy.eye(4),
+    )
 
-        trk_tracts.append((sl, scalars, None))
-
-    trackvis.write(filename, trk_tracts, trk_header, points_space='rasmm')
+    nib.streamlines.save(tractogram, filename, header=trk_header)
 
 
 def tractography_from_trackvis_file(filename):
-    tracts_and_data, header = trackvis.read(filename, points_space='rasmm')
+    trk_file = nib.streamlines.load(filename)
 
-    tracts, scalars, properties = list(zip(*tracts_and_data))
+    tracts = array_sequence_data_to_tracts(
+        trk_file.streamlines.get_data(),
+        trk_file.streamlines._offsets,
+        trk_file.streamlines._lengths,
+    )
 
-    scalar_names = [n for n in header['scalar_name'] if len(n) > 0]
+    tracts_dpp = trk_file.tractogram.data_per_point.store
+    tracts_data = {}
+    if tracts_dpp:
+        tracts_data = {k: array_sequence_to_dpp(array_seq) for k, array_seq in tracts_dpp.items()}
+
+    tracts_dps = trk_file.tractogram.data_per_streamline.store
+    if tracts_dps:
+        properties = dps_to_tuple(tracts_dps)
 
     #scalar_names_unique = []
     #scalar_names_subcomp = {}
@@ -93,14 +101,8 @@ def tractography_from_trackvis_file(filename):
     #    else:
     #        scalar_names_unique.append(sn)
 
-    tracts_data = {}
-    for i, sn in enumerate(scalar_names):
-        if hasattr(sn, 'decode'):
-            sn = sn.decode()
-        tracts_data[sn] = [scalar[:, i][:, None] for scalar in scalars]
-
-    affine = header['vox_to_ras']
-    image_dims = header['dim']
+    affine = trk_file.affine
+    image_dims = trk_file.header['dimensions']
 
     tr = Tractography(
         tracts, tracts_data,
@@ -108,3 +110,36 @@ def tractography_from_trackvis_file(filename):
     )
 
     return tr
+
+
+def array_sequence_to_dpp(array_seq):
+
+    dpp = []
+    for offset, length in zip(array_seq._offsets, array_seq._lengths):
+        val = array_seq._data[offset: offset + length]
+        dpp.append(val)
+
+    return dpp
+
+
+def streamline_property_to_tuple(property):
+
+    num_strml = len(property[0])
+    num_dpps = len(property)
+    return tuple(numpy.hstack([property[j][i] for j in range(num_dpps)]) for i in range(num_strml))
+
+
+def dps_to_tuple(dps):
+
+    dps_lists = list(dps.values())
+    return streamline_property_to_tuple(dps_lists)
+
+
+def array_sequence_data_to_tracts(array_seq_data, offsets, lengths):
+
+    tracts = []
+    for offset, length in zip(offsets, lengths):
+        val = array_seq_data[offset: offset + length]
+        tracts.append(val)
+
+    return tuple(tracts)
