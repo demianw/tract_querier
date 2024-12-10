@@ -118,13 +118,13 @@ def scalar_tract_mean_std(optional_flags, tractography, scalar):
         tracts = tractography.original_tracts_data()[scalar]
         result = OrderedDict((
             ('tract file', []),
-            ('mean %s' % scalar, []),
-            ('std %s' % scalar, [])
+            (f'mean {scalar}', []),
+            (f'std {scalar}', [])
         ))
         for i, t in enumerate(tracts):
-            result['tract file'].append('Tract %04d' % i)
-            result['mean %s' % scalar].append(t.mean())
-            result['std %s' % scalar].append(t.std())
+            result['tract file'].append(f'Tract {i:04d}')
+            result[f'mean {scalar}'].append(t.mean())
+            result[f'std {scalar}'].append(t.std())
 
         return result
 
@@ -138,11 +138,11 @@ def scalar_tract_median(optional_flags, tractography, scalar):
         tracts = tractography.original_tracts_data()[scalar]
         result = OrderedDict((
             ('tract file', []),
-            ('median %s' % scalar, []),
+            (f'median {scalar}', []),
         ))
         for i, t in enumerate(tracts):
-            result['tract file'].append('Tract %04d' % i)
-            result['median %s' % scalar].append(float(numpy.median(t)))
+            result['tract file'].append(f'Tract {i:04d}')
+            result[f'median {scalar}'].append(float(numpy.median(t)))
 
         return result
     except KeyError:
@@ -157,8 +157,8 @@ def scalar_mean_std(optional_flags, tractography, scalar):
         mean = all_scalars.mean(0)
         std = all_scalars.std(0)
         return OrderedDict((
-            ('mean %s' % scalar, float(mean)),
-            ('std %s' % scalar, float(std))
+            (f'mean {scalar}', float(mean)),
+            (f'std {scalar}', float(std))
         ))
 
     except KeyError:
@@ -173,7 +173,7 @@ def scalar_median(optional_flags, tractography, scalar):
         median = numpy.median(all_scalars)
 
         return OrderedDict((
-            ('median %s' % scalar, float(median)),
+            (f'median {scalar}', float(median)),
         ))
 
     except KeyError:
@@ -759,7 +759,7 @@ def tract_bhattacharyya_coefficient(optional_flags, tractography, resolution, *o
     result = OrderedDict(
         [('tract file', [])]
         + [
-            ('bhattacharyya %s value' % coord[i], [])
+            (f'bhattacharyya {coord[i]} value', [])
             for i in range(3)
         ]
     )
@@ -805,7 +805,7 @@ def tract_bhattacharyya_coefficient(optional_flags, tractography, resolution, *o
         ]
         for i in range(3):
             result['tract file'].append(tract)
-            result['bhattacharyya %s value' % coord[i]].append(
+            result[f'bhattacharyya {coord[i]} value'].append(
                 numpy.nan_to_num(distances[i]))
 
     return result

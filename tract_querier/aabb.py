@@ -35,10 +35,7 @@ class BoundingBox(np.ndarray):
         return input_array.view(cls)
 
     def __str__(self):
-        return ('%s:%s' % (
-            super(np.ndarray, self[:3]).__str__(),
-            super(np.ndarray, self[3:]).__str__()
-        )).replace('BoundingBox', '')
+        return (f'{super(np.ndarray, self[:3]).__str__()}:{super(np.ndarray, self[3:]).__str__()}').replace('BoundingBox', '')
 
     @property
     def volume(self):
@@ -292,13 +289,10 @@ class AABBTree:
             self.parent = parent
 
         def __str__(self):
-            return """
-      box = %s
-      indices = %s
-      """ % (
-                self.box,
-                self.indices,
-            )
+            return f"""
+      box = {self.box}
+      indices = {self.indices}
+      """
 
         def __repr__(self):
             return self.__str__()
@@ -314,13 +308,10 @@ class AABBTree:
             self.parent = parent
 
         def __str__(self):
-            return """
-      box = %s
-      indices = %s
-      """ % (
-                self.box,
-                self.indices,
-            )
+            return f"""
+      box = {self.box}
+      indices = {self.indices}
+      """
 
         def __repr__(self):
             return self.__str__()

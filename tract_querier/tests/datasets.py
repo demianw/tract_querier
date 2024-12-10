@@ -55,7 +55,7 @@ class TestDataSet(unittest.TestCase):
             if (
                 hashlib.md5(open(dst_filename).read()).digest() != v[2]
             ):
-                raise IOError('File %s url %s was not properly downloaded' % (v[1], v[0]))
+                raise IOError(f'File {v[1]} url {v[0]} was not properly downloaded')
 
             self.files[k] = dst_filename
 
