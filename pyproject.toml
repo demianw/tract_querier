@@ -25,11 +25,11 @@ classifiers = [
 ]
 dependencies = [
     "numpy>=1.23.0,<2.0.0",
-    "nibabel>=3.0.0",
-    "vtk"
+    "nibabel>=3.0.0,<4.0.0",
+    "vtk>8.1.0,<=9.4.0"
 ]
 dynamic = ["version"]
-requires-python = ">=3.9"
+requires-python = ">=3.9,<3.12"
 
 [project.optional-dependencies]
 doc = [
