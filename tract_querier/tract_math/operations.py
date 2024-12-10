@@ -16,11 +16,7 @@ import traceback
 from . import tensor_operations
 from . import tract_operations
 
-
-try:
-    from collections import OrderedDict
-except ImportError:  # Python 2.6 fix
-    from ordereddict import OrderedDict
+from collections import OrderedDict
 
 
 @tract_math_operation(': print the names of scalar data associated with each tract')
