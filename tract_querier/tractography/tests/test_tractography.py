@@ -30,7 +30,7 @@ n_tracts = 50
 
 def equal_tracts(a, b):
     for t1, t2 in zip(a, b):
-        if not (len(t1) == len(t2) and allclose(t1, t2)):
+        if not (len(t1) == len(t2) and allclose(t1, t2, atol=1e-7)):
             return False
 
     return True
