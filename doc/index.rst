@@ -23,7 +23,7 @@ This software is published under the following :ref:`license`
 .. toctree::
    :maxdepth: 1
 
-    tract_querier
+   tract_querier
 
 
 
