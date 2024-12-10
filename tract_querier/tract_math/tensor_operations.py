@@ -3,11 +3,7 @@ from ..tractography import Tractography
 from . import tract_operations
 from ..tensor import scalar_measures
 
-try:
-    from collections import OrderedDict
-except ImportError:  # Python 2.6 fix
-    from ordereddict import OrderedDict
-
+from collections import OrderedDict
 
 
 def compute_all_measures(tractography, desired_keys_list, scalars=None, resolution=None):
