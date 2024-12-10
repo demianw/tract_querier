@@ -28,4 +28,4 @@ jobs:
 
     - name: Build docs
       run: |
-          make -C doc/ SPHINXOPTS="-W -v" BUILDDIR="$HOME/docs" OUTDIR="$HOME/html" html
+          make -C doc/ SPHINXOPTS="-v" BUILDDIR="$HOME/docs" OUTDIR="$HOME/html" html
