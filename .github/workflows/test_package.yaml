@@ -59,4 +59,9 @@ jobs:
 
     - name: Run tests
       run: |
-        pytest -v
+        coverage run --source tract_querier -m pytest -v tract_querier
+
+    - name: Statistics
+      if: success()
+      run: |
+         coverage report
