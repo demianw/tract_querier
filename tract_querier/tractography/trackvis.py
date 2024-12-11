@@ -2,7 +2,7 @@ from warnings import warn
 
 import numpy
 
-from .tractography import Tractography
+from tract_querier.tractography import Tractography
 
 from nibabel import trackvis
 

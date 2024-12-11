@@ -7,7 +7,7 @@ from os import path
 
 import nibabel
 
-from ..tractography import (
+from tract_querier.tractography import (
     Tractography, tractography_to_file
 )
 import os

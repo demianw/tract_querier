@@ -1,4 +1,4 @@
-from .decorator import tract_math_operation, set_dictionary_from_use_filenames_as_index
+from tract_querier.tract_math.decorator import tract_math_operation, set_dictionary_from_use_filenames_as_index
 
 from warnings import warn
 
@@ -7,14 +7,14 @@ import numpy
 import nibabel
 from nibabel.spatialimages import SpatialImage
 
-from ..tractography import (
+from tract_querier.tractography import (
     Tractography, tractography_to_file, tractography_from_files
 )
 
 import sys
 import traceback
-from . import tensor_operations
-from . import tract_operations
+from tract_querier.tract_math import tensor_operations
+from tract_querier.tract_math import tract_operations
 
 
 try:
@@ -697,7 +697,7 @@ def tract_smooth(optional_flags, tractography, var, file_output):
 
 @tract_math_operation('<tract_out>: compute the protoype tract')
 def tract_prototype_median(optional_flags, tractography, file_output=None):
-    from .tract_obb import prototype_tract
+    from tract_querier.tract_math.tract_obb import prototype_tract
 
     tracts = tractography.tracts()
     data = tractography.tracts_data()
@@ -717,7 +717,7 @@ def tract_prototype_median(optional_flags, tractography, file_output=None):
 
 @tract_math_operation('<smooth order> <tract_out>: compute the protoype tract')
 def tract_prototype_mean(optional_flags, tractography, smooth_order, file_output=None):
-    from .tract_obb import prototype_tract
+    from tract_querier.tract_math.tract_obb  import prototype_tract
 
     tracts = tractography.tracts()
     prototype_ix, leave_centers = prototype_tract(
