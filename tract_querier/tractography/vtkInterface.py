@@ -297,7 +297,7 @@ def tracts_to_vtkPolyData(tracts, tracts_data={}, lines_indices=None):
             value_ = value
         else:
             raise ValueError(
-                "Data in %s does not have the correct number of items")
+                f"Data in {key} does not have the correct number of items")
 
         vtk_value = ns.numpy_to_vtk(
             np.ascontiguousarray(value_, dtype=ns.get_vtk_to_numpy_typemap()[vtk.VTK_FLOAT]),
@@ -353,13 +353,8 @@ def writeLinesToVtkPolyData_pure_python(filename, lines, point_data={}):
     points_for_line_saved = 0
     for line in lines:
         file_.write(
-            "%d %s \n" % (
-                len(line),
-                reduce(
-                    lambda x, y: x + ' %d' % (y + points_for_line_saved),
-                    range(len(line)), ''
-                )
-            ))
+            f"{len(line)} {reduce(lambda x, y: x + f' {(y + points_for_line_saved)}', range(len(line)), '')} \n"
+        )
         points_for_line_saved += len(line)
 
     if point_data:
@@ -400,8 +395,7 @@ def write_active_components(file_, point_data):
                 (fixed_number_of_components != number_of_components)
             ):
                 raise ValueError(
-                    "Active %s don't have %d components, it has %d" % (
-                        type_, fixed_number_of_components, number_of_components)
+                    f"Active {type_} don't have {fixed_number_of_components} components, it has {number_of_components}"
                 )
             if type_ == 'Scalars':
                 file_.write(__point_data_attribute_header__(
@@ -435,7 +429,7 @@ def write_field_data(file_, number_of_points, active_keys, point_data):
 
         if sum(len(d) for d in data) != number_of_points:
             raise ValueError(
-                "Attribute %s does not have a tuple per point in the line" % key)
+                f"Attribute {key} does not have a tuple per point in the line")
 
         file_.write(
             __field_data_attribute_header__(
@@ -489,30 +483,27 @@ __polyDataType__ = "DATASET POLYDATA\n"
 
 
 def __points_header__(number_of_points):
-    return "POINTS %d float\n" % number_of_points
+    return f"POINTS {number_of_points} float\n"
 
 
 def __lines_header__(number_of_lines, number_of_points):
-    return "LINES %d %d\n" % (number_of_lines, number_of_lines + number_of_points)
+    return f"LINES {number_of_lines} {number_of_lines + number_of_points}\n"
 
 
 def __point_data_header__(number_of_points):
-    return "POINT_DATA %d\n" % number_of_points
+    return f"POINT_DATA {number_of_points}\n"
 
 
 def __point_data_attribute_header__(type_, name, number_of_components=0):
-    return "%s %s float %.d\n" % (type_, name, number_of_components)
+    return f"{type_} {name} float {number_of_components:d}\n"
 
 
 def __field_data_header__(number_of_arrays):
-    return "FIELD FieldData %d\n" % number_of_arrays
+    return f"FIELD FieldData {number_of_arrays}\n"
 
 
 def __field_data_attribute_header__(
     array_name='', number_of_components=1,
     number_of_points=1, data_type='float'
 ):
-    return " % s %d %d %s\n" % (
-        array_name, number_of_components,
-        number_of_points, data_type
-    )
+    return f" {array_name} {number_of_components} {number_of_points} {data_type}\n"

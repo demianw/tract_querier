@@ -223,9 +223,7 @@ class GenWarpFields(utils.ANTSCommand):
                     self._internal['input_images'],
                     self._internal['metric_weights'],
                 ):
-                    arg_string += '-m CC[%s,%s,%0.2f,4] ' % (
-                        template, reference, weight
-                    )
+                    arg_string += f'-m CC[{template},{reference},{weight:0.2f},4] '
                 return arg_string[:-1]
             else:
                 return ''
