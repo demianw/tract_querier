@@ -1,4 +1,5 @@
 import ast
+import numbers
 from os import path
 from copy import deepcopy
 from operator import lt, gt
@@ -239,12 +240,6 @@ class EvaluateQueries(ast.NodeVisitor):
         else:
             raise TractQuerierSyntaxError(
                 "Syntax error in query line %d" % node.lineno)
-
-    def visit_Str(self, node):
-        query_info = FiberQueryInfo()
-        for name in fnmatch.filter(self.evaluated_queries_info.keys(), node.s):
-            query_info.update(self.evaluated_queries_info[name])
-        return query_info
 
     def visit_Call(self, node):
         # Single string argument function
@@ -558,31 +553,40 @@ class EvaluateQueries(ast.NodeVisitor):
                 (node.lineno, query_name)
             )
 
-    def visit_Num(self, node):
-        if (
-            node.n in
-            self.tractography_spatial_indexing.crossing_labels_tracts
-        ):
-            tracts = (
-                self.tractography_spatial_indexing.
-                crossing_labels_tracts[node.n]
+    def visit_Constant(self, node):
+        if isinstance(node.value, numbers.Number):
+            if (
+                node.n in
+                self.tractography_spatial_indexing.crossing_labels_tracts
+            ):
+                tracts = (
+                    self.tractography_spatial_indexing.
+                    crossing_labels_tracts[node.n]
+                )
+            else:
+                tracts = set()
+
+            endpoints = (set(), set())
+            for i in (0, 1):
+                elt = self.tractography_spatial_indexing.ending_labels_tracts[i]
+                if node.n in elt:
+                    endpoints[i].update(elt[node.n])
+
+            labelset = set((node.n,))
+            query_info = FiberQueryInfo(
+                tracts, labelset,
+                endpoints
             )
+
+        elif isinstance(node.value, str):
+            query_info = FiberQueryInfo()
+            for name in fnmatch.filter(self.evaluated_queries_info.keys(),
+                                       node.s):
+                query_info.update(self.evaluated_queries_info[name])
         else:
-            tracts = set()
+            raise NotImplementedError(f"{node.value} not supported.")
 
-        endpoints = (set(), set())
-        for i in (0, 1):
-            elt = self.tractography_spatial_indexing.ending_labels_tracts[i]
-            if node.n in elt:
-                endpoints[i].update(elt[node.n])
-
-        labelset = set((node.n,))
-        tract_info = FiberQueryInfo(
-            tracts, labelset,
-            endpoints
-        )
-
-        return tract_info
+        return query_info
 
     def visit_Expr(self, node):
         if isinstance(node.value, ast.Name):
@@ -735,11 +739,14 @@ class RewritePreprocess(ast.NodeTransformer):
             node
         )
 
-    def visit_Str(self, node):
-        return ast.copy_location(
-            ast.Str(s=node.s.lower()),
-            node
-        )
+    def visit_Constant(self, node):
+        if isinstance(node.s, str):
+            return ast.copy_location(
+                ast.Constant(node.s.lower()),
+                node
+            )
+        else:
+            return self.generic_visit(node)
 
     def visit_Import(self, node):
         try:
