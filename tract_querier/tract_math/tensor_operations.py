@@ -1,7 +1,7 @@
 import numpy
-from ..tractography import Tractography
-from . import tract_operations
-from ..tensor import scalar_measures
+from tract_querier.tractography import Tractography
+from tract_querier.tract_math import tract_operations
+from tract_querier.tensor import scalar_measures
 
 from collections import OrderedDict
 

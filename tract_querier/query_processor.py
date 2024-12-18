@@ -5,7 +5,7 @@ from operator import lt, gt
 from itertools import takewhile
 import fnmatch
 
-from .code_util import DocStringInheritor
+from tract_querier.code_util import DocStringInheritor
 
 
 __all__ = [
