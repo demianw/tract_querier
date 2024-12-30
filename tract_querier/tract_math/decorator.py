@@ -196,7 +196,7 @@ def process_output(output, file_output=None):
             header = dict(zip(writer.fieldnames, writer.fieldnames))
             writer.writerow(header)
 
-        first_value = output.values()[0]
+        first_value = list(output.values())[0]
         if (
             not isinstance(first_value, str) and
             isinstance(first_value, Iterable)

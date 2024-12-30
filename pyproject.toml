@@ -38,6 +38,7 @@ doc = [
 test = [
     "coverage",
     "pytest",
+    "pytest-console-scripts",
 ]
 
 [project.urls]
