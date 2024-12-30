@@ -135,7 +135,7 @@ def main():
     #     parser.error(e.value)
 
     labels_nii = nibabel.load(options.atlas_file_name)
-    img = labels_nii.get_data()
+    img = labels_nii.get_fdata()
 
     tr = tract_querier.tractography.tractography_from_file(
         options.tractography_file_name
@@ -163,14 +163,14 @@ def main():
             }
         else:
             tractography_extra_kwargs = {
-                'affine': labels_nii.get_affine(),
+                'affine': labels_nii.affine,
                 'image_dimensions': img.shape
             }
     else:
         tractography_extra_kwargs = {}
 
     print("Calculating labels and crossings")
-    affine_ijk_2_ras = labels_nii.get_affine()
+    affine_ijk_2_ras = labels_nii.affine
     tracts = tr.tracts()
 
     if bounding_box_affine_transform is not None:
