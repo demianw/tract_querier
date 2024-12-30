@@ -10,6 +10,8 @@ import warnings
 import os, sys
 # sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
+from tract_querier.tract_math import operations
+
 
 def tract_math_operation(help_text, needs_one_tract=True):
     '''
@@ -29,10 +31,7 @@ def tract_math_operation(help_text, needs_one_tract=True):
     return internal_decorator
 
 
-def main():
-    from tract_querier.tract_math import operations
-    from tract_querier.tract_math import TractMathWrongArgumentsError
-
+def _build_arg_parser():
     usage = r"""
     usage: %(prog)s <tract1.vtk> ... <tractN.vtk> operation <operation parameter1> ... <operation parameterN> <output_tract.vtk> \
                       [ optional flags ]
@@ -84,7 +83,15 @@ def main():
     parser.add_argument('operation_parameters', type=str, nargs=REMAINDER,
                         help="operation parameters")
 
+    return parser
+
+
+def main():
+    from tract_querier.tract_math import TractMathWrongArgumentsError
+
+    parser = _build_arg_parser()
     args = parser.parse_args()
+
     # Load the global modules after the parsing of parameters
     from tract_querier.tractography import tractography_from_files
 
