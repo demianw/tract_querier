@@ -320,7 +320,7 @@ def tract_deform(optional_flags, tractography, image, file_output=None):
     import numpy as numpy
 
     image = nibabel.load(image)
-    coord_adjustment = numpy.sign(numpy.diag(image.get_affine())[:-1])
+    coord_adjustment = numpy.sign(numpy.diag(image.affine)[:-1])
     ijk_points = tract_operations.tract_in_ijk(image, tractography)
     image_data = image.get_fdata().squeeze()
 
@@ -362,7 +362,7 @@ def tract_affine_transform(optional_flags,
     import nibabel
     import numpy as numpy
     ref_image = nibabel.load(ref_image)
-    ref_affine = ref_image.get_affine()
+    ref_affine = ref_image.affine
     transform = numpy.loadtxt(transform_file)
     invert = bool(invert)
     if invert:
@@ -440,7 +440,7 @@ def tract_generate_mask(optional_flags, tractography, image, file_output):
     image = nibabel.load(image)
     mask = tract_operations.tract_mask(image, tractography)
 
-    return SpatialImage(mask, image.get_affine())
+    return SpatialImage(mask, image.affine)
 
 
 @tract_math_operation('<image> [smoothing] <image_out>: calculates the probabilistic tract image for these tracts', needs_one_tract=False)
@@ -466,7 +466,7 @@ def tract_generate_population_probability_map(optional_flags, tractographies, im
 
     prob_map /= len(tractographies)
 
-    return SpatialImage(prob_map, image.get_affine()),
+    return SpatialImage(prob_map, image.affine),
 
 
 @tract_math_operation('<image> <image_out>: calculates the probabilistic tract image for these tracts', needs_one_tract=False)
@@ -481,7 +481,7 @@ def tract_generate_probability_map(optional_flags, tractographies, image, file_o
         new_prob_map = tract_operations.tract_mask(image, tract[1])
         prob_map = prob_map + new_prob_map - (prob_map * new_prob_map)
 
-    return SpatialImage(prob_map, image.get_affine())
+    return SpatialImage(prob_map, image.affine)
 
 
 @tract_math_operation('<tractography_out>: strips the data from the tracts', needs_one_tract=True)

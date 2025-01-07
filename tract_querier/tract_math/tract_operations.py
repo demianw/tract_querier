@@ -3,7 +3,7 @@ import numpy
 
 def tract_in_ras(image, tract_ijk):
     ijk_points = tract_ijk
-    ras_points = numpy.dot(image.get_affine(), numpy.hstack((
+    ras_points = numpy.dot(image.affine, numpy.hstack((
         ijk_points,
         numpy.ones((len(ijk_points), 1))
     )).T).T[:, :-1]
@@ -12,7 +12,7 @@ def tract_in_ras(image, tract_ijk):
 
 def tract_in_ijk(image, tractography):
     ras_points = numpy.vstack(tractography.tracts())
-    ijk_points = numpy.linalg.solve(image.get_affine(), numpy.hstack((
+    ijk_points = numpy.linalg.solve(image.affine, numpy.hstack((
         ras_points,
         numpy.ones((len(ras_points), 1))
     )).T).T[:, :-1]
@@ -22,7 +22,7 @@ def tract_in_ijk(image, tractography):
 def each_tract_in_ijk(image, tractography):
     ijk_tracts = []
     for tract in tractography.tracts():
-        ijk_tracts.append(numpy.dot(numpy.linalg.inv(image.get_affine()), numpy.hstack((
+        ijk_tracts.append(numpy.dot(numpy.linalg.inv(image.affine), numpy.hstack((
             tract,
             numpy.ones((len(tract), 1))
         )).T).T[:, :-1])
