@@ -278,7 +278,7 @@ def tract_map_image(optional_flags, tractography, image, quantity_name, file_out
     image = nibabel.load(image)
 
     ijk_points = tract_operations.tract_in_ijk(image, tractography)
-    image_data = image.get_data()
+    image_data = image.get_fdata()
 
     if image_data.ndim > 3:
         output_name, ext = path.splitext(file_output)
@@ -322,7 +322,7 @@ def tract_deform(optional_flags, tractography, image, file_output=None):
     image = nibabel.load(image)
     coord_adjustment = numpy.sign(numpy.diag(image.get_affine())[:-1])
     ijk_points = tract_operations.tract_in_ijk(image, tractography)
-    image_data = image.get_data().squeeze()
+    image_data = image.get_fdata().squeeze()
 
     if image_data.ndim != 4 and image_data.shape[-1] != 3:
         raise ValueError('Image is not a deformation field')
@@ -565,7 +565,7 @@ def tract_kappa_volume(optional_flags, tractography, volume, threshold, resoluti
     resolution = float(resolution)
 
     volume = nibabel.load(volume)
-    mask = (volume.get_data() > threshold).astype(int)
+    mask = (volume.get_fdata() > threshold).astype(int)
     voxels = tract_operations.tract_mask(mask, tractography)
 
     result = OrderedDict((
@@ -817,7 +817,7 @@ def tract_flip_endpoints_in_label(
 ):
     image = nibabel.load(image)
     tracts_ijk = tract_operations.each_tract_in_ijk(image, tractography)
-    image_data = image.get_data()
+    image_data = image.get_fdata()
     label = int(label)
     print(image_data.sum())
     needs_flip = []

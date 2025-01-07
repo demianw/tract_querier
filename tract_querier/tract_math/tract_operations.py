@@ -31,7 +31,7 @@ def each_tract_in_ijk(image, tractography):
 
 def tract_probability_map(image, tractography):
     ijk_tracts = each_tract_in_ijk(image, tractography)
-    image_data = image.get_data()
+    image_data = image.get_fdata()
 
     probability_map = numpy.zeros_like(image_data, dtype=float)
     for ijk_points in ijk_tracts:
@@ -47,7 +47,7 @@ def tract_probability_map(image, tractography):
 
 def tract_mask(image, tractography):
     ijk_points = tract_in_ijk(image, tractography)
-    image_data = image.get_data()
+    image_data = image.get_fdata()
 
     ijk_clipped = ijk_points.clip(
         (0, 0, 0), numpy.array(image_data.shape) - 1

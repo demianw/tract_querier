@@ -135,7 +135,7 @@ def main():
     #     parser.error(e.value)
 
     labels_nii = nibabel.load(options.atlas_file_name)
-    img = labels_nii.get_data()
+    img = labels_nii.get_fdata()
 
     tr = tract_querier.tractography.tractography_from_file(
         options.tractography_file_name
