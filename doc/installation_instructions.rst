@@ -26,7 +26,7 @@ Installing::
 
   cd tract_querier
   pip install .
-
+  export PATH=`pwd`/scripts:$PATH
 
 Now you can check if the installation worked::
 
