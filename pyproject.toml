@@ -45,10 +45,6 @@ documentation = "http://demianw.github.io/tract_querier"
 homepage = "http://demianw.github.io/tract_querier"
 repository = "https://github.com/demianw/tract_querier"
 
-[project.scripts]
-tract_math = "scripts.tract_math:main"
-tract_querier = "scripts.tract_querier:main"
-
 [tool.setuptools]
 include-package-data = true
 
