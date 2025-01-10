@@ -3,6 +3,67 @@ from optparse import OptionParser
 import os
 import sys
 
+
+def save_query(query_name, tractography, options, evaluated_queries, extension='.vtk', extra_kwargs={}):
+    tract_numbers = evaluated_queries[query_name]
+    print("\tQuery %s: %.6d" % (query_name, len(tract_numbers)))
+    if tract_numbers:
+        filename = options.output_file_name + "_" + query_name + extension
+        save_tractography_file(
+            filename,
+            tractography,
+            tract_numbers,
+            extra_kwargs=extra_kwargs
+        )
+        return filename
+
+
+def save_tractography_file(
+    filename, tractography, tract_numbers, extra_kwargs={}
+):
+    tract_numbers = list(tract_numbers)
+
+    original_tracts = tractography.original_tracts()
+
+    tracts_to_save = [original_tracts[i] for i in tract_numbers]
+
+    if len(tracts_to_save) == 0:
+        return
+
+    tracts_data_to_save = {}
+    for key, data in tractography.original_tracts_data().items():
+        tracts_data_to_save[key] = [data[f] for f in tract_numbers]
+
+    if (
+        'ActiveTensors' not in tracts_data_to_save and
+        'Tensors_' in tracts_data_to_save
+    ):
+        tracts_data_to_save['ActiveTensors'] = 'Tensors_'
+    if (
+        'ActiveVectors' not in tracts_data_to_save and
+        'Vectors_' in tracts_data_to_save
+    ):
+        tracts_data_to_save['ActiveVectors'] = 'Vectors_'
+
+    tract_querier.tractography.tractography_to_file(
+        filename,
+        tract_querier.tractography.Tractography(
+            tracts_to_save,
+            tracts_data_to_save
+        ),
+        **extra_kwargs
+    )
+
+
+def affine_transform_tract(affine_transform, tract):
+    import numpy as np
+
+    tract = np.dot(affine_transform[:3, :3], tract.T).T
+    tract += affine_transform[-1, :3]
+
+    return tract
+
+
 def main():
     parser = OptionParser(
         version=0.1,
@@ -222,65 +283,6 @@ def main():
 
         interactive_shell.cmdloop()
 
-
-def save_query(query_name, tractography, options, evaluated_queries, extension='.vtk', extra_kwargs={}):
-    tract_numbers = evaluated_queries[query_name]
-    print("\tQuery %s: %.6d" % (query_name, len(tract_numbers)))
-    if tract_numbers:
-        filename = options.output_file_name + "_" + query_name + extension
-        save_tractography_file(
-            filename,
-            tractography,
-            tract_numbers,
-            extra_kwargs=extra_kwargs
-        )
-        return filename
-
-
-def save_tractography_file(
-    filename, tractography, tract_numbers, extra_kwargs={}
-):
-    tract_numbers = list(tract_numbers)
-
-    original_tracts = tractography.original_tracts()
-
-    tracts_to_save = [original_tracts[i] for i in tract_numbers]
-
-    if len(tracts_to_save) == 0:
-        return
-
-    tracts_data_to_save = {}
-    for key, data in tractography.original_tracts_data().items():
-        tracts_data_to_save[key] = [data[f] for f in tract_numbers]
-
-    if (
-        'ActiveTensors' not in tracts_data_to_save and
-        'Tensors_' in tracts_data_to_save
-    ):
-        tracts_data_to_save['ActiveTensors'] = 'Tensors_'
-    if (
-        'ActiveVectors' not in tracts_data_to_save and
-        'Vectors_' in tracts_data_to_save
-    ):
-        tracts_data_to_save['ActiveVectors'] = 'Vectors_'
-
-    tract_querier.tractography.tractography_to_file(
-        filename,
-        tract_querier.tractography.Tractography(
-            tracts_to_save,
-            tracts_data_to_save
-        ),
-        **extra_kwargs
-    )
-
-
-def affine_transform_tract(affine_transform, tract):
-    import numpy as np
-
-    tract = np.dot(affine_transform[:3, :3], tract.T).T
-    tract += affine_transform[-1, :3]
-
-    return tract
 
 if __name__ == "__main__":
     main()
