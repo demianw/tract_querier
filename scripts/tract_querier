@@ -75,10 +75,10 @@ def main():
 
     print("Loading files")
 
-    # Search order precidence for .qry files
+    # Search order precedence for .qry files
     # 1. Command line options specified are respected first
     # 2. Current directory is respected second
-    # 3. Default query location thrid
+    # 3. Default query location third
     # 4. Source Tree 4th
     qry_search_folders = []
     if options.include:
