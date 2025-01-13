@@ -64,7 +64,8 @@ def affine_transform_tract(affine_transform, tract):
     return tract
 
 
-def main():
+def _build_arg_parser():
+
     parser = OptionParser(
         version=0.1,
         usage="usage: %prog -t tractography_file -a atlas_file "
@@ -101,6 +102,11 @@ def main():
         "to put both in AC-PC coordinate space"
     )
 
+    return parser
+
+
+def main():
+    parser = _build_arg_parser()
     (options, args) = parser.parse_args()
 
     if (
