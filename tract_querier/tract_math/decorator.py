@@ -1,6 +1,6 @@
 import inspect
 from itertools import repeat
-from collections import Mapping, Iterable
+from collections.abc import Mapping, Iterable
 import io
 import csv
 from os import path
