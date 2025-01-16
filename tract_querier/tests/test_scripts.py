@@ -29,7 +29,7 @@ ENVIRON['PYTHONPATH'] = reduce(lambda x, y: '%s:%s' % (x, y), sys.path)
 
 TEST_DATA = datasets.TestDataSet()
 
-@unittest.skip()
+@unittest.skip('test deprecated')
 def test_tract_querier_help():
     popen = subprocess.Popen(
         [PYTHON, TRACT_QUERIER_SCRIPT],
@@ -41,7 +41,7 @@ def test_tract_querier_help():
     assert 'error: incorrect number of arguments' in stderr_text
     assert popen.returncode > 0
 
-@unittest.skip()
+@unittest.skip('test deprecated')
 def test_tract_math_help():
     popen = subprocess.Popen(
         [PYTHON, TRACT_MATH_SCRIPT],
@@ -53,7 +53,7 @@ def test_tract_math_help():
     assert 'error: too few arguments' in stderr_text
     assert popen.returncode > 0
 
-@unittest.skip()
+@unittest.skip('test deprecated')
 def test_tract_math_count():
     popen = subprocess.Popen(
         [PYTHON, TRACT_MATH_SCRIPT, TEST_DATA.files['tract_file'], 'count'],
@@ -65,7 +65,7 @@ def test_tract_math_count():
     assert re.search('[^0-9]6783[^0-9]', stdout_text) is not None
     assert popen.returncode == 0
 
-@unittest.skip()
+@unittest.skip('test deprecated')
 def test_tract_querier_query():
     output_prefix = '%s/test' % TEST_DATA.dirname
     popen = subprocess.Popen(
