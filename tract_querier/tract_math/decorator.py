@@ -100,7 +100,7 @@ def tract_math_operation(help_text, needs_one_tract=True):
             args, options_dict = find_optional_args(input_args)
 
             total_args = len(args)
-            argspec = inspect.getargspec(func)
+            argspec = inspect.getfullargspec(func)
             # Subtract 1 for implicit options_dict
             func_total_args = len(argspec.args) - 1
 
