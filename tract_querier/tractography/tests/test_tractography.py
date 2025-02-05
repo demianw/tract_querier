@@ -76,7 +76,7 @@ def setup_module(*args, **kwargs):
     dimensions = [(rng.integers(5, max_tract_length), 3) for _ in range(n_tracts)]
     tracts = [rng.standard_normal(d) for d in dimensions]
     tracts_data = {
-        'a%d' % i: [
+        f'a{i}': [
             rng.standard_normal((d[0], k))
             for d in dimensions
         ]

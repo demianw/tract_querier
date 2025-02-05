@@ -162,8 +162,7 @@ class EvaluateQueries(ast.NodeVisitor):
     def visit_Compare(self, node):
         if any(not isinstance(op, ast.NotIn) for op in node.ops):
             raise TractQuerierSyntaxError(
-                "Invalid syntax in query line %d" % node.lineno
-            )
+                f"Invalid syntax in query line {node.lineno}")
 
         query_info = self.visit(node.left).copy()
         for value in node.comparators:
@@ -239,7 +238,7 @@ class EvaluateQueries(ast.NodeVisitor):
             return new_info
         else:
             raise TractQuerierSyntaxError(
-                "Syntax error in query line %d" % node.lineno)
+                f"Syntax error in query line {node.lineno}")
 
     def visit_Call(self, node):
         # Single string argument function
@@ -299,7 +298,7 @@ class EvaluateQueries(ast.NodeVisitor):
             elif node.func.id.lower() in self.relative_terms:
                 return self.process_relative_term(node)
 
-        raise TractQuerierSyntaxError("Invalid query in line %d" % node.lineno)
+        raise TractQuerierSyntaxError(f"Invalid query in line {node.lineno}")
 
     def process_relative_term(self, node):
         r"""
@@ -344,7 +343,7 @@ class EvaluateQueries(ast.NodeVisitor):
         else:
             raise TractQuerierSyntaxError(
                 "Attribute not recognized for relative specification."
-                "Line %d" % node.lineno
+                f"Line {node.lineno}"
             )
 
         labels = query_info.labels
@@ -363,7 +362,7 @@ class EvaluateQueries(ast.NodeVisitor):
                 )
         except KeyError as e:
             raise TractQuerierLabelNotFound(
-                "Label %s not found in atlas file" % e
+                f"Label {e} not found in atlas file"
             )
         function_name = node.func.id.lower()
 
@@ -431,7 +430,7 @@ class EvaluateQueries(ast.NodeVisitor):
     def visit_Assign(self, node):
         if len(node.targets) > 1:
             raise TractQuerierSyntaxError(
-                "Invalid assignment in line %d" % node.lineno)
+                f"Invalid assignment in line {node.lineno}")
 
         queries_to_evaluate = self.process_assignment(node)
 
@@ -442,7 +441,7 @@ class EvaluateQueries(ast.NodeVisitor):
     def visit_AugAssign(self, node):
         if not isinstance(node.op, ast.BitOr):
             raise TractQuerierSyntaxError(
-                "Invalid assignment in line %d" % node.lineno)
+                f"Invalid assignment in line {node.lineno}")
 
         queries_to_evaluate = self.process_assignment(node)
 
@@ -491,7 +490,7 @@ class EvaluateQueries(ast.NodeVisitor):
                 + target.attr.lower()] = node.value
         else:
             raise TractQuerierSyntaxError(
-                "Invalid assignment in line %d" % node.lineno)
+                f"Invalid assignment in line {node.lineno}")
         return queries_to_evaluate
 
     def rewrite_side_query(self, node):
@@ -537,7 +536,7 @@ class EvaluateQueries(ast.NodeVisitor):
             return self.evaluated_queries_info[node.id]
         else:
             raise TractQuerierSyntaxError(
-                "Invalid query name in line %d: %s" % (node.lineno, node.id))
+                f"Invalid query name in line {node.lineno}: {node.id}")
 
     def visit_Attribute(self, node):
         if not isinstance(node.value, ast.Name):
@@ -549,9 +548,7 @@ class EvaluateQueries(ast.NodeVisitor):
             return self.evaluated_queries_info[query_name]
         else:
             raise TractQuerierSyntaxError(
-                "Invalid query name in line %d: %s" %
-                (node.lineno, query_name)
-            )
+                f"Invalid query name in line {node.lineno}: {query_name}")
 
     def visit_Constant(self, node):
         if isinstance(node.value, numbers.Number):
@@ -594,18 +591,16 @@ class EvaluateQueries(ast.NodeVisitor):
                 self.queries_to_save.add(node.value.id)
             else:
                 raise TractQuerierSyntaxError(
-                    "Query %s not known line: %d" %
-                    (node.value.id, node.lineno)
-                )
+                    f"Query {node.value.id} not known line: {node.lineno}")
         elif isinstance(node.value, ast.Module):
             self.visit(node.value)
         else:
             raise TractQuerierSyntaxError(
-                "Invalid expression at line: %d" % (node.lineno))
+                f"Invalid expression at line: {node.lineno}")
 
     def generic_visit(self, node):
         raise TractQuerierSyntaxError(
-            "Invalid Operation %s line: %d" % (type(node), node.lineno))
+            f"Invalid Operation {type(node)} line: {node.lineno}")
 
     def visit_For(self, node):
         id_to_replace = node.target.id.lower()
@@ -621,10 +616,8 @@ class EvaluateQueries(ast.NodeVisitor):
                     list_items.append(item.id.lower())
                 else:
                     raise TractQuerierSyntaxError(
-                        'Error in FOR statement in line %d,'
-                        ' elements in the list must be query names' %
-                        node.lineno
-                    )
+                        f'Error in FOR statement in line {node.lineno},'
+                        ' elements in the list must be query names')
 
         original_body = ast.Module(body=node.body)
 
@@ -762,7 +755,7 @@ class RewritePreprocess(ast.NodeTransformer):
                         break
                 if not found:
                     raise TractQuerierSyntaxError(
-                        'Imported file not found: %s' % file_name
+                        f'Imported file not found: {file_name}'
                     )
             imported_modules = [
                 ast.parse(open(module_name).read(), filename=module_name)
@@ -774,14 +767,7 @@ class RewritePreprocess(ast.NodeTransformer):
             exc_type, exc_value, exc_traceback = sys.exc_info()
             formatted_lines = traceback.format_exc().splitlines()
             raise TractQuerierSyntaxError(
-                'syntax error in line %s line %d: \n%s\n%s' %
-                (
-                    module_name,
-                    exc_value[1][1],
-                    formatted_lines[-3],
-                    formatted_lines[-2]
-                )
-            )
+                f'syntax error in module {module_name} line {exc_value[1][1]}: \n{formatted_lines[-3]}\n{formatted_lines[-2]}')
 
         new_node = ast.Module(imported_modules)
 
@@ -802,16 +788,9 @@ def queries_preprocess(query_file, filename='<unknown>', include_folders=[]):
         exc_type, exc_value, exc_traceback = sys.exc_info()
         formatted_lines = traceback.format_exc().splitlines()
         raise TractQuerierSyntaxError(
-            'syntax error in line %s line %d: \n%s' %
-            (
-                filename,
-                exc_value.lineno,
-                # The offset should not be necessary
-                # If you really need that, use
-                # exc_value.offset
-                exc_value.text
-            )
-        )
+            f'syntax error in line {filename} line {exc_value.lineno}: \n{exc_value.text}')
+            # The offset should not be necessary. If you really need that, use
+            # exc_value.offset
 
     rewrite_preprocess = RewritePreprocess(include_folders=include_folders)
     rewrite_precedence_not_in = RewriteChangeNotInPrescedence()

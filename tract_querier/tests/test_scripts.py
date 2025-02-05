@@ -24,7 +24,7 @@ PYTHON = sys.executable
 
 ENVIRON = os.environ.copy()
 sys.path.insert(0, PACKAGE_ROOT_DIR)
-ENVIRON['PYTHONPATH'] = reduce(lambda x, y: '%s:%s' % (x, y), sys.path)
+ENVIRON['PYTHONPATH'] = reduce(lambda x, y: f'{x}:{y}', sys.path)
 
 TEST_DATA = datasets.TestDataSet()
 
@@ -62,11 +62,11 @@ def test_tract_math_count():
     assert popen.returncode == 0
 
 def test_tract_querier_query():
-    output_prefix = '%s/test' % TEST_DATA.dirname
+    output_prefix = f'{TEST_DATA.dirname}/test'
     popen = subprocess.Popen(
         [PYTHON, TRACT_QUERIER_SCRIPT] +
-        ('-a %(atlas_file)s -t %(tract_file)s -q %(query_uf_file)s' % TEST_DATA.files).split() +
-        (' -o %s' % output_prefix).split(),
+        f"-a {TEST_DATA.files['atlas_file']} -t {TEST_DATA.files['tract_file']} -q {TEST_DATA.files['query_uf_file']}".split() +
+        f' -o {output_prefix}'.split(),
         shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         env=ENVIRON
     )

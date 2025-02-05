@@ -51,8 +51,8 @@ def compute_all_measures(tractography, desired_keys_list, scalars=None, resoluti
         mean_keys_list = list()
         std_keys_list = list()
         for scalar in scalars:
-            mean_key = 'per tract distance weighted mean %s' % scalar
-            std_key = 'per tract distance weighted std %s' % scalar
+            mean_key = f'per tract distance weighted mean {scalar}'
+            std_key = f'per tract distance weighted std {scalar}'
             mean_keys_list.append(mean_key)
             std_keys_list.append(std_key)
             scalars = tractography.tracts_data()[scalar]
