@@ -100,7 +100,7 @@ def tract_math_operation(help_text, needs_one_tract=True):
             args, options_dict = find_optional_args(input_args)
 
             total_args = len(args)
-            argspec = inspect.getargspec(func)
+            argspec = inspect.getfullargspec(func)
             # Subtract 1 for implicit options_dict
             func_total_args = len(argspec.args) - 1
 
@@ -196,7 +196,7 @@ def process_output(output, file_output=None):
             header = dict(zip(writer.fieldnames, writer.fieldnames))
             writer.writerow(header)
 
-        first_value = output.values()[0]
+        first_value = next(iter(output.values()))
         if (
             not isinstance(first_value, str) and
             isinstance(first_value, Iterable)
