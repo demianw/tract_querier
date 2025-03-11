@@ -74,10 +74,10 @@ def setup_module(*args, **kwargs):
 
     rng = np.random.default_rng(1234)
     dimensions = [(rng.integers(5, max_tract_length), 3) for _ in range(n_tracts)]
-    tracts = [rng.standard_normal(d) for d in dimensions]
+    tracts = [rng.random(d) for d in dimensions]
     tracts_data = {
         'a%d' % i: [
-            rng.standard_normal((d[0], k))
+            rng.random((d[0], k))
             for d in dimensions
         ]
         for i, k in zip(range(4), rng.integers(1, 3, 9))
