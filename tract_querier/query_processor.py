@@ -294,7 +294,7 @@ class EvaluateQueries(ast.NodeVisitor):
                 node.func.id.lower() == 'save' and
                 isinstance(node.args, ast.Constant) and isinstance(node.args.value, str)
             ):
-                self.queries_to_save.add(node.args[0].s)
+                self.queries_to_save.add(node.args[0].value)
                 return
             elif node.func.id.lower() in self.relative_terms:
                 return self.process_relative_term(node)
@@ -556,12 +556,12 @@ class EvaluateQueries(ast.NodeVisitor):
     def visit_Constant(self, node):
         if isinstance(node.value, numbers.Number):
             if (
-                node.n in
+                node.value in
                 self.tractography_spatial_indexing.crossing_labels_tracts
             ):
                 tracts = (
                     self.tractography_spatial_indexing.
-                    crossing_labels_tracts[node.n]
+                    crossing_labels_tracts[node.value]
                 )
             else:
                 tracts = set()
@@ -569,10 +569,10 @@ class EvaluateQueries(ast.NodeVisitor):
             endpoints = (set(), set())
             for i in (0, 1):
                 elt = self.tractography_spatial_indexing.ending_labels_tracts[i]
-                if node.n in elt:
-                    endpoints[i].update(elt[node.n])
+                if node.value in elt:
+                    endpoints[i].update(elt[node.value])
 
-            labelset = set((node.n,))
+            labelset = set((node.value,))
             query_info = FiberQueryInfo(
                 tracts, labelset,
                 endpoints
@@ -581,7 +581,7 @@ class EvaluateQueries(ast.NodeVisitor):
         elif isinstance(node.value, str):
             query_info = FiberQueryInfo()
             for name in fnmatch.filter(self.evaluated_queries_info.keys(),
-                                       node.s):
+                                       node.value):
                 query_info.update(self.evaluated_queries_info[name])
         else:
             raise NotImplementedError(f"{node.value} not supported.")
@@ -613,7 +613,7 @@ class EvaluateQueries(ast.NodeVisitor):
         iter_ = node.iter
         if isinstance(iter_, ast.Constant) and isinstance(iter_.value, str):
             list_items = fnmatch.filter(
-                self.evaluated_queries_info.keys(), iter_.s.lower())
+                self.evaluated_queries_info.keys(), iter_.value.lower())
         elif isinstance(iter_, ast.List):
             list_items = []
             for item in iter_.elts:
@@ -740,9 +740,9 @@ class RewritePreprocess(ast.NodeTransformer):
         )
 
     def visit_Constant(self, node):
-        if isinstance(node.s, str):
+        if isinstance(node.value, str):
             return ast.copy_location(
-                ast.Constant(node.s.lower()),
+                ast.Constant(node.value.lower()),
                 node
             )
         else:
