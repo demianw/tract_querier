@@ -292,7 +292,7 @@ class EvaluateQueries(ast.NodeVisitor):
                 )
             elif (
                 node.func.id.lower() == 'save' and
-                isinstance(node.args, ast.Str)
+                isinstance(node.args, ast.Constant) and isinstance(node.args.value, str)
             ):
                 self.queries_to_save.add(node.args[0].s)
                 return
@@ -611,7 +611,7 @@ class EvaluateQueries(ast.NodeVisitor):
         id_to_replace = node.target.id.lower()
 
         iter_ = node.iter
-        if isinstance(iter_, ast.Str):
+        if isinstance(iter_, ast.Constant) and isinstance(iter_.value, str):
             list_items = fnmatch.filter(
                 self.evaluated_queries_info.keys(), iter_.s.lower())
         elif isinstance(iter_, ast.List):
