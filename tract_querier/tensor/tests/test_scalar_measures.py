@@ -1,4 +1,4 @@
-from .. import scalar_measures
+from tract_querier.tensor import scalar_measures
 
 import numpy
 from numpy.testing import assert_array_almost_equal

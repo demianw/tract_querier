@@ -1,4 +1,4 @@
-from .. import query_processor
+from tract_querier import query_processor
 
 import pytest
 

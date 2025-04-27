@@ -1,5 +1,5 @@
-from .tractography import Tractography
-from .trackvis import tractography_from_trackvis_file, tractography_to_trackvis_file
+from tract_querier.tractography.tractography import Tractography
+from tract_querier.tractography.trackvis import tractography_from_trackvis_file, tractography_to_trackvis_file
 
 from warnings import warn
 import numpy
@@ -16,7 +16,7 @@ try:
         'tractography_from_vtk_files', 'tractography_to_vtk_file',
         'vtkPolyData_to_tracts', 'tracts_to_vtkPolyData'
     ]
-    from .vtkInterface import (
+    from tract_querier.tractography.vtkInterface import (
         tractography_from_vtk_files, tractography_to_vtk_file,
         vtkPolyData_to_tracts, tracts_to_vtkPolyData
     )
