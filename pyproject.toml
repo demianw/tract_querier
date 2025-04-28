@@ -24,12 +24,12 @@ classifiers = [
     "Operating System :: MacOS"
 ]
 dependencies = [
-    "numpy>=1.23.0,<2.0.0",
-    "nibabel>=3.0.0",
-    "vtk>8.1.0,<=9.4.0"
+    "numpy>=1.26.0",
+    "nibabel>=4.0.0",
+    "vtk>8.1.0"
 ]
 dynamic = ["version"]
-requires-python = ">=3.9,<3.12"
+requires-python = ">=3.9"
 
 [project.optional-dependencies]
 doc = [
