@@ -2,7 +2,7 @@ import warnings
 
 import numpy as np
 
-from .aabb import BoundingBox
+from tract_querier.aabb import BoundingBox
 
 __all__ = ['TractographySpatialIndexing']
 

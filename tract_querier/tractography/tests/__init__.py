@@ -1,1 +1,1 @@
-from .test_tractography import *
+from tract_querier.tractography.tests.test_tractography import *
