@@ -1,4 +1,4 @@
-from .. import queries_preprocess, queries_syntax_check
+from tract_querier.query_processor import queries_preprocess, queries_syntax_check
 
 import os
 import fnmatch
