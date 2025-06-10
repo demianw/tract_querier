@@ -16,6 +16,16 @@ FILES = {
         'IIT3mean_desikan_2009.nii.gz',
         b'vx\x13\xbaE\x1dR\t\xcd\xc9EF\x17\xa66\xb7'
     ),
+    'query_commissural_file': (
+        'https://osf.io/download/xyj8t/',
+        'wmql_3_commissural.qry',
+        b'\xb46.\x14\xb6W\xd1*2]\xd0\xd7\xcau\x13\xca'
+    ),
+    'query_cst_file': (
+        'https://osf.io/download/g3hfp/',
+        'wmql_1_cst.qry',
+        b'\x05\xc4a\xcf\xe2\x80\xa5\xe1.\xa3\xcb\x8b/w\xf6\x8e'
+    ),
     'query_uf_file': (
         'https://osf.io/download/3zj5h/',
         'wmql_2_uf.qry',
