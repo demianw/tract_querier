@@ -3,7 +3,7 @@ import vtk
 from vtk.util import numpy_support as ns
 import numpy as np
 
-from .tractography import Tractography
+from tract_querier.tractography import Tractography
 from functools import reduce
 
 

@@ -1,7 +1,7 @@
 import ast
 import cmd
 import fnmatch
-from .query_processor import (
+from tract_querier.query_processor import (
     EvaluateQueries, queries_preprocess,
     TractQuerierSyntaxError, TractQuerierLabelNotFound,
     keywords
