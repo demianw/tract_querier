@@ -2,6 +2,7 @@ from .. import query_processor
 
 import ast
 import numpy as np
+import pytest
 
 
 # Ten tracts traversing random labels
@@ -273,6 +274,20 @@ def test_unsaved_query():
         query_evaluator.evaluated_queries_info['A'].tracts == labels_tracts[0] and
         query_evaluator.evaluated_queries_info['A'].labels == set((0,))
     ))
+
+
+def test_save_query():
+    body = query_processor.queries_preprocess(
+        "A |= 0\nB.left |= 1\nC |= 0\nA\nsave('B.left')"
+    )
+    assert set(query_processor.eval_queries(body, dummy_spatial_indexing)) == {
+        'a', 'b.left'
+    }
+
+    for query in ("A |= 0\nsave('B')", "A |= 0\nX = save('A')"):
+        body = query_processor.queries_preprocess(query)
+        with pytest.raises(query_processor.TractQuerierSyntaxError):
+            query_processor.eval_queries(body, dummy_spatial_indexing)
 
 
 def test_symbolic_assignment():
