@@ -15,6 +15,9 @@ which fetches the required dependencies automatically:
 * `VTK > 8.1 <https://vtk.org>`_ (Python wheels, used to read and write VTK
   tractography files, e.g. for interacting with 3D Slicer)
 
+Some ``tract_math`` operations also need SciPy and scikit-learn, which are
+installed with the ``tract_math`` extra, e.g. ``pip install ".[tract_math]"``.
+
 We recommend installing WMQL in a dedicated virtual environment, created
 either with ``venv``::
 
