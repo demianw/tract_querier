@@ -18,3 +18,4 @@ cover
 
 # Version file
 tract_querier/_version.py
+*.egg-info
