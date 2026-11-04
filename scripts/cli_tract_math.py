@@ -8,24 +8,6 @@ import traceback
 from tract_querier.tract_math import operations
 
 
-def tract_math_operation(help_text, needs_one_tract=True):
-    '''
-    Decorator to identify tract_math functionalities the name of the
-    function will be automatically incorporated to the tract_math options
-
-    Parameters
-    ----------
-    help_text: help for the operation
-    needs_one_tract: tells the script if all the input tractographies should
-                      be unified as one or left as a tractography list
-    '''
-    def internal_decorator(func):
-        func.help_text = help_text
-        func.needs_one_tract = needs_one_tract
-        return func
-    return internal_decorator
-
-
 def _build_arg_parser():
     usage = r"""
     usage: %(prog)s <tract1.vtk> ... <tractN.vtk> operation <operation parameter1> ... <operation parameterN> <output_tract.vtk> \
