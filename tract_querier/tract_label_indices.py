@@ -172,6 +172,18 @@ def compute_tract_bounding_boxes(tracts, affine_transform=None):
     return box_array
 
 
+def labels_for_tracts(tracts_labels):
+    """
+    Invert a dictionary from each tract to the labels it is in into a
+    dictionary from each label to the tracts in it
+    """
+    labels_tracts = {}
+    for tract, labels in tracts_labels.items():
+        for label in labels:
+            labels_tracts.setdefault(label, set()).add(tract)
+    return labels_tracts
+
+
 def compute_label_crossings(
     tract_cumulative_lengths, point_labels, threshold, tract_indices
 ):
@@ -184,32 +196,7 @@ def compute_label_crossings(
         percentages = bincount * 1. / bincount.sum()
         tracts_labels[tract] = set(np.where(percentages >= (threshold / 100.))[0])
 
-    labels_tracts = {}
-    for i, f in tracts_labels.items():
-        for l in f:
-            if l in labels_tracts:
-                labels_tracts[l].add(i)
-            else:
-                labels_tracts[l] = set((i,))
-    return tracts_labels, labels_tracts
-
-
-def compute_label_endings(tract_cumulative_lengths, point_labels):
-    tracts_labels = {}
-    for i in range(len(tract_cumulative_lengths) - 1):
-        start = tract_cumulative_lengths[i]
-        end = tract_cumulative_lengths[i + 1]
-        tracts_labels[i] = set((int(point_labels[
-                               start]), int(point_labels[end - 1])))
-
-    labels_tracts = {}
-    for i, f in tracts_labels.items():
-        for l in f:
-            if l in labels_tracts:
-                labels_tracts[l].add(i)
-            else:
-                labels_tracts[l] = set((i,))
-    return tracts_labels, labels_tracts
+    return tracts_labels, labels_for_tracts(tracts_labels)
 
 
 def compute_label_endings_start_end(
@@ -223,21 +210,14 @@ def compute_label_endings_start_end(
         tracts_labels_start[tract] = int(point_labels[start])
         tracts_labels_end[tract] = int(point_labels[end - 1])
 
-    labels_tracts_start = {}
-    labels_tracts_end = {}
-
-    for tracts_labels, labels_tracts in (
-        (tracts_labels_start, labels_tracts_start),
-        (tracts_labels_end, labels_tracts_end)
-    ):
-        for i, l in tracts_labels.items():
-            if l in labels_tracts:
-                labels_tracts[l].add(i)
-            else:
-                labels_tracts[l] = set((i,))
     return (
         (tracts_labels_start, tracts_labels_end),
-        (labels_tracts_start, labels_tracts_end)
+        tuple(
+            labels_for_tracts({
+                tract: (label,) for tract, label in tracts_labels.items()
+            })
+            for tracts_labels in (tracts_labels_start, tracts_labels_end)
+        )
     )
 
 
