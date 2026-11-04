@@ -87,6 +87,14 @@ class TractographySpatialIndexing:
             self.tract_endpoints_pos[i, 0] = t[0]
             self.tract_endpoints_pos[i, 1] = t[-1]
 
+        # Tracts left out of the label indices, e.g. those shorter than
+        # length_threshold, must not be selected by relative terms either
+        excluded = np.ones(len(self.tractography), dtype=bool)
+        excluded[list(self.crossing_tracts_labels)] = False
+        for name in self.tract_bounding_boxes.dtype.names:
+            self.tract_bounding_boxes[name][excluded] = np.nan
+        self.tract_endpoints_pos[excluded] = np.nan
+
 
 def compute_label_bounding_boxes(image, affine_ijk_2_ras):
     linear_component = affine_ijk_2_ras[:3, :3]
@@ -164,15 +172,17 @@ def compute_tract_bounding_boxes(tracts, affine_transform=None):
     return box_array
 
 
-def compute_label_crossings(tract_cumulative_lengths, point_labels, threshold):
+def compute_label_crossings(
+    tract_cumulative_lengths, point_labels, threshold, tract_indices
+):
     tracts_labels = {}
-    for i in range(len(tract_cumulative_lengths) - 1):
+    for i, tract in enumerate(tract_indices):
         start = tract_cumulative_lengths[i]
         end = tract_cumulative_lengths[i + 1]
         label_crossings = np.asanyarray(point_labels[start:end], dtype=int)
         bincount = np.bincount(label_crossings)
         percentages = bincount * 1. / bincount.sum()
-        tracts_labels[i] = set(np.where(percentages >= (threshold / 100.))[0])
+        tracts_labels[tract] = set(np.where(percentages >= (threshold / 100.))[0])
 
     labels_tracts = {}
     for i, f in tracts_labels.items():
@@ -202,14 +212,16 @@ def compute_label_endings(tract_cumulative_lengths, point_labels):
     return tracts_labels, labels_tracts
 
 
-def compute_label_endings_start_end(tract_cumulative_lengths, point_labels):
+def compute_label_endings_start_end(
+    tract_cumulative_lengths, point_labels, tract_indices
+):
     tracts_labels_start = {}
     tracts_labels_end = {}
-    for i in range(len(tract_cumulative_lengths) - 1):
+    for i, tract in enumerate(tract_indices):
         start = tract_cumulative_lengths[i]
         end = tract_cumulative_lengths[i + 1]
-        tracts_labels_start[i] = int(point_labels[start])
-        tracts_labels_end[i] = int(point_labels[end - 1])
+        tracts_labels_start[tract] = int(point_labels[start])
+        tracts_labels_end[tract] = int(point_labels[end - 1])
 
     labels_tracts_start = {}
     labels_tracts_end = {}
@@ -233,11 +245,18 @@ def compute_tract_label_indices(
     affine_ras_2_ijk, img,
     tracts, length_threshold, crossing_threshold
 ):
+    # The label indices are keyed by the position of each tract in the full
+    # tractography, tracts shorter than length_threshold are left out
+    tract_indices = list(range(len(tracts)))
     if length_threshold > 0:
         tract_length = lambda tract: ((((
             tract[1:] - tract[:-1]
         ) ** 2).sum(1)) ** .5).sum()
-        tracts = [f for f in tracts if tract_length(f) >= length_threshold]
+        tract_indices = [
+            i for i in tract_indices
+            if tract_length(tracts[i]) >= length_threshold
+        ]
+        tracts = [tracts[i] for i in tract_indices]
 
     all_points = np.vstack(tracts)
     all_points_ijk = (np.dot(affine_ras_2_ijk[:-1, :-1], all_points.T).T +
@@ -259,11 +278,14 @@ def compute_tract_label_indices(
     tract_cumulative_lengths = np.cumsum([0] + [len(f) for f in tracts])
 
     crossing_tracts_labels, crossing_labels_tracts = compute_label_crossings(
-        tract_cumulative_lengths, point_labels, crossing_threshold
+        tract_cumulative_lengths, point_labels, crossing_threshold,
+        tract_indices
     )
 
     ending_tracts_labels, ending_labels_tracts = \
-        compute_label_endings_start_end(tract_cumulative_lengths, point_labels)
+        compute_label_endings_start_end(
+            tract_cumulative_lengths, point_labels, tract_indices
+        )
 
     return (
         crossing_tracts_labels,
