@@ -139,6 +139,9 @@ html_theme = 'sphinxdoc'
 # Add any paths that contain custom themes here, relative to this directory.
 html_theme_path = ['themes']
 
+# Canonical URL of the published documentation (GitHub Pages)
+html_baseurl = 'https://demianw.github.io/tract_querier/'
+
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
