@@ -237,7 +237,13 @@ def test_and():
 
 def test_not_in():
     query_evaluator = query_processor.EvaluateQueries(dummy_spatial_indexing)
-    query_evaluator.visit(ast.parse("A=0 or 1 not in 1"))
+    # WMQL gives `not in` lower precedence than `or`, unlike Python:
+    # apply the same rewrite as `queries_preprocess` before evaluating.
+    query_evaluator.visit(
+        query_processor.RewriteChangeNotInPrescedence().visit(
+            ast.parse("A=0 or 1 not in 1")
+        )
+    )
     assert ((
         'A' in query_evaluator.queries_to_save and
         query_evaluator.evaluated_queries_info['A'].tracts == labels_tracts[0].difference(labels_tracts[1]) and
