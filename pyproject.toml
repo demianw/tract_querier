@@ -64,7 +64,9 @@ tract_querier = [
 ]
 
 [tool.setuptools.packages]
-find = {}  # Scanning implicit namespaces is active by default
+# Scanning implicit namespaces is active by default; `scripts` must stay
+# importable because the console scripts use it.
+find = {include = ["tract_querier*", "scripts*"]}
 
 [tool.setuptools_scm]
 write_to = "tract_querier/_version.py"
