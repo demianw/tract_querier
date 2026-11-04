@@ -370,7 +370,7 @@ class EvaluateQueries(ast.NodeVisitor):
         name = function_name.replace('_of', '')
 
         if (
-            name in ('anterior', 'inferior') or
+            name in ('anterior', 'superior') or
             name == 'medial' and side == 'left' or
             name == 'lateral' and side == 'right'
         ):
