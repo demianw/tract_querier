@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from .. import query_processor
 from ..tract_label_indices import TractographySpatialIndexing
@@ -43,7 +44,7 @@ i = 3 and posterior_of(two)
 '''
 
 
-def evaluate(length_threshold):
+def evaluate(length_threshold, tracts=tracts):
     spatial_indexing = TractographySpatialIndexing(
         tracts, image, affine, length_threshold, 2.
     )
@@ -62,3 +63,10 @@ def test_length_threshold():
         assert results_threshold[name] == set(
             i for i in result if lengths[i] >= length_threshold
         ), name
+
+
+def test_tracts_with_fewer_than_two_points():
+    degenerate_tracts = [tract(2, 2), tract(17, 17), np.empty((0, 3))]
+    with pytest.warns(UserWarning, match='3 tracts have fewer than 2 points'):
+        results = evaluate(0, tracts + degenerate_tracts)
+    assert results == evaluate(0)
