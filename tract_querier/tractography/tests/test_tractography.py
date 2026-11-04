@@ -108,6 +108,28 @@ def test_creation():
     assert(not tractography.are_tracts_filtered())
 
 
+def test_creation_validates_tracts_data():
+    two_tracts = [np.zeros((3, 3)), np.zeros((4, 3))]
+
+    with pytest.raises(ValueError):
+        Tractography(two_tracts, {'FA': [np.zeros((3, 1))]})
+
+    with pytest.raises(ValueError):
+        Tractography(two_tracts, {'FA': [np.zeros((3, 1)), np.zeros((3, 1))]})
+
+    with pytest.raises(ValueError):
+        Tractography(two_tracts, {'FA': [np.zeros((3, 1)), np.zeros((4, 2))]})
+
+    Tractography(
+        two_tracts,
+        {
+            'FA': [np.zeros((3, 1)), np.zeros((4, 1))],
+            'ActiveScalars': 'FA',
+        }
+    )
+    Tractography(two_tracts, {'FA': [np.zeros((3, 1))]}, validate=False)
+
+
 def test_subsample_tracts():
     tractography.subsample_tracts(5)
 

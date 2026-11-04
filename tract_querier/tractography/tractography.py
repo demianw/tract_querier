@@ -1,3 +1,5 @@
+from collections.abc import Mapping
+
 import numpy as np
 
 __all__ = ['Tractography']
@@ -87,7 +89,7 @@ class Tractography:
                 except AttributeError:
                     raise ValueError('First argument is not a list of tracts')
 
-                if tracts_data is not None and hasattr(tracts_data, 'iteritems'):
+                if isinstance(tracts_data, Mapping):
                     for k, v in tracts_data.items():
                         if isinstance(v, str):
                             continue
@@ -96,12 +98,10 @@ class Tractography:
                                 'Number of elements in attribute %s must '
                                 'be the same as the number of tracts' % k
                             )
-                        _, M = v[0].shape
                         for i, tract_v in enumerate(v):
-                            N, tract_M = tract_v.shape
                             if (
-                                (N != len(tracts[i])) or
-                                (tract_M != M)
+                                (len(tract_v) != len(tracts[i])) or
+                                (tract_v.shape[1:] != v[0].shape[1:])
                             ):
                                 raise ValueError(
                                     "Data for tract %s: %d is inconsistent" % (
@@ -111,7 +111,7 @@ class Tractography:
             if tracts_data.keys() != self._tracts_data.keys():
                 raise ValueError("Tract data to append not compatible")
             if any(
-                self._tracts_data[k][0].shape[1] != v[0].shape[1]
+                self._tracts_data[k][0].shape[1:] != v[0].shape[1:]
                 for k, v in tracts_data.items()
                 if not isinstance(v, str)
             ):
@@ -124,8 +124,6 @@ class Tractography:
 
             if self.are_tracts_subsampled():
                 self.subsample_tracts(self._quantity_of_points_per_tract)
-            if self.are_tracts_filtered():
-                self.filter_tracts(self._criterium)
 
     def unsubsample_tracts(self):
         r"""
@@ -174,36 +172,6 @@ class Tractography:
                     self._subsampled_data[k].append(v[i][s])
 
         self._interpolated = False
-
-    def filter_tracts(self, criterium):
-        r"""
-        Filter the tracts in the set according to a criterium function
-
-        Parameters
-        ----------
-
-        criterium : function of array :math:`N\times 3` -> Bool
-            A function taking a tract as an array of
-            3D points and returning True or False with
-            specifying if it should be included
-        """
-        if len(self._subsampled_tracts) > 0:
-            tracts = self._subsampled_tracts
-            data = self._subsampled_data
-        else:
-            tracts = self._tracts
-            data = self._data
-
-        self._tract_map = [i for i in range(len(tracts)) if criterium(tracts)]
-
-        self._filtered_tracts = [tracts[i] for i in self._tract_map]
-        self._filtered_data = {}
-        for k, v in data.items():
-            self._filtered_data[k] = [
-                v[i] for i in self._tract_map
-            ]
-
-        self._criterium = criterium
 
     def are_tracts_filtered(self):
         return self._tract_map is not None
