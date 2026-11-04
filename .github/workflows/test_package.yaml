@@ -24,6 +24,16 @@ jobs:
         exclude:
           - python-version: '3.13'
             requires: 'minimal'
+          # Python 3.9 is not available for the latest Ubuntu runner images
+          - os: ubuntu-latest
+            python-version: '3.9'
+        include:
+          - os: ubuntu-24.04
+            python-version: '3.9'
+            requires: 'minimal'
+          - os: ubuntu-24.04
+            python-version: '3.9'
+            requires: 'latest'
 
     steps:
     - name: Check out repository
