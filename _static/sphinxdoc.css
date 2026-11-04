@@ -1,12 +1,7 @@
 /*
- * sphinxdoc.css_t
- * ~~~~~~~~~~~~~~~
+ * Sphinx stylesheet -- sphinxdoc theme.
  *
- * Sphinx stylesheet -- sphinxdoc theme.  Originally created by
- * Armin Ronacher for Werkzeug.
- *
- * :copyright: Copyright 2007-2016 by the Sphinx team, see AUTHORS.
- * :license: BSD, see LICENSE for details.
+ * Originally created by Armin Ronacher for Werkzeug.
  *
  */
 
@@ -37,8 +32,13 @@ div.document {
     background-repeat: repeat-x;
 }
 
+div.documentwrapper {
+    float: left;
+    width: 100%;
+}
+
 div.bodywrapper {
-    margin: 0 240px 0 0;
+    margin: 0 calc(230px + 10px) 0 0;
     border-right: 1px solid #ccc;
 }
 
@@ -86,9 +86,8 @@ div.sphinxsidebarwrapper {
 }
 
 div.sphinxsidebar {
-    margin: 0;
     padding: 0.5em 15px 15px 0;
-    width: 210px;
+    width: calc(230px - 20px);
     float: right;
     font-size: 1em;
     text-align: left;
@@ -134,7 +133,7 @@ div.footer a {
 
 /* -- body styles ----------------------------------------------------------- */
 
-p {    
+p {
     margin: 0.8em 0 0.5em 0;
 }
 
@@ -145,6 +144,10 @@ a {
 
 a:hover {
     color: #2491CF;
+}
+
+a:visited {
+    color: #551A8B;
 }
 
 div.body a {
@@ -243,7 +246,6 @@ pre {
     line-height: 120%;
     padding: 0.5em;
     border: 1px solid #ccc;
-    background-color: #f8f8f8;
 }
 
 pre a {
@@ -263,6 +265,8 @@ div.quotebar {
     border: 1px solid #ccc;
 }
 
+nav.contents,
+aside.topic,
 div.topic {
     background-color: #f8f8f8;
 }

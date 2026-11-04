@@ -1,34 +1,24 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
-
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html lang="en" data-content_root="../">
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
     <title>tract_querier.tensor &#8212; WMQL 0.1 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../',
-        VERSION:     '0.1',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
-    <script type="text/javascript" src="../_static/jquery.js"></script>
-    <script type="text/javascript" src="../_static/underscore.js"></script>
-    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinxdoc.css?v=34905f61" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <script src="../_static/documentation_options.js?v=2709fde1"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="canonical" href="https://demianw.github.io/tract_querier/generated/tract_querier.tensor.html" />
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" /> 
-  </head>
-  <body role="document">
-    <div class="related" role="navigation" aria-label="related navigation">
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="tract_querier.tensor.scalar_measures" href="tract_querier.tensor.scalar_measures.html" />
+    <link rel="prev" title="tract_querier.query_processor" href="tract_querier.query_processor.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -37,11 +27,45 @@
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">WMQL</a> &#187;</li> 
+        <li class="right" >
+          <a href="tract_querier.tensor.scalar_measures.html" title="tract_querier.tensor.scalar_measures"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="tract_querier.query_processor.html" title="tract_querier.query_processor"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">WMQL</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../tract_querier.html" accesskey="U">tract_querier Package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">tract_querier.tensor</a></li> 
       </ul>
-    </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-tract_querier.tensor">
+<span id="tract-querier-tensor"></span><h1>tract_querier.tensor<a class="headerlink" href="#module-tract_querier.tensor" title="Link to this heading">¶</a></h1>
+<p>Utils to handle tensor operations</p>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="tract_querier.query_processor.html"
+                          title="previous chapter">tract_querier.query_processor</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="tract_querier.tensor.scalar_measures.html"
+                          title="next chapter">tract_querier.tensor.scalar_measures</a></p>
+  </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -49,36 +73,21 @@
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
     <form class="search" action="../search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
     </form>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
-      </div>
-
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
-            
-  <div class="section" id="module-tract_querier.tensor">
-<span id="tract-querier-tensor"></span><h1>tract_querier.tensor<a class="headerlink" href="#module-tract_querier.tensor" title="Permalink to this headline">¶</a></h1>
-<p>Utils to handle tensor operations</p>
-</div>
-
-
-          </div>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -87,12 +96,20 @@
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">WMQL</a> &#187;</li> 
+        <li class="right" >
+          <a href="tract_querier.tensor.scalar_measures.html" title="tract_querier.tensor.scalar_measures"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="tract_querier.query_processor.html" title="tract_querier.query_processor"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">WMQL</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../tract_querier.html" >tract_querier Package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">tract_querier.tensor</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2013, Demian Wassermann (Modified BSD License).
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.3.
+    &#169; Copyright 2013, Demian Wassermann (Modified BSD License).
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
     </div>
   </body>
 </html>

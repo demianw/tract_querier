@@ -1,34 +1,24 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
-
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html lang="en" data-content_root="../">
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
     <title>tract_querier.tensor.scalar_measures &#8212; WMQL 0.1 documentation</title>
-    
-    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../',
-        VERSION:     '0.1',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
-    <script type="text/javascript" src="../_static/jquery.js"></script>
-    <script type="text/javascript" src="../_static/underscore.js"></script>
-    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinxdoc.css?v=34905f61" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <script src="../_static/documentation_options.js?v=2709fde1"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="canonical" href="https://demianw.github.io/tract_querier/generated/tract_querier.tensor.scalar_measures.html" />
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" /> 
-  </head>
-  <body role="document">
-    <div class="related" role="navigation" aria-label="related navigation">
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="tract_querier.tract_label_indices" href="tract_querier.tract_label_indices.html" />
+    <link rel="prev" title="tract_querier.tensor" href="tract_querier.tensor.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -37,11 +27,140 @@
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">WMQL</a> &#187;</li> 
+        <li class="right" >
+          <a href="tract_querier.tract_label_indices.html" title="tract_querier.tract_label_indices"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="tract_querier.tensor.html" title="tract_querier.tensor"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">WMQL</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../tract_querier.html" accesskey="U">tract_querier Package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">tract_querier.tensor.scalar_measures</a></li> 
       </ul>
-    </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="tract-querier-tensor-scalar-measures">
+<h1>tract_querier.tensor.scalar_measures<a class="headerlink" href="#tract-querier-tensor-scalar-measures" title="Link to this heading">¶</a></h1>
+<p class="rubric">Functions</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tract_querier.tensor.scalar_measures.axial_diffusivity</span></code>(evals)</p></td>
+<td><p>Taken from dipy/reconst/dti.py see for documentation :return:</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tract_querier.tensor.scalar_measures.eigenvalues" title="tract_querier.tensor.scalar_measures.eigenvalues"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tract_querier.tensor.scalar_measures.eigenvalues</span></code></a>(...)</p></td>
+<td><p>Eigenvalues of the tensors</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tract_querier.tensor.scalar_measures.fractional_anisotropy" title="tract_querier.tensor.scalar_measures.fractional_anisotropy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tract_querier.tensor.scalar_measures.fractional_anisotropy</span></code></a>(...)</p></td>
+<td><p>Fractional Anisotropy (Basser et al.) measure computed as</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tract_querier.tensor.scalar_measures.fractional_anisotropy_from_eigenvalues</span></code>(evals)</p></td>
+<td><p>Taken from dipy/reconst/dti.py see for documentation :return:</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tract_querier.tensor.scalar_measures.geodesic_anisotropy</span></code>(evals)</p></td>
+<td><p>Taken from dipy/reconst/dti.py see for documentation :return:</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tract_querier.tensor.scalar_measures.mean_diffusivity</span></code>(evals)</p></td>
+<td><p>Taken from dipy/reconst/dti.py see for documentation :return:</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tract_querier.tensor.scalar_measures.radial_diffusivity</span></code>(evals)</p></td>
+<td><p>Taken from dipy/reconst/dti.py see for documentation :return:</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tract_querier.tensor.scalar_measures.tensor_contraction" title="tract_querier.tensor.scalar_measures.tensor_contraction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tract_querier.tensor.scalar_measures.tensor_contraction</span></code></a>(...)</p></td>
+<td><p>Return the contraction of each tensor pair</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tract_querier.tensor.scalar_measures.tensor_det" title="tract_querier.tensor.scalar_measures.tensor_det"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tract_querier.tensor.scalar_measures.tensor_det</span></code></a>(...)</p></td>
+<td><p>Determinant of a tensor array</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tract_querier.tensor.scalar_measures.tensor_trace" title="tract_querier.tensor.scalar_measures.tensor_trace"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tract_querier.tensor.scalar_measures.tensor_trace</span></code></a>(...)</p></td>
+<td><p>Trace of each tensor</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tract_querier.tensor.scalar_measures.volume_fraction" title="tract_querier.tensor.scalar_measures.volume_fraction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tract_querier.tensor.scalar_measures.volume_fraction</span></code></a>(...)</p></td>
+<td><p>Volume Fraction (Basser et al.) measure computed as:</p></td>
+</tr>
+</tbody>
+</table>
+<p id="module-tract_querier.tensor.scalar_measures">Anisotropy measures from tensor operations</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="tract_querier.tensor.scalar_measures.fractional_anisotropy">
+<span class="sig-prename descclassname"><span class="pre">tract_querier.tensor.scalar_measures.</span></span><span class="sig-name descname"><span class="pre">fractional_anisotropy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor_array</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tract_querier/tensor/scalar_measures.html#fractional_anisotropy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tract_querier.tensor.scalar_measures.fractional_anisotropy" title="Link to this definition">¶</a></dt>
+<dd><p>Fractional Anisotropy (Basser et al.) measure computed as</p>
+<div class="math">
+<p><span class="math">FA = \sqrt{\frac {3(mn \cdot I - T) : (mn \cdot I - T)} {2(T : T)}}
+
+mn = Tr(T) / 3</span></p>
+</div></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tract_querier.tensor.scalar_measures.volume_fraction">
+<span class="sig-prename descclassname"><span class="pre">tract_querier.tensor.scalar_measures.</span></span><span class="sig-name descname"><span class="pre">volume_fraction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor_array</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tract_querier/tensor/scalar_measures.html#volume_fraction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tract_querier.tensor.scalar_measures.volume_fraction" title="Link to this definition">¶</a></dt>
+<dd><p>Volume Fraction (Basser et al.) measure computed as:</p>
+<div class="math">
+<p><span class="math">VF = 1 - \frac{|T|} {(Tr(T) / 3.)^3}</span></p>
+</div></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tract_querier.tensor.scalar_measures.eigenvalues">
+<span class="sig-prename descclassname"><span class="pre">tract_querier.tensor.scalar_measures.</span></span><span class="sig-name descname"><span class="pre">eigenvalues</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor_array</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tract_querier/tensor/scalar_measures.html#eigenvalues"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tract_querier.tensor.scalar_measures.eigenvalues" title="Link to this definition">¶</a></dt>
+<dd><p>Eigenvalues of the tensors</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tract_querier.tensor.scalar_measures.tensor_trace">
+<span class="sig-prename descclassname"><span class="pre">tract_querier.tensor.scalar_measures.</span></span><span class="sig-name descname"><span class="pre">tensor_trace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor_array</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tract_querier/tensor/scalar_measures.html#tensor_trace"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tract_querier.tensor.scalar_measures.tensor_trace" title="Link to this definition">¶</a></dt>
+<dd><p>Trace of each tensor</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tract_querier.tensor.scalar_measures.tensor_contraction">
+<span class="sig-prename descclassname"><span class="pre">tract_querier.tensor.scalar_measures.</span></span><span class="sig-name descname"><span class="pre">tensor_contraction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor_array_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tensor_array_2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tract_querier/tensor/scalar_measures.html#tensor_contraction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tract_querier.tensor.scalar_measures.tensor_contraction" title="Link to this definition">¶</a></dt>
+<dd><p>Return the contraction of each tensor pair</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tract_querier.tensor.scalar_measures.tensor_det">
+<span class="sig-prename descclassname"><span class="pre">tract_querier.tensor.scalar_measures.</span></span><span class="sig-name descname"><span class="pre">tensor_det</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor_array</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tract_querier/tensor/scalar_measures.html#tensor_det"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tract_querier.tensor.scalar_measures.tensor_det" title="Link to this definition">¶</a></dt>
+<dd><p>Determinant of a tensor array</p>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">tract_querier.tensor.scalar_measures</a><ul>
+<li><a class="reference internal" href="#tract_querier.tensor.scalar_measures.fractional_anisotropy"><code class="docutils literal notranslate"><span class="pre">fractional_anisotropy</span></code></a></li>
+<li><a class="reference internal" href="#tract_querier.tensor.scalar_measures.volume_fraction"><code class="docutils literal notranslate"><span class="pre">volume_fraction</span></code></a></li>
+<li><a class="reference internal" href="#tract_querier.tensor.scalar_measures.eigenvalues"><code class="docutils literal notranslate"><span class="pre">eigenvalues</span></code></a></li>
+<li><a class="reference internal" href="#tract_querier.tensor.scalar_measures.tensor_trace"><code class="docutils literal notranslate"><span class="pre">tensor_trace</span></code></a></li>
+<li><a class="reference internal" href="#tract_querier.tensor.scalar_measures.tensor_contraction"><code class="docutils literal notranslate"><span class="pre">tensor_contraction</span></code></a></li>
+<li><a class="reference internal" href="#tract_querier.tensor.scalar_measures.tensor_det"><code class="docutils literal notranslate"><span class="pre">tensor_det</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="tract_querier.tensor.html"
+                          title="previous chapter">tract_querier.tensor</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="tract_querier.tract_label_indices.html"
+                          title="next chapter">tract_querier.tract_label_indices</a></p>
+  </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -49,120 +168,21 @@
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
     <form class="search" action="../search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
     </form>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
-      </div>
-
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
-            
-  <div class="section" id="tract-querier-tensor-scalar-measures">
-<h1>tract_querier.tensor.scalar_measures<a class="headerlink" href="#tract-querier-tensor-scalar-measures" title="Permalink to this headline">¶</a></h1>
-<p class="rubric">Functions</p>
-<table border="1" class="longtable docutils">
-<colgroup>
-<col width="10%" />
-<col width="90%" />
-</colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">tract_querier.tensor.scalar_measures.axial_diffusivity</span></code>(evals)</td>
-<td>Taken from dipy/reconst/dti.py</td>
-</tr>
-<tr class="row-even"><td><a class="reference internal" href="#tract_querier.tensor.scalar_measures.eigenvalues" title="tract_querier.tensor.scalar_measures.eigenvalues"><code class="xref py py-obj docutils literal"><span class="pre">tract_querier.tensor.scalar_measures.eigenvalues</span></code></a>(...)</td>
-<td>Eigenvalues of the tensors</td>
-</tr>
-<tr class="row-odd"><td><a class="reference internal" href="#tract_querier.tensor.scalar_measures.fractional_anisotropy" title="tract_querier.tensor.scalar_measures.fractional_anisotropy"><code class="xref py py-obj docutils literal"><span class="pre">tract_querier.tensor.scalar_measures.fractional_anisotropy</span></code></a>(...)</td>
-<td>Fractional Anisotropy (Basser et al.) measure computed as</td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">tract_querier.tensor.scalar_measures.fractional_anisotropy_from_eigenvalues</span></code>(evals)</td>
-<td>Taken from dipy/reconst/dti.py</td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">tract_querier.tensor.scalar_measures.geodesic_anisotropy</span></code>(evals)</td>
-<td>Taken from dipy/reconst/dti.py</td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">tract_querier.tensor.scalar_measures.mean_diffusivity</span></code>(evals)</td>
-<td>Taken from dipy/reconst/dti.py</td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">tract_querier.tensor.scalar_measures.radial_diffusivity</span></code>(evals)</td>
-<td>Taken from dipy/reconst/dti.py</td>
-</tr>
-<tr class="row-even"><td><a class="reference internal" href="#tract_querier.tensor.scalar_measures.tensor_contraction" title="tract_querier.tensor.scalar_measures.tensor_contraction"><code class="xref py py-obj docutils literal"><span class="pre">tract_querier.tensor.scalar_measures.tensor_contraction</span></code></a>(...)</td>
-<td>Return the contraction of each tensor pair</td>
-</tr>
-<tr class="row-odd"><td><a class="reference internal" href="#tract_querier.tensor.scalar_measures.tensor_det" title="tract_querier.tensor.scalar_measures.tensor_det"><code class="xref py py-obj docutils literal"><span class="pre">tract_querier.tensor.scalar_measures.tensor_det</span></code></a>(...)</td>
-<td>Determinant of a tensor array</td>
-</tr>
-<tr class="row-even"><td><a class="reference internal" href="#tract_querier.tensor.scalar_measures.tensor_trace" title="tract_querier.tensor.scalar_measures.tensor_trace"><code class="xref py py-obj docutils literal"><span class="pre">tract_querier.tensor.scalar_measures.tensor_trace</span></code></a>(...)</td>
-<td>Trace of each tensor</td>
-</tr>
-<tr class="row-odd"><td><a class="reference internal" href="#tract_querier.tensor.scalar_measures.volume_fraction" title="tract_querier.tensor.scalar_measures.volume_fraction"><code class="xref py py-obj docutils literal"><span class="pre">tract_querier.tensor.scalar_measures.volume_fraction</span></code></a>(...)</td>
-<td>Volume Fraction (Basser et al.) measure computed as:</td>
-</tr>
-</tbody>
-</table>
-<span class="target" id="module-tract_querier.tensor.scalar_measures"></span><p>Anisotropy measures from tensor operations</p>
-<dl class="function">
-<dt id="tract_querier.tensor.scalar_measures.fractional_anisotropy">
-<code class="descclassname">tract_querier.tensor.scalar_measures.</code><code class="descname">fractional_anisotropy</code><span class="sig-paren">(</span><em>tensor_array</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tract_querier/tensor/scalar_measures.html#fractional_anisotropy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tract_querier.tensor.scalar_measures.fractional_anisotropy" title="Permalink to this definition">¶</a></dt>
-<dd><p>Fractional Anisotropy (Basser et al.) measure computed as</p>
-<div class="math">
-<p><img src="../_images/math/7b50047992ed470958d1f27eff48b3d56d1520c1.png" alt="FA = \sqrt{\frac {3(mn \cdot I - T) : (mn \cdot I - T)} {2(T : T)}}
-
-mn = Tr(T) / 3"/></p>
-</div></dd></dl>
-
-<dl class="function">
-<dt id="tract_querier.tensor.scalar_measures.volume_fraction">
-<code class="descclassname">tract_querier.tensor.scalar_measures.</code><code class="descname">volume_fraction</code><span class="sig-paren">(</span><em>tensor_array</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tract_querier/tensor/scalar_measures.html#volume_fraction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tract_querier.tensor.scalar_measures.volume_fraction" title="Permalink to this definition">¶</a></dt>
-<dd><p>Volume Fraction (Basser et al.) measure computed as:</p>
-<div class="math">
-<p><img src="../_images/math/6b707a8dc07259409974f70c6e73accbf01e18d4.png" alt="VF = 1 - \frac{|T|} {(Tr(T) / 3.)^3}"/></p>
-</div></dd></dl>
-
-<dl class="function">
-<dt id="tract_querier.tensor.scalar_measures.eigenvalues">
-<code class="descclassname">tract_querier.tensor.scalar_measures.</code><code class="descname">eigenvalues</code><span class="sig-paren">(</span><em>tensor_array</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tract_querier/tensor/scalar_measures.html#eigenvalues"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tract_querier.tensor.scalar_measures.eigenvalues" title="Permalink to this definition">¶</a></dt>
-<dd><p>Eigenvalues of the tensors</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="tract_querier.tensor.scalar_measures.tensor_det">
-<code class="descclassname">tract_querier.tensor.scalar_measures.</code><code class="descname">tensor_det</code><span class="sig-paren">(</span><em>tensor_array</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tract_querier/tensor/scalar_measures.html#tensor_det"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tract_querier.tensor.scalar_measures.tensor_det" title="Permalink to this definition">¶</a></dt>
-<dd><p>Determinant of a tensor array</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="tract_querier.tensor.scalar_measures.tensor_trace">
-<code class="descclassname">tract_querier.tensor.scalar_measures.</code><code class="descname">tensor_trace</code><span class="sig-paren">(</span><em>tensor_array</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tract_querier/tensor/scalar_measures.html#tensor_trace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tract_querier.tensor.scalar_measures.tensor_trace" title="Permalink to this definition">¶</a></dt>
-<dd><p>Trace of each tensor</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="tract_querier.tensor.scalar_measures.tensor_contraction">
-<code class="descclassname">tract_querier.tensor.scalar_measures.</code><code class="descname">tensor_contraction</code><span class="sig-paren">(</span><em>tensor_array_1</em>, <em>tensor_array_2</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tract_querier/tensor/scalar_measures.html#tensor_contraction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tract_querier.tensor.scalar_measures.tensor_contraction" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the contraction of each tensor pair</p>
-</dd></dl>
-
-</div>
-
-
-          </div>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -171,12 +191,20 @@ mn = Tr(T) / 3"/></p>
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">WMQL</a> &#187;</li> 
+        <li class="right" >
+          <a href="tract_querier.tract_label_indices.html" title="tract_querier.tract_label_indices"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="tract_querier.tensor.html" title="tract_querier.tensor"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">WMQL</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../tract_querier.html" >tract_querier Package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">tract_querier.tensor.scalar_measures</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2013, Demian Wassermann (Modified BSD License).
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.3.
+    &#169; Copyright 2013, Demian Wassermann (Modified BSD License).
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
     </div>
   </body>
 </html>

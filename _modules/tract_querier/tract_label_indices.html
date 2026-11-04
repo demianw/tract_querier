@@ -1,34 +1,21 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
-
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html lang="en" data-content_root="../../">
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>tract_querier.tract_label_indices &#8212; WMQL 0.1 documentation</title>
-    
-    <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../../',
-        VERSION:     '0.1',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
-    <script type="text/javascript" src="../../_static/jquery.js"></script>
-    <script type="text/javascript" src="../../_static/underscore.js"></script>
-    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinxdoc.css?v=34905f61" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+    <script src="../../_static/documentation_options.js?v=2709fde1"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="canonical" href="https://demianw.github.io/tract_querier/_modules/tract_querier/tract_label_indices.html" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
-  </head>
-  <body role="document">
-    <div class="related" role="navigation" aria-label="related navigation">
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -38,23 +25,10 @@
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="nav-item nav-item-0"><a href="../../index.html">WMQL</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">tract_querier.tract_label_indices</a></li> 
       </ul>
-    </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <form class="search" action="../../search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
-      </div>
+    </div>  
 
     <div class="document">
       <div class="documentwrapper">
@@ -62,20 +36,20 @@
           <div class="body" role="main">
             
   <h1>Source code for tract_querier.tract_label_indices</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">warnings</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 
-<span class="kn">from</span> <span class="nn">six.moves</span> <span class="k">import</span> <span class="nb">range</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.aabb</span><span class="w"> </span><span class="kn">import</span> <span class="n">BoundingBox</span>
 
-<span class="kn">from</span> <span class="nn">.aabb</span> <span class="k">import</span> <span class="n">BoundingBox</span>
-
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;TractographySpatialIndexing&#39;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'TractographySpatialIndexing'</span><span class="p">]</span>
 
 
-<div class="viewcode-block" id="TractographySpatialIndexing"><a class="viewcode-back" href="../../generated/tract_querier.tract_label_indices.html#tract_querier.tract_label_indices.TractographySpatialIndexing">[docs]</a><span class="k">class</span> <span class="nc">TractographySpatialIndexing</span><span class="p">:</span>
+<div class="viewcode-block" id="TractographySpatialIndexing">
+<a class="viewcode-back" href="../../generated/tract_querier.tract_label_indices.html#tract_querier.tract_label_indices.TractographySpatialIndexing">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TractographySpatialIndexing</span><span class="p">:</span>
 
-    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    This class implements a mutual spatial indexing of</span>
 <span class="sd">    an labeled image and a tractography</span>
 
@@ -119,9 +93,9 @@
 <span class="sd">    tract_endpoints_pos : array_like of :math:`N\times 2 \times 3` where</span>
 <span class="sd">        :math:`N` is the number of tracts</span>
 <span class="sd">        Contains the position of both endpoints of each tract</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">tractography</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">affine_ijk_2_ras</span><span class="p">,</span>
         <span class="n">length_threshold</span><span class="p">,</span> <span class="n">crossing_threshold</span>
     <span class="p">):</span>
@@ -154,13 +128,14 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">tract_endpoints_pos</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">t</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span></div>
 
 
-<span class="k">def</span> <span class="nf">compute_label_bounding_boxes</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">affine_ijk_2_ras</span><span class="p">):</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_label_bounding_boxes</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">affine_ijk_2_ras</span><span class="p">):</span>
     <span class="n">linear_component</span> <span class="o">=</span> <span class="n">affine_ijk_2_ras</span><span class="p">[:</span><span class="mi">3</span><span class="p">,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span>
     <span class="n">translation</span> <span class="o">=</span> <span class="n">affine_ijk_2_ras</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
     <span class="n">label_bounding_boxes</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="kn">from</span> <span class="nn">scipy</span> <span class="k">import</span> <span class="n">ndimage</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">ndimage</span>
         <span class="n">labels</span> <span class="o">=</span> <span class="n">ndimage</span><span class="o">.</span><span class="n">find_objects</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">labels</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -192,7 +167,7 @@
     <span class="k">return</span> <span class="n">label_bounding_boxes</span>
 
 
-<span class="k">def</span> <span class="nf">compute_tract_bounding_boxes</span><span class="p">(</span><span class="n">tracts</span><span class="p">,</span> <span class="n">affine_transform</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_tract_bounding_boxes</span><span class="p">(</span><span class="n">tracts</span><span class="p">,</span> <span class="n">affine_transform</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="n">bounding_boxes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">tracts</span><span class="p">),</span> <span class="mi">6</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">affine_transform</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -210,18 +185,18 @@
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ras_coords</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s1">&#39;Tracts in the tractography must have at least 2 points&#39;</span>
-                <span class="s1">&#39; tract #</span><span class="si">%d</span><span class="s1"> has less than two points.&#39;</span>
-                <span class="s1">&#39; You can use the tract_math tool to prune short tracts&#39;</span>
-                <span class="s1">&#39; and solve this problem.&#39;</span> <span class="o">%</span> <span class="n">i</span>
+                <span class="s1">'Tracts in the tractography must have at least 2 points'</span>
+                <span class="s1">' tract #</span><span class="si">%d</span><span class="s1"> has less than two points.'</span>
+                <span class="s1">' You can use the tract_math tool to prune short tracts'</span>
+                <span class="s1">' and solve this problem.'</span> <span class="o">%</span> <span class="n">i</span>
             <span class="p">)</span>
         <span class="n">bounding_boxes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">BoundingBox</span><span class="p">(</span><span class="n">ras_coords</span><span class="p">)</span>
 
     <span class="n">box_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span>
         <span class="nb">len</span><span class="p">(</span><span class="n">tracts</span><span class="p">),</span>
         <span class="n">dtype</span><span class="o">=</span><span class="p">[(</span><span class="n">name</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span>
-            <span class="s1">&#39;left&#39;</span><span class="p">,</span> <span class="s1">&#39;posterior&#39;</span><span class="p">,</span> <span class="s1">&#39;inferior&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;right&#39;</span><span class="p">,</span> <span class="s1">&#39;anterior&#39;</span><span class="p">,</span> <span class="s1">&#39;superior&#39;</span>
+            <span class="s1">'left'</span><span class="p">,</span> <span class="s1">'posterior'</span><span class="p">,</span> <span class="s1">'inferior'</span><span class="p">,</span>
+            <span class="s1">'right'</span><span class="p">,</span> <span class="s1">'anterior'</span><span class="p">,</span> <span class="s1">'superior'</span>
         <span class="p">)])</span>
     <span class="n">bounding_boxes</span> <span class="o">=</span> <span class="n">bounding_boxes</span><span class="o">.</span><span class="n">T</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">box_array</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">names</span><span class="p">):</span>
@@ -230,7 +205,7 @@
     <span class="k">return</span> <span class="n">box_array</span>
 
 
-<span class="k">def</span> <span class="nf">compute_label_crossings</span><span class="p">(</span><span class="n">tract_cumulative_lengths</span><span class="p">,</span> <span class="n">point_labels</span><span class="p">,</span> <span class="n">threshold</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_label_crossings</span><span class="p">(</span><span class="n">tract_cumulative_lengths</span><span class="p">,</span> <span class="n">point_labels</span><span class="p">,</span> <span class="n">threshold</span><span class="p">):</span>
     <span class="n">tracts_labels</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tract_cumulative_lengths</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
         <span class="n">start</span> <span class="o">=</span> <span class="n">tract_cumulative_lengths</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
@@ -250,7 +225,7 @@
     <span class="k">return</span> <span class="n">tracts_labels</span><span class="p">,</span> <span class="n">labels_tracts</span>
 
 
-<span class="k">def</span> <span class="nf">compute_label_endings</span><span class="p">(</span><span class="n">tract_cumulative_lengths</span><span class="p">,</span> <span class="n">point_labels</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_label_endings</span><span class="p">(</span><span class="n">tract_cumulative_lengths</span><span class="p">,</span> <span class="n">point_labels</span><span class="p">):</span>
     <span class="n">tracts_labels</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tract_cumulative_lengths</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
         <span class="n">start</span> <span class="o">=</span> <span class="n">tract_cumulative_lengths</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
@@ -268,7 +243,7 @@
     <span class="k">return</span> <span class="n">tracts_labels</span><span class="p">,</span> <span class="n">labels_tracts</span>
 
 
-<span class="k">def</span> <span class="nf">compute_label_endings_start_end</span><span class="p">(</span><span class="n">tract_cumulative_lengths</span><span class="p">,</span> <span class="n">point_labels</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_label_endings_start_end</span><span class="p">(</span><span class="n">tract_cumulative_lengths</span><span class="p">,</span> <span class="n">point_labels</span><span class="p">):</span>
     <span class="n">tracts_labels_start</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">tracts_labels_end</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tract_cumulative_lengths</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
@@ -295,14 +270,14 @@
     <span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">compute_tract_label_indices</span><span class="p">(</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_tract_label_indices</span><span class="p">(</span>
     <span class="n">affine_ras_2_ijk</span><span class="p">,</span> <span class="n">img</span><span class="p">,</span>
     <span class="n">tracts</span><span class="p">,</span> <span class="n">length_threshold</span><span class="p">,</span> <span class="n">crossing_threshold</span>
 <span class="p">):</span>
     <span class="k">if</span> <span class="n">length_threshold</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">tract_length</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">tract</span><span class="p">:</span> <span class="p">((((</span>
             <span class="n">tract</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">-</span> <span class="n">tract</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-        <span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span> <span class="o">**</span> <span class="o">.</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span> <span class="o">**</span> <span class="mf">.5</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
         <span class="n">tracts</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">tracts</span> <span class="k">if</span> <span class="n">tract_length</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">length_threshold</span><span class="p">]</span>
 
     <span class="n">all_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">tracts</span><span class="p">)</span>
@@ -313,7 +288,7 @@
     <span class="k">if</span> <span class="p">(</span><span class="nb">any</span><span class="p">((</span>
         <span class="p">(</span><span class="n">all_points_ijk_rounded</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">.</span><span class="n">any</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
     <span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">all_points_ijk_rounded</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">()):</span>
-        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Warning tract points fall outside the image&quot;</span><span class="p">)</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">"Warning tract points fall outside the image"</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
         <span class="n">all_points_ijk_rounded</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">all_points_ijk_rounded</span><span class="p">[</span>
@@ -339,12 +314,27 @@
     <span class="p">)</span>
 </pre></div>
 
+            <div class="clearer"></div>
           </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -354,12 +344,13 @@
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="nav-item nav-item-0"><a href="../../index.html">WMQL</a> &#187;</li>
-          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">tract_querier.tract_label_indices</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2013, Demian Wassermann (Modified BSD License).
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.3.
+    &#169; Copyright 2013, Demian Wassermann (Modified BSD License).
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
     </div>
   </body>
 </html>

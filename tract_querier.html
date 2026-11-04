@@ -1,34 +1,24 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
-
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html lang="en" data-content_root="./">
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
     <title>tract_querier Package &#8212; WMQL 0.1 documentation</title>
-    
-    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '0.1',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinxdoc.css?v=34905f61" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=4ae1632d" />
+    <script src="_static/documentation_options.js?v=2709fde1"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="canonical" href="https://demianw.github.io/tract_querier/tract_querier.html" />
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" /> 
-  </head>
-  <body role="document">
-    <div class="related" role="navigation" aria-label="related navigation">
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="tract_querier.query_processor" href="generated/tract_querier.query_processor.html" />
+    <link rel="prev" title="Welcome to WMQL’s documentation!" href="index.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -37,21 +27,153 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">WMQL</a> &#187;</li> 
+        <li class="right" >
+          <a href="generated/tract_querier.query_processor.html" title="tract_querier.query_processor"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to WMQL’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">WMQL</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">tract_querier Package</a></li> 
       </ul>
-    </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="tract-querier-package">
+<h1>tract_querier Package<a class="headerlink" href="#tract-querier-package" title="Link to this heading">¶</a></h1>
+<section id="registration-package">
+<h2><code class="xref py py-mod docutils literal notranslate"><span class="pre">registration</span></code> Package<a class="headerlink" href="#registration-package" title="Link to this heading">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="generated/tract_querier.query_processor.html">tract_querier.query_processor</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="generated/tract_querier.query_processor.html#tract_querier.query_processor.EvaluateQueries"><code class="docutils literal notranslate"><span class="pre">EvaluateQueries</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/tract_querier.query_processor.html#tract_querier.query_processor.EvaluateQueries.relative_terms"><code class="docutils literal notranslate"><span class="pre">EvaluateQueries.relative_terms</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/tract_querier.query_processor.html#tract_querier.query_processor.EvaluateQueries.visit_Module"><code class="docutils literal notranslate"><span class="pre">EvaluateQueries.visit_Module</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/tract_querier.query_processor.html#tract_querier.query_processor.EvaluateQueries.visit_Compare"><code class="docutils literal notranslate"><span class="pre">EvaluateQueries.visit_Compare</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/tract_querier.query_processor.html#tract_querier.query_processor.EvaluateQueries.visit_BoolOp"><code class="docutils literal notranslate"><span class="pre">EvaluateQueries.visit_BoolOp</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/tract_querier.query_processor.html#tract_querier.query_processor.EvaluateQueries.visit_BinOp"><code class="docutils literal notranslate"><span class="pre">EvaluateQueries.visit_BinOp</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/tract_querier.query_processor.html#tract_querier.query_processor.EvaluateQueries.visit_UnaryOp"><code class="docutils literal notranslate"><span class="pre">EvaluateQueries.visit_UnaryOp</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/tract_querier.query_processor.html#tract_querier.query_processor.EvaluateQueries.visit_Call"><code class="docutils literal notranslate"><span class="pre">EvaluateQueries.visit_Call</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/tract_querier.query_processor.html#tract_querier.query_processor.EvaluateQueries.process_relative_term"><code class="docutils literal notranslate"><span class="pre">EvaluateQueries.process_relative_term</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/tract_querier.query_processor.html#tract_querier.query_processor.EvaluateQueries.visit_Assign"><code class="docutils literal notranslate"><span class="pre">EvaluateQueries.visit_Assign</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/tract_querier.query_processor.html#tract_querier.query_processor.EvaluateQueries.visit_AugAssign"><code class="docutils literal notranslate"><span class="pre">EvaluateQueries.visit_AugAssign</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/tract_querier.query_processor.html#tract_querier.query_processor.EvaluateQueries.process_assignment"><code class="docutils literal notranslate"><span class="pre">EvaluateQueries.process_assignment</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/tract_querier.query_processor.html#tract_querier.query_processor.EvaluateQueries.rewrite_side_query"><code class="docutils literal notranslate"><span class="pre">EvaluateQueries.rewrite_side_query</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/tract_querier.query_processor.html#tract_querier.query_processor.EvaluateQueries.visit_Name"><code class="docutils literal notranslate"><span class="pre">EvaluateQueries.visit_Name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/tract_querier.query_processor.html#tract_querier.query_processor.EvaluateQueries.visit_Attribute"><code class="docutils literal notranslate"><span class="pre">EvaluateQueries.visit_Attribute</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/tract_querier.query_processor.html#tract_querier.query_processor.EvaluateQueries.visit_Constant"><code class="docutils literal notranslate"><span class="pre">EvaluateQueries.visit_Constant</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/tract_querier.query_processor.html#tract_querier.query_processor.EvaluateQueries.visit_Expr"><code class="docutils literal notranslate"><span class="pre">EvaluateQueries.visit_Expr</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/tract_querier.query_processor.html#tract_querier.query_processor.EvaluateQueries.generic_visit"><code class="docutils literal notranslate"><span class="pre">EvaluateQueries.generic_visit</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/tract_querier.query_processor.html#tract_querier.query_processor.EvaluateQueries.visit_For"><code class="docutils literal notranslate"><span class="pre">EvaluateQueries.visit_For</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="generated/tract_querier.query_processor.html#tract_querier.query_processor.eval_queries"><code class="docutils literal notranslate"><span class="pre">eval_queries</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/tract_querier.query_processor.html#tract_querier.query_processor.queries_syntax_check"><code class="docutils literal notranslate"><span class="pre">queries_syntax_check</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/tract_querier.query_processor.html#tract_querier.query_processor.queries_preprocess"><code class="docutils literal notranslate"><span class="pre">queries_preprocess</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/tract_querier.query_processor.html#tract_querier.query_processor.TractQuerierSyntaxError"><code class="docutils literal notranslate"><span class="pre">TractQuerierSyntaxError</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/tract_querier.query_processor.html#tract_querier.query_processor.TractQuerierLabelNotFound"><code class="docutils literal notranslate"><span class="pre">TractQuerierLabelNotFound</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="generated/tract_querier.tensor.html">tract_querier.tensor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated/tract_querier.tensor.scalar_measures.html">tract_querier.tensor.scalar_measures</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="generated/tract_querier.tensor.scalar_measures.html#tract_querier.tensor.scalar_measures.fractional_anisotropy"><code class="docutils literal notranslate"><span class="pre">fractional_anisotropy</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/tract_querier.tensor.scalar_measures.html#tract_querier.tensor.scalar_measures.volume_fraction"><code class="docutils literal notranslate"><span class="pre">volume_fraction</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/tract_querier.tensor.scalar_measures.html#tract_querier.tensor.scalar_measures.eigenvalues"><code class="docutils literal notranslate"><span class="pre">eigenvalues</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/tract_querier.tensor.scalar_measures.html#tract_querier.tensor.scalar_measures.tensor_trace"><code class="docutils literal notranslate"><span class="pre">tensor_trace</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/tract_querier.tensor.scalar_measures.html#tract_querier.tensor.scalar_measures.tensor_contraction"><code class="docutils literal notranslate"><span class="pre">tensor_contraction</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/tract_querier.tensor.scalar_measures.html#tract_querier.tensor.scalar_measures.tensor_det"><code class="docutils literal notranslate"><span class="pre">tensor_det</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="generated/tract_querier.tract_label_indices.html">tract_querier.tract_label_indices</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="generated/tract_querier.tract_label_indices.html#tract_querier.tract_label_indices.TractographySpatialIndexing"><code class="docutils literal notranslate"><span class="pre">TractographySpatialIndexing</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="generated/tract_querier.tractography.html">tract_querier.tractography</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="generated/tract_querier.tractography.html#tract_querier.tractography.Tractography"><code class="docutils literal notranslate"><span class="pre">Tractography</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/tract_querier.tractography.html#tract_querier.tractography.Tractography.extra_args"><code class="docutils literal notranslate"><span class="pre">Tractography.extra_args</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/tract_querier.tractography.html#tract_querier.tractography.Tractography.append"><code class="docutils literal notranslate"><span class="pre">Tractography.append</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/tract_querier.tractography.html#tract_querier.tractography.Tractography.unsubsample_tracts"><code class="docutils literal notranslate"><span class="pre">Tractography.unsubsample_tracts</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/tract_querier.tractography.html#tract_querier.tractography.Tractography.unfilter_tracts"><code class="docutils literal notranslate"><span class="pre">Tractography.unfilter_tracts</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/tract_querier.tractography.html#tract_querier.tractography.Tractography.subsample_tracts"><code class="docutils literal notranslate"><span class="pre">Tractography.subsample_tracts</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/tract_querier.tractography.html#tract_querier.tractography.Tractography.filter_tracts"><code class="docutils literal notranslate"><span class="pre">Tractography.filter_tracts</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/tract_querier.tractography.html#tract_querier.tractography.Tractography.are_tracts_filtered"><code class="docutils literal notranslate"><span class="pre">Tractography.are_tracts_filtered</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/tract_querier.tractography.html#tract_querier.tractography.Tractography.are_tracts_subsampled"><code class="docutils literal notranslate"><span class="pre">Tractography.are_tracts_subsampled</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/tract_querier.tractography.html#tract_querier.tractography.Tractography.original_tracts"><code class="docutils literal notranslate"><span class="pre">Tractography.original_tracts</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/tract_querier.tractography.html#tract_querier.tractography.Tractography.original_tracts_data"><code class="docutils literal notranslate"><span class="pre">Tractography.original_tracts_data</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/tract_querier.tractography.html#tract_querier.tractography.Tractography.filtered_tracts_map"><code class="docutils literal notranslate"><span class="pre">Tractography.filtered_tracts_map</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/tract_querier.tractography.html#tract_querier.tractography.Tractography.tracts"><code class="docutils literal notranslate"><span class="pre">Tractography.tracts</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/tract_querier.tractography.html#tract_querier.tractography.Tractography.tracts_data"><code class="docutils literal notranslate"><span class="pre">Tractography.tracts_data</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/tract_querier.tractography.html#tract_querier.tractography.Tractography.add_tract_data_from_array"><code class="docutils literal notranslate"><span class="pre">Tractography.add_tract_data_from_array</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="generated/tract_querier.tractography.html#tract_querier.tractography.tractography_from_trackvis_file"><code class="docutils literal notranslate"><span class="pre">tractography_from_trackvis_file</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/tract_querier.tractography.html#tract_querier.tractography.tractography_to_trackvis_file"><code class="docutils literal notranslate"><span class="pre">tractography_to_trackvis_file</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/tract_querier.tractography.html#tract_querier.tractography.tractography_from_files"><code class="docutils literal notranslate"><span class="pre">tractography_from_files</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/tract_querier.tractography.html#tract_querier.tractography.tractography_from_file"><code class="docutils literal notranslate"><span class="pre">tractography_from_file</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/tract_querier.tractography.html#tract_querier.tractography.tractography_to_file"><code class="docutils literal notranslate"><span class="pre">tractography_to_file</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/tract_querier.tractography.html#tract_querier.tractography.tractography_from_vtk_files"><code class="docutils literal notranslate"><span class="pre">tractography_from_vtk_files</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/tract_querier.tractography.html#tract_querier.tractography.tractography_to_vtk_file"><code class="docutils literal notranslate"><span class="pre">tractography_to_vtk_file</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/tract_querier.tractography.html#tract_querier.tractography.vtkPolyData_to_tracts"><code class="docutils literal notranslate"><span class="pre">vtkPolyData_to_tracts</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/tract_querier.tractography.html#tract_querier.tractography.tracts_to_vtkPolyData"><code class="docutils literal notranslate"><span class="pre">tracts_to_vtkPolyData</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/tract_querier.query_processor.html#module-tract_querier.query_processor" title="tract_querier.query_processor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">query_processor</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/tract_querier.tractography.html#module-tract_querier.tractography" title="tract_querier.tractography"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tractography</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/tract_querier.tract_label_indices.html#module-tract_querier.tract_label_indices" title="tract_querier.tract_label_indices"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tract_label_indices</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/tract_querier.tensor.html#module-tract_querier.tensor" title="tract_querier.tensor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tensor</span></code></a></p></td>
+<td><p>Utils to handle tensor operations</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/tract_querier.tensor.scalar_measures.html#module-tract_querier.tensor.scalar_measures" title="tract_querier.tensor.scalar_measures"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tensor.scalar_measures</span></code></a></p></td>
+<td><p>Anisotropy measures from tensor operations</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
-  <h3><a href="index.html">Table Of Contents</a></h3>
-  <ul>
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
 <li><a class="reference internal" href="#">tract_querier Package</a><ul>
-<li><a class="reference internal" href="#registration-package"><code class="docutils literal"><span class="pre">registration</span></code> Package</a><ul>
+<li><a class="reference internal" href="#registration-package"><code class="xref py py-mod docutils literal notranslate"><span class="pre">registration</span></code> Package</a><ul>
 </ul>
 </li>
 </ul>
 </li>
 </ul>
 
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="index.html"
+                          title="previous chapter">Welcome to WMQL’s documentation!</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="generated/tract_querier.query_processor.html"
+                          title="next chapter">tract_querier.query_processor</a></p>
+  </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -59,74 +181,21 @@
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
     </form>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-        </div>
-      </div>
-
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
-            
-  <div class="section" id="tract-querier-package">
-<h1>tract_querier Package<a class="headerlink" href="#tract-querier-package" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="registration-package">
-<h2><code class="xref py py-mod docutils literal"><span class="pre">registration</span></code> Package<a class="headerlink" href="#registration-package" title="Permalink to this headline">¶</a></h2>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="generated/tract_querier.query_processor.html">tract_querier.query_processor</a><ul class="simple">
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="generated/tract_querier.tensor.html">tract_querier.tensor</a></li>
-<li class="toctree-l1"><a class="reference internal" href="generated/tract_querier.tensor.scalar_measures.html">tract_querier.tensor.scalar_measures</a></li>
-<li class="toctree-l1"><a class="reference internal" href="generated/tract_querier.tract_label_indices.html">tract_querier.tract_label_indices</a></li>
-<li class="toctree-l1"><a class="reference internal" href="generated/tract_querier.tractography.html">tract_querier.tractography</a><ul class="simple">
-</ul>
-</li>
-</ul>
-</div>
-<table border="1" class="longtable docutils">
-<colgroup>
-<col width="10%" />
-<col width="90%" />
-</colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="generated/tract_querier.query_processor.html#module-tract_querier.query_processor" title="tract_querier.query_processor"><code class="xref py py-obj docutils literal"><span class="pre">query_processor</span></code></a></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><a class="reference internal" href="generated/tract_querier.tractography.html#module-tract_querier.tractography" title="tract_querier.tractography"><code class="xref py py-obj docutils literal"><span class="pre">tractography</span></code></a></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><a class="reference internal" href="generated/tract_querier.tract_label_indices.html#module-tract_querier.tract_label_indices" title="tract_querier.tract_label_indices"><code class="xref py py-obj docutils literal"><span class="pre">tract_label_indices</span></code></a></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><a class="reference internal" href="generated/tract_querier.tensor.html#module-tract_querier.tensor" title="tract_querier.tensor"><code class="xref py py-obj docutils literal"><span class="pre">tensor</span></code></a></td>
-<td>Utils to handle tensor operations</td>
-</tr>
-<tr class="row-odd"><td><a class="reference internal" href="generated/tract_querier.tensor.scalar_measures.html#module-tract_querier.tensor.scalar_measures" title="tract_querier.tensor.scalar_measures"><code class="xref py py-obj docutils literal"><span class="pre">tensor.scalar_measures</span></code></a></td>
-<td>Anisotropy measures from tensor operations</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-
-
-          </div>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -135,12 +204,19 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">WMQL</a> &#187;</li> 
+        <li class="right" >
+          <a href="generated/tract_querier.query_processor.html" title="tract_querier.query_processor"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to WMQL’s documentation!"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">WMQL</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">tract_querier Package</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2013, Demian Wassermann (Modified BSD License).
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.3.
+    &#169; Copyright 2013, Demian Wassermann (Modified BSD License).
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
     </div>
   </body>
 </html>

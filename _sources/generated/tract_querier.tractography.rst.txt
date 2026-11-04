@@ -3,13 +3,6 @@ tract_querier.tractography
 
 
 
-.. rubric:: Classes
-
-.. autosummary::
-  :template: class.rst
-  
-    tract_querier.tractography.Tractography
-
 
 
 
@@ -18,8 +11,9 @@ tract_querier.tractography
 
 .. autosummary::
   
-    tract_querier.tractography.tractography_from_vtk_files
-    tract_querier.tractography.tractography_to_vtk_file
+    tract_querier.tractography.tractography_from_file
+    tract_querier.tractography.tractography_from_files
+    tract_querier.tractography.tractography_to_file
 
 
 

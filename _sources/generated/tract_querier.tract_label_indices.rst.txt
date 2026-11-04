@@ -8,7 +8,6 @@ tract_querier.tract_label_indices
 .. autosummary::
   :template: class.rst
   
-    tract_querier.tract_label_indices.BoundingBox
     tract_querier.tract_label_indices.TractographySpatialIndexing
 
 
