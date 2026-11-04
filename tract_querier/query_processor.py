@@ -290,12 +290,6 @@ class EvaluateQueries(ast.NodeVisitor):
                     new_tracts, query_info.labels,
                     query_info.tracts_endpoints
                 )
-            elif (
-                node.func.id.lower() == 'save' and
-                isinstance(node.args, ast.Constant) and isinstance(node.args.value, str)
-            ):
-                self.queries_to_save.add(node.args[0].value)
-                return
             elif node.func.id.lower() in self.relative_terms:
                 return self.process_relative_term(node)
 
@@ -590,12 +584,27 @@ class EvaluateQueries(ast.NodeVisitor):
 
     def visit_Expr(self, node):
         if isinstance(node.value, ast.Name):
-            if node.value.id in self.evaluated_queries_info.keys():
-                self.queries_to_save.add(node.value.id)
+            query_name = node.value.id
+        elif (
+            isinstance(node.value, ast.Call) and
+            isinstance(node.value.func, ast.Name) and
+            node.value.func.id.lower() == 'save' and
+            len(node.value.args) == 1 and
+            len(node.value.keywords) == 0 and
+            isinstance(node.value.args[0], ast.Constant) and
+            isinstance(node.value.args[0].value, str)
+        ):
+            query_name = node.value.args[0].value
+        else:
+            query_name = None
+
+        if query_name is not None:
+            if query_name in self.evaluated_queries_info.keys():
+                self.queries_to_save.add(query_name)
             else:
                 raise TractQuerierSyntaxError(
                     "Query %s not known line: %d" %
-                    (node.value.id, node.lineno)
+                    (query_name, node.lineno)
                 )
         elif isinstance(node.value, ast.Module):
             self.visit(node.value)
