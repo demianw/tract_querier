@@ -40,7 +40,7 @@ def count(optional_flags, tractographies):
 
 @tract_math_operation(': calculates mean and std of tract length')
 def length_mean_std(optional_flags, tractography):
-    return tensor_operations.compute_all_measures(tractography, ['length mean (mm)', 'length std (mm^2)'])
+    return tensor_operations.compute_all_measures(tractography, ['length mean (mm)', 'length std (mm)'])
 
 
 @tract_math_operation('<volume unit>: calculates the volume of a tract based on voxel occupancy of a certain voxel volume')
@@ -93,7 +93,7 @@ def scalar_compute_most(optional_flags, tractographies, scalar):
                                                     ['per tract distance weighted mean %s',
                                                      'per tract distance weighted std %s',
                                                      'tract volume',
-                                                     'length mean (mm)', 'length std (mm^2)',
+                                                     'length mean (mm)', 'length std (mm)',
                                                      'number of tracts'
                                                      ],
                                                     scalars=scalars, resolution=1.)

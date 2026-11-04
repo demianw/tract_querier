@@ -14,12 +14,12 @@ def compute_all_measures(tractography, desired_keys_list, scalars=None, resoluti
         unordered_results['number of tracts'] = tract_operations.tract_count(
             tractography.tracts())
 
-    if ('length mean (mm)' in desired_keys_list) or ('length std (mm^2)' in desired_keys_list):
+    if ('length mean (mm)' in desired_keys_list) or ('length std (mm)' in desired_keys_list):
         lengths = numpy.empty(len(tractography.tracts()))
         for i, one_tract in enumerate(tractography.tracts()):
             lengths[i] = tract_operations.tract_length(one_tract)
         unordered_results['length mean (mm)'] = lengths.mean()
-        unordered_results['length std (mm^2)'] = lengths.std()
+        unordered_results['length std (mm)'] = lengths.std()
 
     if ('tract volume' in desired_keys_list) and (resolution is not None):
         resolution = float(resolution)
@@ -66,8 +66,8 @@ def compute_all_measures(tractography, desired_keys_list, scalars=None, resoluti
                 weighted_scalars[line_index, 1] = length
             mean = numpy.average(
                 weighted_scalars[:, 0], weights=weighted_scalars[:, 1])
-            std = numpy.average(
-                (weighted_scalars[:, 0] - mean) ** 2, weights=weighted_scalars[:, 1])
+            std = numpy.sqrt(numpy.average(
+                (weighted_scalars[:, 0] - mean) ** 2, weights=weighted_scalars[:, 1]))
             unordered_results[mean_key] = mean
             unordered_results[std_key] = std
         mii = desired_keys_list.index('per tract distance weighted mean %s')
