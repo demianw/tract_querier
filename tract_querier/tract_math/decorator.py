@@ -94,6 +94,15 @@ def tract_math_operation(help_text, needs_one_tract=True):
         return base_args, options_dict
 
     def internal_decorator(func):
+        def call(*option_and_args):
+            try:
+                inspect.signature(func).bind(*option_and_args)
+            except TypeError as e:
+                raise TractMathWrongArgumentsError(
+                    'Wrong number of parameters for the operation: ' + str(e)
+                )
+            return func(*option_and_args)
+
         def wrapper(*input_args):
             # find optional flags and put them as a dictionary
             # at the beginning of args
@@ -134,7 +143,7 @@ def tract_math_operation(help_text, needs_one_tract=True):
                     args = args[:-1]
 
                 option_and_args = (options_dict,) + args
-                out = func(*option_and_args)
+                out = call(*option_and_args)
 
                 process_output(out, file_output=file_output)
             elif (
@@ -145,7 +154,7 @@ def tract_math_operation(help_text, needs_one_tract=True):
                     args = args[:-1]
 
                 option_and_args = (options_dict,) + args
-                process_output(func(*option_and_args))
+                process_output(call(*option_and_args))
             else:
                 raise TractMathWrongArgumentsError(
                     'Wrong number of arguments for the operation'

@@ -3,8 +3,6 @@ import sys
 import itertools
 from argparse import ArgumentParser, FileType, REMAINDER
 
-import traceback
-
 from tract_querier.tract_math import operations
 
 
@@ -102,18 +100,14 @@ def main():
                 tractography.append((f.name, tractography_from_files(f.name)))
         except IOError as e:
             # print >>sys.stderr, "Error reading file ", f.name, "(%s)" % repr(e)
-            print(sys.stderr, "Error reading file ", f.name, "(%s)" % repr(e))
+            print("Error reading file ", f.name, "(%s)" % repr(e), file=sys.stderr)
 
     if args.operation in operations:
         try:
             operations[args.operation](
                 tractography, *args.operation_parameters)
         except TractMathWrongArgumentsError as e:
-            traceback.print_exc(file=sys.stdout)
             parser.error('\n\n' + str(e))
-        except TypeError:
-            traceback.print_exc(file=sys.stdout)
-            parser.error("\n\nError: Wrong number of parameters for the operation")
 
     else:
         parser.error("\n\nOperation not found")
