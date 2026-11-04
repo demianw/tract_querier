@@ -65,7 +65,13 @@ jobs:
       # if: steps.cache.outputs.cache-hit != 'true'
       run: |
         python -m pip install --upgrade --user pip setuptools coverage
-        pip install -e .[test]
+        # Minimal jobs also check that the package works without the
+        # optional VTK dependency
+        if [ "${{ matrix.requires }}" = "latest" ]; then
+          pip install -e ".[test,vtk]"
+        else
+          pip install -e ".[test]"
+        fi
         python --version
         pip --version
         pip list

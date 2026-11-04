@@ -12,20 +12,24 @@ __all__ = [
 ]
 
 try:
-    __all__ += [
-        'tractography_from_vtk_files', 'tractography_to_vtk_file',
-        'vtkPolyData_to_tracts', 'tracts_to_vtkPolyData'
-    ]
     from .vtkInterface import (
         tractography_from_vtk_files, tractography_to_vtk_file,
         vtkPolyData_to_tracts, tracts_to_vtkPolyData
     )
+    __all__ += [
+        'tractography_from_vtk_files', 'tractography_to_vtk_file',
+        'vtkPolyData_to_tracts', 'tracts_to_vtkPolyData'
+    ]
 
 except ImportError:
-    warn(
-        'VTK support not installed in this python distribution, '
-        'VTK files will not be read or written'
-    )
+    # VTK is an optional dependency: only needed for .vtk/.vtp files
+    pass
+
+VTK_NOT_INSTALLED = (
+    "VTK is not installed, so .vtk/.vtp files cannot be {}. Install it with "
+    "`pip install vtk` or reinstall with the `vtk` extra, "
+    "e.g. `pip install \"tract_querier[vtk]\"`"
+)
 
 
 def tractography_from_files(filenames):
@@ -48,7 +52,7 @@ def tractography_from_file(filename):
         if 'tractography_from_vtk_files' in __all__:
             return tractography_from_vtk_files(filename)
         else:
-            raise IOError("No VTK support installed, VTK files could not be read")
+            raise IOError(VTK_NOT_INSTALLED.format("read"))
     else:
         raise IOError("File format not supported")
 
@@ -84,6 +88,6 @@ def tractography_to_file(filename, tractography, **kwargs):
         if 'tractography_from_vtk_files' in __all__:
             return tractography_to_vtk_file(filename, tractography, **kwargs)
         else:
-            raise IOError("No VTK support installed, VTK files could not be read")
+            raise IOError(VTK_NOT_INSTALLED.format("written"))
     else:
         raise IOError("File format not supported")

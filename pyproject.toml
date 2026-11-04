@@ -26,12 +26,14 @@ classifiers = [
 dependencies = [
     "numpy>=1.26.0",
     "nibabel>=4.0.0",
-    "vtk>8.1.0"
 ]
 dynamic = ["version"]
 requires-python = ">=3.9"
 
 [project.optional-dependencies]
+vtk = [
+    "vtk>8.1.0",
+]
 doc = [
     "numpydoc",
     "sphinx",
