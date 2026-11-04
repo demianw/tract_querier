@@ -61,6 +61,14 @@ jobs:
     #     restore-keys: |
     #       ${{ env.pythonLocation }}-
 
+    # The tests download their data from OSF; downloading it in every job
+    # gets throttled (HTTP 403), so keep it in the Actions cache
+    - name: Cache test data
+      uses: actions/cache@v4
+      with:
+        path: /tmp/tract_querier
+        key: test-data-${{ hashFiles('tract_querier/tests/datasets.py') }}
+
     - name: Install dependencies
       # if: steps.cache.outputs.cache-hit != 'true'
       run: |
