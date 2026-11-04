@@ -7,6 +7,7 @@ from itertools import takewhile
 import fnmatch
 
 from .code_util import DocStringInheritor
+from .tract_label_indices import labels_for_tracts
 
 
 __all__ = [
@@ -852,14 +853,3 @@ def queries_syntax_check(query_file_body):
             self.tract_bounding_boxes = {}
 
     eval_queries(query_file_body, DummySpatialIndexing())
-
-
-def labels_for_tracts(crossing_tracts_labels):
-    crossing_labels_tracts = {}
-    for i, f in crossing_tracts_labels.items():
-        for l in f:
-            if l in crossing_labels_tracts:
-                crossing_labels_tracts[l].add(i)
-            else:
-                crossing_labels_tracts[l] = set((i,))
-    return crossing_labels_tracts
