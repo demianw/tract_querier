@@ -6,8 +6,6 @@ from operator import lt, gt
 from itertools import takewhile
 import fnmatch
 
-from .code_util import DocStringInheritor
-
 
 __all__ = [
     'keywords', 'EvaluateQueries', 'eval_queries',
@@ -133,7 +131,6 @@ class EvaluateQueries(ast.NodeVisitor):
         the tracts resulting from this query
 
     """
-    __metaclass__ = DocStringInheritor
 
     relative_terms = [
         'anterior_of',
