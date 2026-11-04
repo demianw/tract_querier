@@ -28,7 +28,7 @@ class TractQuerier(CommandLine):
     Examples
     --------
 
-    >>> from ..nipype.wmql import TractQuerier
+    >>> from tract_querier.nipype.wmql import TractQuerier
     >>> import os
     >>> tract_querier = TractQuerier()
     >>> tract_querier.inputs.atlas_type = 'Desikan'
@@ -85,7 +85,7 @@ class MapImageToTracts(CommandLine):
     Examples
     --------
 
-    >>> from ..nipype.wmql import MapImageToTracts
+    >>> from tract_querier.nipype.wmql import MapImageToTracts
     >>> tract_mapper = MapImageToTracts()
     >>> tract_mapper.inputs.output_tractography_prefix = 'out_'
     >>> tract_mapper.inputs.input_image = 'fa.nii.gz'

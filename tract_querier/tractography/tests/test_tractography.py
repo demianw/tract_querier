@@ -1,12 +1,11 @@
-from .. import Tractography
-from .. import (
+from tract_querier.tractography import Tractography, tractography_from_files, tractography_to_file
+from tract_querier.tractography.trackvis import (
     tractography_from_trackvis_file, tractography_to_trackvis_file,
-    tractography_from_files, tractography_to_file
 )
 
 try:
     VTK = True
-    from ..vtkInterface import (
+    from tract_querier.tractography.vtkInterface import (
         tractography_from_vtk_files, tractography_to_vtk_file,
     )
 except ImportError:
