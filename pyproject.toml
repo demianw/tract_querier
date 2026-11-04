@@ -41,6 +41,10 @@ test = [
     "pytest",
     "pytest-console-scripts",
 ]
+tract_math = [
+    "scipy",
+    "scikit-learn",
+]
 
 [project.urls]
 documentation = "https://demianw.github.io/tract_querier/"

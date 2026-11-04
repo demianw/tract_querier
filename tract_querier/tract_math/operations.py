@@ -11,12 +11,24 @@ from ..tractography import (
     Tractography, tractography_to_file, tractography_from_files
 )
 
+import importlib
 import sys
 import traceback
 from . import tensor_operations
 from . import tract_operations
 
 from collections import OrderedDict
+
+
+def _import_optional(module_name):
+    try:
+        return importlib.import_module(module_name)
+    except ImportError as e:
+        raise ImportError(
+            "This operation needs %s: install it, or install tract_querier "
+            "with the tract_math extra, e.g. pip install '.[tract_math]' "
+            "from the source tree" % module_name.split('.')[0]
+        ) from e
 
 
 @tract_math_operation(': print the names of scalar data associated with each tract')
@@ -273,7 +285,7 @@ def tract_remove_short_tracts(optional_flags, tractography, min_tract_length, fi
 @tract_math_operation('<image> <quantity_name> <tractography_file_output>: maps the values of an image to the tract points')
 def tract_map_image(optional_flags, tractography, image, quantity_name, file_output):
     from os import path
-    from scipy import ndimage
+    ndimage = _import_optional('scipy.ndimage')
 
     image = nibabel.load(image)
 
@@ -316,7 +328,7 @@ def tract_map_image(optional_flags, tractography, image, quantity_name, file_out
     'non-linear deformation to a tractography'
 )
 def tract_deform(optional_flags, tractography, image, file_output=None):
-    from scipy import ndimage
+    ndimage = _import_optional('scipy.ndimage')
     import numpy as numpy
 
     image = nibabel.load(image)
@@ -445,7 +457,7 @@ def tract_generate_mask(optional_flags, tractography, image, file_output):
 
 @tract_math_operation('<image> [smoothing] <image_out>: calculates the probabilistic tract image for these tracts', needs_one_tract=False)
 def tract_generate_population_probability_map(optional_flags, tractographies, image, smoothing=0, file_output=None):
-    from scipy import ndimage
+    ndimage = _import_optional('scipy.ndimage')
     image = nibabel.load(image)
     smoothing = float(smoothing)
 
@@ -622,7 +634,7 @@ def tract_dice(optional_flags, tractography, resolution, *other_tracts):
 
 @tract_math_operation('<var> <tract_out>: smoothes the tract by convolving with a sliding window')
 def tract_smooth(optional_flags, tractography, var, file_output):
-    from sklearn.neighbors import BallTree
+    BallTree = _import_optional('sklearn.neighbors').BallTree
 
     var = float(var)
     std = var ** 2
@@ -743,7 +755,10 @@ def tract_prototype_mean(optional_flags, tractography, smooth_order, file_output
             tck, u = interpolate.splprep(mean_tract.T)
             mean_tract = numpy.ascontiguousarray(numpy.transpose(interpolate.splev(u, tck)))
         except ImportError:
-            warn("A smooth order larger than 0 needs scipy installed")
+            warn(
+                "A smooth order larger than 0 needs scipy: install it, or "
+                "install tract_querier with the tract_math extra"
+            )
 
     return Tractography([mean_tract], {}, **tractography.extra_args)
 
