@@ -146,7 +146,6 @@ def main():
     # 1. Command line options specified are respected first
     # 2. Current directory is respected second
     # 3. Default query location third
-    # 4. Source Tree 4th
     qry_search_folders = []
     if options.include:
         command_line_qry_folders = options.include.split(':')
@@ -160,16 +159,6 @@ def main():
 
     if os.path.exists(tract_querier.default_queries_folder):
         qry_search_folders.extend([tract_querier.default_queries_folder])
-
-    ## Source Tree Data
-    source_tree_data_path = os.path.abspath(
-        os.path.join(
-        os.path.dirname(os.path.dirname(__file__)),
-        'tract_querier','data')
-    )
-    if os.path.exists(source_tree_data_path):
-        qry_search_folders.extend([source_tree_data_path])
-
 
     try:
         if os.path.exists(options.queries_string):
