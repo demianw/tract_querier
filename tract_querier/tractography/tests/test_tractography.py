@@ -197,6 +197,23 @@ def test_saveload_trk():
     os.remove(fname)
 
 
+def test_save_trk_image_dims_from_tractography():
+    import tempfile
+    import os
+    fname = tempfile.mkstemp('.trk')[1]
+
+    tractography_ = Tractography(
+        tractography.tracts(), affine=eye(4), image_dims=np.array([2, 3, 4])
+    )
+    tractography_to_trackvis_file(fname, tractography_)
+
+    new_tractography = tractography_from_files(fname)
+    assert_array_equal(new_tractography.image_dims, [2, 3, 4])
+    assert(equal_tracts(tractography_.tracts(), new_tractography.tracts()))
+
+    os.remove(fname)
+
+
 def test_saveload():
     import tempfile
     import os
