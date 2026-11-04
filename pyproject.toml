@@ -1,6 +1,6 @@
 [build-system]
 requires = [
-    "setuptools",
+    "setuptools>=77",
     "setuptools_scm",
     "wheel",
 ]
@@ -10,9 +10,12 @@ build-backend = "setuptools.build_meta"
 name = "tract_querier"
 description = "WMQL: Query language for automatic tract extraction from full-brain tractographies with a registered template on top of them"
 readme = "README.md"
-license = {file = "license.rst"}
+# Custom license (restricts for-profit redistribution, see license.rst and
+# issue #1); it is not an SPDX-listed license, hence the LicenseRef- id.
+license = "LicenseRef-tract-querier"
+license-files = ["license.rst"]
 authors = [
-  {name = "Demian Wassermann"}, {email = "demian.wassermann@inria.fr"}
+  {name = "Demian Wassermann", email = "demian.wassermann@inria.fr"}
 ]
 classifiers = [
     "Intended Audience :: Science/Research",
@@ -53,15 +56,6 @@ tract_querier = "scripts.cli_tract_querier:main"
 
 [tool.setuptools]
 include-package-data = true
-
-[tool.setuptools.package-data]
-tract_querier = [
-    "data/FreeSurfer.qry",
-    "data/JHU_MNI_SS_WMPM_Type_I.qry",
-    "data/JHU_MNI_SS_WMPM_Type_II.qry",
-    "data/freesurfer_queries.qry",
-    "data/mori_queries.qry",
-]
 
 [tool.setuptools.packages]
 find = {}  # Scanning implicit namespaces is active by default
