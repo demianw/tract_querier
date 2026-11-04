@@ -4,6 +4,9 @@
 import os
 from os import path
 
+import numpy as np
+
+from scripts.cli_tract_querier import affine_transform_tract
 from tract_querier.tests import datasets
 
 
@@ -46,3 +49,37 @@ def test_tract_querier_query(script_runner):
     assert ret.success
     if path.exists(output_prefix + tract_fname_end):
         os.remove(output_prefix + tract_fname_end)
+
+
+def test_affine_transform_tract():
+    affine = np.array([
+        [0., -1., 0., 10.],
+        [1., 0., 0., 20.],
+        [0., 0., 2., 30.],
+        [0., 0., 0., 1.],
+    ])
+    tract = np.array([[0., 0., 0.], [1., 2., 3.]])
+    np.testing.assert_allclose(
+        affine_transform_tract(affine, tract),
+        [[10., 20., 30.], [8., 21., 36.]]
+    )
+
+
+def test_tract_querier_bounding_box_affine_transform_translation(
+    script_runner, tmp_path
+):
+    # A pure translation moves the tracts and the atlas together, so the
+    # selected tracts must be the same as without any transform.
+    test_data = datasets.TestDataSet()
+    ret = script_runner.run([
+        "tract_querier",
+        "-a", test_data.files["atlas_file"],
+        "-t", test_data.files["tract_file"],
+        "-q", test_data.files["query_cst_file"],
+        "-o", str(tmp_path / "test"),
+        "--bounding_box_affine_transform",
+        "1,0,0,10,0,1,0,20,0,0,1,30,0,0,0,1",
+    ])
+    assert ret.success
+    assert "cortico_spinal.left: 000385" in ret.stdout
+    assert "cortico_spinal.right: 000000" in ret.stdout
