@@ -181,7 +181,6 @@ class TractQuerierCmd(cmd.Cmd):
 
     @safe_method
     def default(self, line):
-        print(line)
         if len(line) == 0:
             return False
 

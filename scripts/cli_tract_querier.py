@@ -117,6 +117,22 @@ def main():
     ):
         parser.error("incorrect number of arguments")
 
+    input_split = os.path.splitext(options.tractography_file_name)
+    output_split = os.path.splitext(options.output_file_name)
+    if len(output_split[-1]) > 0:
+        options.output_file_name = output_split[0]
+        tractography_extension = output_split[1]
+    else:
+        tractography_extension = input_split[1]
+
+    if tractography_extension not in ('.trk', '.vtk', '.vtp'):
+        parser.error(
+            "output format %r not supported, it must be .trk, .vtk or .vtp; "
+            "add it to the output prefix, e.g. -o %s.trk"
+            % (tractography_extension, options.output_file_name +
+               tractography_extension)
+        )
+
     options.threshold = float(options.threshold)
     options.length_threshold = float(options.length_threshold)
 
@@ -207,20 +223,6 @@ def main():
     tr = tract_querier.tractography.tractography_from_file(
         options.tractography_file_name
     )
-
-    tractography_extension = os.path.splitext(options.tractography_file_name)[-1]
-    if tractography_extension == '.trk':
-        tractography_extra_kwargs = {
-            'affine': tr.affine,
-            'image_dimensions': tr.image_dims
-        }
-    input_split = os.path.splitext(options.tractography_file_name)
-    output_split = os.path.splitext(options.output_file_name)
-    if len(output_split[-1]) > 0:
-        options.output_file_name = output_split[0]
-        tractography_extension = output_split[1]
-    else:
-        tractography_extension = input_split[1]
 
     if tractography_extension == '.trk':
         if input_split[-1] == '.trk':

@@ -220,7 +220,7 @@ def tract_dump_endpoints(optional_flags, tractography):
     return res
 
 
-@tract_math_operation(': Minimum and maximum distance between two consecutive points')
+@tract_math_operation(': minimum and maximum tract length')
 def tract_point_distance_min_max(optional_flags, tractography):
     dist_min = numpy.empty(len(tractography.tracts()))
     dist_max = numpy.empty(len(tractography.tracts()))
@@ -241,7 +241,7 @@ def tract_subsample(optional_flags, tractography, points_per_tract, file_output)
     )
 
 
-@tract_math_operation('<mm per tract> <tractography_file_output>: subsamples tracts to a maximum number of points')
+@tract_math_operation('<min length in mm> <tractography_file_output>: keeps only the tracts longer than the given length')
 def tract_remove_short_tracts(optional_flags, tractography, min_tract_length, file_output):
 
     min_tract_length = float(min_tract_length)
@@ -351,9 +351,10 @@ def tract_deform(optional_flags, tractography, image, file_output=None):
 
 
 @tract_math_operation(
-    '<transform> [invert] <tractography_file_output>: apply a '
+    '<transform> <ref_image> [invert] <tractography_file_output>: apply a '
     'affine transform to a tractography. '
-    'transform is assumed to be in RAS format like Nifti.'
+    'transform is assumed to be in RAS format like Nifti. '
+    'ref_image gives the affine and dimensions of the output.'
 )
 def tract_affine_transform(optional_flags,
                            tractography, transform_file, ref_image,
