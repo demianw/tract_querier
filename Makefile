@@ -4,7 +4,7 @@
 
 PYTHON ?= python
 CYTHON ?= cython
-NOSETESTS ?= nosetests
+PYTEST ?= pytest
 CTAGS ?= ctags
 
 all: clean inplace test
@@ -29,18 +29,17 @@ clean: clean-build clean-pyc clean-so clean-ctags clean-doc
 
 in: inplace # just a shortcut
 inplace:
-	$(PYTHON) setup.py build_ext -i
+	$(PYTHON) -m pip install -e .
 
 test-code: in
-	$(NOSETESTS) -s tract_querier
+	$(PYTEST) tract_querier
 test-doc:
-	$(NOSETESTS) -s --with-doctest --doctest-tests --doctest-extension=rst \
-	--doctest-extension=inc --doctest-fixtures=_fixture doc/ 
+	$(PYTEST) --doctest-glob='*.rst' doc/
 
 test-coverage:
 	rm -rf coverage .coverage
-	$(NOSETESTS) -s --with-coverage --cover-html --cover-html-dir=coverage \
-	--cover-package=tract_querier tract_querier
+	coverage run --source tract_querier -m $(PYTEST) tract_querier
+	coverage html -d coverage
 
 test: test-code
 
