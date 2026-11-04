@@ -1,5 +1,6 @@
 from .tractography import Tractography
 from .trackvis import tractography_from_trackvis_file, tractography_to_trackvis_file
+from .tck import tractography_from_tck_file, tractography_to_tck_file
 
 from warnings import warn
 import numpy
@@ -7,6 +8,7 @@ import numpy
 __all__ = [
     'Tractography',
     'tractography_from_trackvis_file', 'tractography_to_trackvis_file',
+    'tractography_from_tck_file', 'tractography_to_tck_file',
     'tractography_from_files',
     'tractography_from_file', 'tractography_to_file',
 ]
@@ -44,6 +46,8 @@ def tractography_from_files(filenames):
 def tractography_from_file(filename):
     if filename.endswith('trk'):
         return tractography_from_trackvis_file(filename)
+    elif filename.endswith('tck'):
+        return tractography_from_tck_file(filename)
     elif filename.endswith('vtk') or filename.endswith('vtp'):
         if 'tractography_from_vtk_files' in __all__:
             return tractography_from_vtk_files(filename)
@@ -79,6 +83,9 @@ def tractography_to_file(filename, tractography, **kwargs):
                 kwargs['image_dimensions'] = numpy.ones(3)
 
         return tractography_to_trackvis_file(filename, tractography, **kwargs)
+
+    elif filename.endswith('tck'):
+        return tractography_to_tck_file(filename, tractography, **kwargs)
 
     elif filename.endswith('vtk') or filename.endswith('vtp'):
         if 'tractography_from_vtk_files' in __all__:
