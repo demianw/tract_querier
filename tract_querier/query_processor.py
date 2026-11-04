@@ -331,23 +331,38 @@ class EvaluateQueries(ast.NodeVisitor):
             Numbers of the labels that are traversed by
             the tracts resulting from this query
         """
-        if len(self.tractography_spatial_indexing.label_bounding_boxes) == 0:
-            return FiberQueryInfo()
-
+        function_name = node.func.id.lower()
+        side = None
         arg = node.args[0]
         if isinstance(arg, ast.Name):
             query_info = self.visit(arg)
-        elif isinstance(arg, ast.Attribute):
-            if arg.attr.lower() in ('left', 'right'):
-                side = arg.attr.lower()
-                query_info = self.visit(arg)
+        elif (
+            isinstance(arg, ast.Attribute) and
+            arg.attr.lower() in ('left', 'right')
+        ):
+            side = arg.attr.lower()
+            query_info = self.visit(arg)
         else:
             raise TractQuerierSyntaxError(
                 "Attribute not recognized for relative specification."
                 "Line %d" % node.lineno
             )
 
+        if function_name in ('medial_of', 'lateral_of') and side is None:
+            raise TractQuerierSyntaxError(
+                "%s needs a query ending in .left or .right. Line %d" %
+                (function_name, node.lineno)
+            )
+
+        if len(self.tractography_spatial_indexing.label_bounding_boxes) == 0:
+            return FiberQueryInfo()
+
         labels = query_info.labels
+        if len(labels) == 0:
+            raise TractQuerierLabelNotFound(
+                "%s applied to a query with no labels. Line %d" %
+                (function_name, node.lineno)
+            )
 
         labels_generator = (l for l in labels)
 
@@ -365,7 +380,6 @@ class EvaluateQueries(ast.NodeVisitor):
             raise TractQuerierLabelNotFound(
                 "Label %s not found in atlas file" % e
             )
-        function_name = node.func.id.lower()
 
         name = function_name.replace('_of', '')
 
@@ -542,7 +556,9 @@ class EvaluateQueries(ast.NodeVisitor):
     def visit_Attribute(self, node):
         if not isinstance(node.value, ast.Name):
             raise TractQuerierSyntaxError(
-                "Invalid query in line %d: %s" % node.lineno)
+                "Invalid query in line %d: %s" %
+                (node.lineno, ast.unparse(node))
+            )
 
         query_name = node.value.id + '.' + node.attr
         if query_name in self.evaluated_queries_info:
@@ -625,6 +641,11 @@ class EvaluateQueries(ast.NodeVisitor):
                         ' elements in the list must be query names' %
                         node.lineno
                     )
+        else:
+            raise TractQuerierSyntaxError(
+                'Error in FOR statement in line %d, it must iterate over'
+                ' a list of query names or a string pattern' % node.lineno
+            )
 
         original_body = ast.Module(body=node.body)
 
@@ -768,19 +789,10 @@ class RewritePreprocess(ast.NodeTransformer):
                 ast.parse(open(module_name).read(), filename=module_name)
                 for module_name in module_names
             ]
-        except SyntaxError:
-            import sys
-            import traceback
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            formatted_lines = traceback.format_exc().splitlines()
+        except SyntaxError as e:
             raise TractQuerierSyntaxError(
-                'syntax error in line %s line %d: \n%s\n%s' %
-                (
-                    module_name,
-                    exc_value[1][1],
-                    formatted_lines[-3],
-                    formatted_lines[-2]
-                )
+                'syntax error in file %s line %d: \n%s' %
+                (e.filename, e.lineno, e.text)
             )
 
         new_node = ast.Module(imported_modules)
