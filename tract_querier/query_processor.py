@@ -794,15 +794,12 @@ class RewritePreprocess(ast.NodeTransformer):
 def queries_preprocess(query_file, filename='<unknown>', include_folders=[]):
 
     try:
-        query_file_module = ast.parse(query_file) # , filename='<unknown>')
+        query_file_module = ast.parse(query_file, filename=filename)
     except SyntaxError:
         import sys
-        import traceback
-        filename= query_file # This was missing in interpreting error
         exc_type, exc_value, exc_traceback = sys.exc_info()
-        formatted_lines = traceback.format_exc().splitlines()
         raise TractQuerierSyntaxError(
-            'syntax error in line %s line %d: \n%s' %
+            'syntax error in file %s line %d: \n%s' %
             (
                 filename,
                 exc_value.lineno,

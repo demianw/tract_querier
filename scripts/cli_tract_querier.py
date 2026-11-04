@@ -185,6 +185,15 @@ def main():
             if found:
                 query_script = open(file_).read()
                 query_filename = file_
+            elif (
+                options.queries_string.endswith('.qry') or
+                os.sep in options.queries_string or
+                (os.altsep and os.altsep in options.queries_string)
+            ):
+                parser.error(
+                    "Query file not found: %s (searched: %s)" %
+                    (options.queries_string, ', '.join(qry_search_folders))
+                )
             else:
                 query_script = options.queries_string
                 query_filename = '<script>'
@@ -196,10 +205,11 @@ def main():
         )
 
         tract_querier.queries_syntax_check(query_file_body)
-    except tract_querier.TractQuerierSyntaxError or tract_querier.TractographySpatialIndexing as e:
+    except (
+        tract_querier.TractQuerierSyntaxError,
+        tract_querier.TractQuerierLabelNotFound
+    ) as e:
         parser.error(e.value)
-    # except tract_querier.TractographySpatialIndexing as e:
-    #     parser.error(e.value)
 
     labels_nii = nibabel.load(options.atlas_file_name)
     img = labels_nii.get_fdata()
