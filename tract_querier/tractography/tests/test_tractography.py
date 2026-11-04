@@ -1,7 +1,8 @@
 from .. import Tractography
 from .. import (
     tractography_from_trackvis_file, tractography_to_trackvis_file,
-    tractography_from_files, tractography_to_file
+    tractography_from_files, tractography_to_file,
+    tractography_from_tck_file, tractography_to_tck_file,
 )
 
 try:
@@ -237,4 +238,50 @@ def test_saveload():
             new_tractography.tracts_data()
         ))
 
+        os.remove(fname)
+
+
+def test_saveload_tck():
+    import tempfile
+    import os
+    fname_trk = tempfile.mkstemp('.trk')[1]
+    fname_tck = tempfile.mkstemp('.tck')[1]
+    fname_trk_back = tempfile.mkstemp('.trk')[1]
+
+    tractography_to_file(
+        fname_trk, Tractography(tractography.tracts()),
+        affine=eye(4), image_dimensions=ones(3)
+    )
+    tractography_trk = tractography_from_files(fname_trk)
+
+    with pytest.warns(UserWarning, match='TCK'):
+        tractography_to_tck_file(
+            fname_tck,
+            Tractography(
+                tractography_trk.tracts(),
+                {'a': [np.zeros((len(t), 1)) for t in tractography_trk.tracts()]}
+            )
+        )
+    tractography_to_file(fname_tck, tractography_trk)
+    tractography_tck = tractography_from_files(fname_tck)
+
+    assert len(tractography_tck.tracts()) == len(tractography_trk.tracts())
+    assert all(
+        np.array_equal(t1, t2)
+        for t1, t2 in zip(tractography_trk.tracts(), tractography_tck.tracts())
+    )
+    assert tractography_tck.tracts_data() == {}
+    assert not hasattr(tractography_tck, 'affine')
+
+    tractography_to_file(
+        fname_trk_back, tractography_tck,
+        affine=eye(4), image_dimensions=ones(3)
+    )
+    tractography_trk_back = tractography_from_files(fname_trk_back)
+    assert all(
+        np.array_equal(t1, t2)
+        for t1, t2 in zip(tractography_trk.tracts(), tractography_trk_back.tracts())
+    )
+
+    for fname in (fname_trk, fname_tck, fname_trk_back):
         os.remove(fname)

@@ -7,6 +7,7 @@ Example WMQL usage
 To run a WMQL script over and automatically extract a set of white matter tract bundles you will need:
 
 * A full-brain tractography in VTK format: It must be a vtkPolyData object where all the cells are lines.
+  TrackVis (``.trk``) and MRtrix (``.tck``) files are also supported.
 * A brain parcellation, such as the *wmparc.mgz* file obtained from  `freesurfer <https://surfer.nmr.mgh.harvard.edu>`_ in the same space as the full-brain tractography.
 * A WMQL query file
 
