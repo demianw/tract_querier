@@ -81,27 +81,6 @@ def compute_all_measures(tractography, desired_keys_list, scalars=None, resoluti
     return ordered_dict
 
 
-def tract_expand_tensor_metrics(tractography):
-    from os import path
-    from scipy import ndimage
-    from numpy import linalg
-
-    quantity_name = "tensor1_FA"
-    start = 0
-    new_scalar_data = []
-    for tract in tractography.original_tracts():
-        new_scalar_data.append(
-            new_scalar_data_flat[start: start + len(tract)].copy()
-        )
-        start += len(tract)
-    tractography.original_tracts_data()[quantity_name] = new_scalar_data
-
-    return Tractography(
-        tractography.original_tracts(),  tractography.original_tracts_data(),
-        **tractography.extra_args
-    )
-
-
 def decorate_tract_with_measures(tractography, tensor_name):
     ot = tractography.original_tracts_data()
     all_tensors = ot[tensor_name]
