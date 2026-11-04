@@ -33,6 +33,8 @@ def _build_arg_parser():
 
     optional flags:  Always start with "--" and are considered as boolean flags
 
+    The --force flag overwrites an existing output file without asking.
+
     The --use_file_names_as_index col_name1:path_dir_index col_name2:path_dir_index2 .. col_nameN:path_dir_indexN
         Example directory layout:
         =========================
@@ -86,6 +88,9 @@ def main():
 
     parser = _build_arg_parser()
     args = parser.parse_args()
+    # The files are only opened to check that they exist
+    for f in args.tractographies:
+        f.close()
 
     # Load the global modules after the parsing of parameters
     from tract_querier.tractography import tractography_from_files

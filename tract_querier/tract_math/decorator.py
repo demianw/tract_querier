@@ -4,6 +4,7 @@ from collections.abc import Mapping, Iterable
 import io
 import csv
 from os import path
+import sys
 
 import nibabel
 
@@ -98,6 +99,7 @@ def tract_math_operation(help_text, needs_one_tract=True):
             # find optional flags and put them as a dictionary
             # at the beginning of args
             args, options_dict = find_optional_args(input_args)
+            force = options_dict.pop('--force', None) is not None
 
             total_args = len(args)
             argspec = inspect.getfullargspec(func)
@@ -136,7 +138,7 @@ def tract_math_operation(help_text, needs_one_tract=True):
                 option_and_args = (options_dict,) + args
                 out = func(*option_and_args)
 
-                process_output(out, file_output=file_output)
+                process_output(out, file_output=file_output, force=force)
             elif (
                 total_args >= func_total_args or
                 len(args) == func_args
@@ -160,11 +162,16 @@ def tract_math_operation(help_text, needs_one_tract=True):
     return internal_decorator
 
 
-def process_output(output, file_output=None):
+def process_output(output, file_output=None, force=False):
     if output is None:
         return
 
-    if file_output is not None and path.exists(file_output):
+    if file_output is not None and path.exists(file_output) and not force:
+        if not sys.stdin.isatty():
+            raise TractMathWrongArgumentsError(
+                'Output file %s exists, use --force to overwrite it'
+                % file_output
+            )
         in_key = input("Overwrite file %s (y/N)? " % file_output)
         if in_key.lower().strip() != 'y':
             return
@@ -187,33 +194,34 @@ def process_output(output, file_output=None):
                 dialect = 'excel-tab'
             else:
                 dialect = 'excel'
-            f = open(file_output, 'w')
-        writer = csv.DictWriter(f, output.keys(), dialect=dialect)
+            f = open(file_output, 'w', newline='')
+        with f:
+            writer = csv.DictWriter(f, output.keys(), dialect=dialect)
 
-        if hasattr(writer, 'writeheader'):
-            writer.writeheader()
-        else:
-            header = dict(zip(writer.fieldnames, writer.fieldnames))
-            writer.writerow(header)
+            if hasattr(writer, 'writeheader'):
+                writer.writeheader()
+            else:
+                header = dict(zip(writer.fieldnames, writer.fieldnames))
+                writer.writerow(header)
 
-        first_value = next(iter(output.values()))
-        if (
-            not isinstance(first_value, str) and
-            isinstance(first_value, Iterable)
-        ):
-            rows = (
-                dict(zip(*row))
-                for row in zip(
-                    repeat(output.keys(), len(first_value)),
-                    zip(*output.values())
+            first_value = next(iter(output.values()))
+            if (
+                not isinstance(first_value, str) and
+                isinstance(first_value, Iterable)
+            ):
+                rows = (
+                    dict(zip(*row))
+                    for row in zip(
+                        repeat(output.keys(), len(first_value)),
+                        zip(*output.values())
+                    )
                 )
-            )
-            writer.writerows(rows)
-        else:
-            writer.writerow(output)
+                writer.writerows(rows)
+            else:
+                writer.writerow(output)
 
-        if file_output is None:
-            print(f.getvalue())
+            if file_output is None:
+                print(f.getvalue())
 
 
 class TractMathWrongArgumentsError(TypeError):

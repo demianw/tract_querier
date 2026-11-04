@@ -12,6 +12,27 @@ def test_help_option(script_runner):
     assert ret.success
 
 
+def test_tract_querier_unsupported_output_format(script_runner, tmp_path):
+    # ".01" is taken as the output format: it must be rejected before the
+    # files are loaded and the queries computed.
+    test_data = datasets.TestDataSet()
+    ret = script_runner.run([
+        "tract_querier",
+        "-a", test_data.files["atlas_file"],
+        "-t", test_data.files["tract_file"],
+        "-q", test_data.files["query_cst_file"],
+        "-o", str(tmp_path / "subj.01"),
+    ])
+    assert not ret.success
+    assert "'.01' not supported" in ret.stderr
+    assert "Loading files" not in ret.stdout
+
+
+def test_syntax_error_message_is_not_quoted():
+    from tract_querier import TractQuerierSyntaxError
+    assert str(TractQuerierSyntaxError("line 1\nline 2")) == "line 1\nline 2"
+
+
 def test_tract_querier_query(script_runner):
     test_data = datasets.TestDataSet()
     atlas_file = test_data.files["atlas_file"]
