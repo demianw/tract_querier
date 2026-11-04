@@ -153,8 +153,8 @@ def scalar_mean_std(optional_flags, tractography, scalar):
         mean = all_scalars.mean(0)
         std = all_scalars.std(0)
         return OrderedDict((
-            ('mean %s' % scalar, float(mean)),
-            ('std %s' % scalar, float(std))
+            ('mean %s' % scalar, mean.item()),
+            ('std %s' % scalar, std.item())
         ))
 
     except KeyError:
@@ -280,18 +280,7 @@ def tract_map_image(optional_flags, tractography, image, quantity_name, file_out
     ijk_points = tract_operations.tract_in_ijk(image, tractography)
     image_data = image.get_fdata()
 
-    if image_data.ndim > 3:
-        output_name, ext = path.splitext(file_output)
-        output_name = output_name + '_%04d' + ext
-        for i, image in enumerate(image_data):
-            new_scalar_data = ndimage.map_coordinates(
-                image, ijk_points.T
-            )[:, None]
-            tractography.original_tracts_data()[
-                quantity_name] = new_scalar_data
-            tractography_to_file(output_name % i, Tractography(
-                tractography.original_tracts(),  tractography.original_tracts_data()))
-    else:
+    def per_tract_values(image_data):
         new_scalar_data_flat = ndimage.map_coordinates(
             image_data, ijk_points.T
         )[:, None]
@@ -302,7 +291,19 @@ def tract_map_image(optional_flags, tractography, image, quantity_name, file_out
                 new_scalar_data_flat[start: start + len(tract)].copy()
             )
             start += len(tract)
-        tractography.original_tracts_data()[quantity_name] = new_scalar_data
+        return new_scalar_data
+
+    if image_data.ndim > 3:
+        output_name, ext = path.splitext(file_output)
+        output_name = output_name + '_%04d' + ext
+        for i in range(image_data.shape[-1]):
+            tractography.original_tracts_data()[
+                quantity_name] = per_tract_values(image_data[..., i])
+            tractography_to_file(output_name % i, Tractography(
+                tractography.original_tracts(),  tractography.original_tracts_data(),
+                **tractography.extra_args))
+    else:
+        tractography.original_tracts_data()[quantity_name] = per_tract_values(image_data)
 
         return Tractography(
             tractography.original_tracts(
@@ -324,7 +325,7 @@ def tract_deform(optional_flags, tractography, image, file_output=None):
     ijk_points = tract_operations.tract_in_ijk(image, tractography)
     image_data = image.get_fdata().squeeze()
 
-    if image_data.ndim != 4 and image_data.shape[-1] != 3:
+    if image_data.ndim != 4 or image_data.shape[-1] != 3:
         raise ValueError('Image is not a deformation field')
 
     new_points = numpy.vstack(tractography.tracts())  # ijk_points.copy()
@@ -402,11 +403,11 @@ def tract_tract_confidence(optional_flags, tractography, bins, qty, file_output=
     tracts_length_bin = []
     for i, tract in enumerate(tracts):
         lengths[i] = tract_operations.tract_length(tract)
-        tracts_prob_data.append(numpy.zeros(len(tract)))
-        tracts_length_bin.append(numpy.zeros(len(tract)))
+        tracts_prob_data.append(numpy.zeros((len(tract), 1)))
+        tracts_length_bin.append(numpy.zeros((len(tract), 1)))
 
     length_histogram_counts, length_histogram_bins = numpy.histogram(
-        lengths, normed=True, bins=bins)
+        lengths, density=True, bins=bins)
 
     for i in range(1, bins):
         tract_log_prob = []
@@ -451,7 +452,7 @@ def tract_generate_population_probability_map(optional_flags, tractographies, im
 
     # tractographies includes tuples of (tractography filename, tractography
     # instance)
-    if isinstance(tractographies[1], Tractography):
+    if isinstance(tractographies[-1], Tractography):
         tractographies = [tractographies]
 
     prob_map = tract_operations.tract_mask(image, tractographies[0][1]).astype(float)
@@ -466,7 +467,7 @@ def tract_generate_population_probability_map(optional_flags, tractographies, im
 
     prob_map /= len(tractographies)
 
-    return SpatialImage(prob_map, image.affine),
+    return SpatialImage(prob_map, image.affine)
 
 
 @tract_math_operation('<image> <image_out>: calculates the probabilistic tract image for these tracts', needs_one_tract=False)
@@ -525,6 +526,20 @@ def tract_merge(optional_flags, tractographies, file_output):
     )
 
 
+def _kappa(voxels, voxels1):
+    all_voxels = numpy.array(list(voxels.union(voxels1)))
+    N = (all_voxels.max(0) - all_voxels.min(0)).prod()
+    pp = len(voxels.intersection(voxels1)) * 1.
+    pn = len(voxels.difference(voxels1)) * 1.
+    np_ = len(voxels1.difference(voxels)) * 1.
+    nn = N - pp - pn - np_
+    observed_agreement = (pp + nn) / N
+    chance_agreement = (
+        (pp + pn) * (pp + np_) + (nn + np_) * (nn + pn)) / (N * N)
+
+    return (observed_agreement - chance_agreement) / (1 - chance_agreement)
+
+
 @tract_math_operation('<volume unit> <tract1.vtk> ... <tractN.vtk>: calculates the kappa value of the first tract with the rest in the space of the reference image')
 def tract_kappa(optional_flags, tractography, resolution, *other_tracts):
     resolution = float(resolution)
@@ -542,20 +557,8 @@ def tract_kappa(optional_flags, tractography, resolution, *other_tracts):
             resolution
         )
 
-        all_voxels = numpy.array(list(voxels.union(voxels1)))
-        N = (all_voxels.max(0) - all_voxels.min(0)).prod()
-        pp = len(voxels.intersection(voxels1)) * 1.
-        pn = len(voxels.difference(voxels1)) * 1.
-        numpy = len(voxels1.difference(voxels)) * 1.
-        nn = N - pp - pn - numpy
-        observed_agreement = (pp + nn) / N
-        chance_agreement = (
-            (pp + pn) * (pp + numpy) + (nn + numpy) * (nn + pn)) / (N * N)
-
-        k = (observed_agreement - chance_agreement) / (1 - chance_agreement)
-
         result['tract file'].append(tract)
-        result['kappa value'].append(k)
+        result['kappa value'].append(_kappa(voxels, voxels1))
 
     return result
 
@@ -565,7 +568,7 @@ def tract_kappa_volume(optional_flags, tractography, volume, threshold, resoluti
     resolution = float(resolution)
 
     volume = nibabel.load(volume)
-    mask = (volume.get_fdata() > threshold).astype(int)
+    mask = (volume.get_fdata() > float(threshold)).astype(int)
     voxels = tract_operations.tract_mask(mask, tractography)
 
     result = OrderedDict((
@@ -577,20 +580,8 @@ def tract_kappa_volume(optional_flags, tractography, volume, threshold, resoluti
         voxels1 = tract_operations.voxelized_tract(
             tractography_from_files(tract), resolution)
 
-        all_voxels = numpy.array(list(voxels.union(voxels1)))
-        N = (all_voxels.max(0) - all_voxels.min(0)).prod()
-        pp = len(voxels.intersection(voxels1)) * 1.
-        pn = len(voxels.difference(voxels1)) * 1.
-        numpy = len(voxels1.difference(voxels)) * 1.
-        nn = N - pp - pn - numpy
-        observed_agreement = (pp + nn) / N
-        chance_agreement = (
-            (pp + pn) * (pp + numpy) + (nn + numpy) * (nn + pn)) / (N * N)
-
-        k = (observed_agreement - chance_agreement) / (1 - chance_agreement)
-
         result['tract file'].append(tract)
-        result['kappa value'].append(k)
+        result['kappa value'].append(_kappa(voxels, voxels1))
 
     return result
 
@@ -736,7 +727,7 @@ def tract_prototype_mean(optional_flags, tractography, smooth_order, file_output
 
     mean_tract = mean_tract[:len(centers_used)]
 
-    if smooth_order > 0:
+    if int(smooth_order) > 0:
         try:
             from scipy import interpolate
 
@@ -776,9 +767,9 @@ def tract_bhattacharyya_coefficient(optional_flags, tractography, resolution, *o
 
     for pts in other_tracts_points:
         mn_ = numpy.minimum(mn_, pts.min(0))
-        mx_ = numpy.maximum(mn_, pts.max(0))
+        mx_ = numpy.maximum(mx_, pts.max(0))
 
-    bins = numpy.ceil((mx_ - mn_) * 1. / resolution)
+    bins = numpy.ceil((mx_ - mn_) * 1. / resolution).astype(int)
     hists_tract = [
         numpy.histogram(tractography_points[:, i], bins=bins[
                         i], density=True, range=(mn_[i], mx_[i]))[0]
@@ -799,8 +790,8 @@ def tract_bhattacharyya_coefficient(optional_flags, tractography, resolution, *o
             ).sum()
             for i in range(3)
         ]
+        result['tract file'].append(tract)
         for i in range(3):
-            result['tract file'].append(tract)
             result['bhattacharyya %s value' % coord[i]].append(
                 numpy.nan_to_num(distances[i]))
 
@@ -813,7 +804,7 @@ def tract_bhattacharyya_coefficient(optional_flags, tractography, resolution, *o
     needs_one_tract=True
 )
 def tract_flip_endpoints_in_label(
-    tractography, image, label, file_output=None
+    optional_flags, tractography, image, label, file_output=None
 ):
     image = nibabel.load(image)
     tracts_ijk = tract_operations.each_tract_in_ijk(image, tractography)
@@ -839,7 +830,7 @@ def tract_flip_endpoints_in_label(
     print(f"Flipped {len(needs_flip)} tracts")
     for i in needs_flip:
         tracts[i] = tracts[i][::-1]
-        for data_key, data_points in tracts_data:
+        for data_key, data_points in tracts_data.items():
             data_points[i] = data_points[i][::-1]
 
     return Tractography(
