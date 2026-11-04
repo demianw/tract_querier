@@ -36,4 +36,13 @@ def find_queries_path():
 
 default_queries_folder = find_queries_path()
 
-__version__ = 0.1
+try:
+    # Written by setuptools_scm when the package is built or installed.
+    from ._version import version as __version__
+except ImportError:
+    from importlib.metadata import PackageNotFoundError, version
+    try:
+        __version__ = version('tract_querier')
+    except PackageNotFoundError:
+        __version__ = '0+unknown'
+    del PackageNotFoundError, version
