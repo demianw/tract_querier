@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from importlib.metadata import version
 from optparse import OptionParser
 import os
 import sys
@@ -67,7 +68,7 @@ def affine_transform_tract(affine_transform, tract):
 def _build_arg_parser():
 
     parser = OptionParser(
-        version=0.1,
+        version=version("tract_querier"),
         usage="usage: %prog -t tractography_file -a atlas_file "
         "-q queries -o result_prefix"
     )
