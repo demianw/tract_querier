@@ -89,41 +89,32 @@ class TractographySpatialIndexing:
 
 
 def compute_label_bounding_boxes(image, affine_ijk_2_ras):
+    r"""
+    Bounding box in RAS space of each non-zero label of the image
+
+    The box of a label spans the RAS coordinates of the centres of the
+    voxels of that label.
+    """
     linear_component = affine_ijk_2_ras[:3, :3]
     translation = affine_ijk_2_ras[:-1, -1]
-    label_bounding_boxes = {}
     image = image.astype(int)
-    try:
-        from scipy import ndimage
-        labels = ndimage.find_objects(image)
-        for i, label in enumerate(labels):
-            if label is not None:
-                ras_bounding_box = np.dot(
-                    linear_component,
-                    np.array([(s.start, s.stop) for s in label])
-                ).T + translation
 
-                label_bounding_boxes[i + 1] = BoundingBox(
-                    ras_bounding_box
-                )
+    coords = np.argwhere(image != 0)
+    if len(coords) == 0:
+        return {}
+    labels = image[tuple(coords.T)]
+    order = np.argsort(labels)
+    labels = labels[order]
+    ras_coords = np.dot(coords[order], linear_component.T) + translation
 
-    except ImportError:
-        labels = np.unique(image)
-        for i, label in enumerate(np.sort(labels)):
-            if label == 0:
-                continue
+    unique_labels, starts = np.unique(labels, return_index=True)
+    mins = np.minimum.reduceat(ras_coords, starts)
+    maxs = np.maximum.reduceat(ras_coords, starts)
 
-            coords = np.where(image == label)
-            ras_coords = (
-                (
-                    np.dot(linear_component, coords).T +
-                    translation
-                )
-            )
-
-            label_bounding_boxes[label] = BoundingBox(ras_coords)
-
-    return label_bounding_boxes
+    return {
+        int(label): BoundingBox(np.r_[label_min, label_max])
+        for label, label_min, label_max in zip(unique_labels, mins, maxs)
+    }
 
 
 def compute_tract_bounding_boxes(tracts, affine_transform=None):
