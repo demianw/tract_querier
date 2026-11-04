@@ -6,8 +6,6 @@ from operator import lt, gt
 from itertools import takewhile
 import fnmatch
 
-from .code_util import DocStringInheritor
-
 
 __all__ = [
     'keywords', 'EvaluateQueries', 'eval_queries',
@@ -107,7 +105,6 @@ class FiberQueryInfo(object):
         return operation
 
 
-# @add_metaclass(DocStringInheritor)
 class EvaluateQueries(ast.NodeVisitor):
 
     r"""
@@ -133,7 +130,6 @@ class EvaluateQueries(ast.NodeVisitor):
         the tracts resulting from this query
 
     """
-    __metaclass__ = DocStringInheritor
 
     relative_terms = [
         'anterior_of',
@@ -246,9 +242,7 @@ class EvaluateQueries(ast.NodeVisitor):
         if (
             isinstance(node.func, ast.Name) and
             len(node.args) == 1 and
-            len(node.keywords) == 0 and
-            (not hasattr(node, 'starargs') or node.starargs is None) and
-            (not hasattr(node, 'kwargs') or node.kwargs is None)
+            len(node.keywords) == 0
         ):
             if (node.func.id.lower() == 'only'):
                 query_info = self.visit(node.args[0])

@@ -190,11 +190,7 @@ def process_output(output, file_output=None):
             f = open(file_output, 'w')
         writer = csv.DictWriter(f, output.keys(), dialect=dialect)
 
-        if hasattr(writer, 'writeheader'):
-            writer.writeheader()
-        else:
-            header = dict(zip(writer.fieldnames, writer.fieldnames))
-            writer.writerow(header)
+        writer.writeheader()
 
         first_value = next(iter(output.values()))
         if (
