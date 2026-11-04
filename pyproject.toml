@@ -43,8 +43,8 @@ test = [
 ]
 
 [project.urls]
-documentation = "http://demianw.github.io/tract_querier"
-homepage = "http://demianw.github.io/tract_querier"
+documentation = "https://demianw.github.io/tract_querier/"
+homepage = "https://demianw.github.io/tract_querier/"
 repository = "https://github.com/demianw/tract_querier"
 
 [project.scripts]

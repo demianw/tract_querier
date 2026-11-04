@@ -8,4 +8,4 @@ The White Matter Query Language (WMQL) is a technique to formally describe white
 
 This is an implementation of the WMQL language presented in ["The white matter query language: a novel approach for describing human white matter anatomy", Wassermann et al. Brain Structure and Function 2016](http://link.springer.com/article/10.1007%2Fs00429-015-1179-4)
 
- [WMQL Documentation](http://demianw.github.io/tract_querier "WMQL Documentation")
+ [WMQL Documentation](https://demianw.github.io/tract_querier/ "WMQL Documentation")
