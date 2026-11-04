@@ -151,7 +151,7 @@ class TractQuerierCmd(cmd.Cmd):
             )
             self.save_query_visitor.visit(ast.Module(body=body))
         except SyntaxError as e:
-            print(e.value)
+            print(e)
         except TractQuerierSyntaxError as e:
             print(e.value)
         except TractQuerierLabelNotFound as e:
@@ -194,7 +194,7 @@ class TractQuerierCmd(cmd.Cmd):
             self.querier.visit(body)
             self.save_query_visitor.visit(body)
         except SyntaxError as e:
-            print(e.value)
+            print(e)
         except TractQuerierSyntaxError as e:
             print(e.value)
         except TractQuerierLabelNotFound as e:
@@ -204,18 +204,7 @@ class TractQuerierCmd(cmd.Cmd):
 
     @safe_method
     def names(self):
-        names = []
-        for query in self.querier.evaluated_queries_info.keys():
-            if query.endswith('_left'):
-                names += [
-                    query.replace('_left', '.left'),
-                    query.replace('_left', '.right'),
-                ]
-            elif query.endswith('_right'):
-                pass
-            else:
-                names.append(query)
-        return names
+        return list(self.querier.evaluated_queries_info.keys())
 
     @safe_method
     def completenames(self, text, *ignored):
