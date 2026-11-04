@@ -1,8 +1,8 @@
 from numpy import (
-    vstack, where, intersect1d, in1d, unique,
+    vstack, where, intersect1d, isin, unique,
     cross, abs, arccos, sign,
     dot, array, cov, nan_to_num, inf, pi,
-    hstack, repeat, bincount, arange
+    hstack, repeat, bincount, arange, ptp
 )
 from numpy.linalg import norm, solve
 
@@ -674,7 +674,7 @@ def all_obb_3d_along_tract(
 
     if (
             (len(labels_both) <= len(unique_labels) * intersection_threshold) and
-            (box_center.points_orientation.ptp() / 2. < min((norm(v) for v in vectors)))
+            (ptp(box_center.points_orientation) / 2. < min((norm(v) for v in vectors)))
     ):
         return new_results
 
@@ -687,7 +687,7 @@ def all_obb_3d_along_tract(
             new_vectors = vectors[mask]
 
             if clean:
-                clean_labels = in1d(
+                clean_labels = isin(
                     labels[side],
                     intersect1d(labels_both, (labels_ratio[side] > .2).nonzero()[0]),
                 )
@@ -785,7 +785,7 @@ def all_obb_3d(points, vectors, labels, tol=1e-8, level=0, intersection_threshol
             new_vectors = vectors[mask]
 
             if clean:
-                clean_labels = in1d(
+                clean_labels = isin(
                     labels[side],
                     intersect1d(labels_both, (labels_ratio[side] > .2).nonzero()[0]),
                 )
