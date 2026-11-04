@@ -56,12 +56,9 @@ def save_tractography_file(
 
 
 def affine_transform_tract(affine_transform, tract):
-    import numpy as np
+    from nibabel.affines import apply_affine
 
-    tract = np.dot(affine_transform[:3, :3], tract.T).T
-    tract += affine_transform[-1, :3]
-
-    return tract
+    return apply_affine(affine_transform, tract)
 
 
 def _build_arg_parser():
@@ -242,7 +239,7 @@ def main():
 
     if bounding_box_affine_transform is not None:
         tracts = [
-            affine_transform_tract(np.linalg.inv(bounding_box_affine_transform), tract)
+            affine_transform_tract(bounding_box_affine_transform, tract)
             for tract in tracts
         ]
 
