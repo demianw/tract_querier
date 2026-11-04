@@ -21,8 +21,8 @@ def tractography_to_trackvis_file(filename, tractography, affine=None, image_dim
     trk_header['voxel_to_rasmm'] = affine
     if image_dimensions is not None:
         trk_header["dimensions"] = image_dimensions
-    elif hasattr(tractography, 'image_dimensions'):
-        trk_header["dimensions"] = tractography.image_dimensions
+    elif hasattr(tractography, 'image_dims'):
+        trk_header["dimensions"] = tractography.image_dims
     else:
         raise ValueError("Image dimensions needed to save a trackvis file")
 
@@ -74,20 +74,12 @@ def tractography_to_trackvis_file(filename, tractography, affine=None, image_dim
 def tractography_from_trackvis_file(filename):
     trk_file = nib.streamlines.load(filename)
 
-    tracts = array_sequence_data_to_tracts(
-        trk_file.streamlines.get_data(),
-        trk_file.streamlines._offsets,
-        trk_file.streamlines._lengths,
-    )
+    tracts = tuple(trk_file.streamlines)
 
-    tracts_dpp = trk_file.tractogram.data_per_point.store
-    tracts_data = {}
-    if tracts_dpp:
-        tracts_data = {k: array_sequence_to_dpp(array_seq) for k, array_seq in tracts_dpp.items()}
-
-    tracts_dps = trk_file.tractogram.data_per_streamline.store
-    if tracts_dps:
-        properties = dps_to_tuple(tracts_dps)
+    tracts_data = {
+        k: list(array_seq)
+        for k, array_seq in trk_file.tractogram.data_per_point.items()
+    }
 
     #scalar_names_unique = []
     #scalar_names_subcomp = {}
@@ -110,36 +102,3 @@ def tractography_from_trackvis_file(filename):
     )
 
     return tr
-
-
-def array_sequence_to_dpp(array_seq):
-
-    dpp = []
-    for offset, length in zip(array_seq._offsets, array_seq._lengths):
-        val = array_seq._data[offset: offset + length]
-        dpp.append(val)
-
-    return dpp
-
-
-def streamline_property_to_tuple(property):
-
-    num_strml = len(property[0])
-    num_dpps = len(property)
-    return tuple(numpy.hstack([property[j][i] for j in range(num_dpps)]) for i in range(num_strml))
-
-
-def dps_to_tuple(dps):
-
-    dps_lists = list(dps.values())
-    return streamline_property_to_tuple(dps_lists)
-
-
-def array_sequence_data_to_tracts(array_seq_data, offsets, lengths):
-
-    tracts = []
-    for offset, length in zip(offsets, lengths):
-        val = array_seq_data[offset: offset + length]
-        tracts.append(val)
-
-    return tuple(tracts)
